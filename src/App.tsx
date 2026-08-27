@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { SearchModal } from './components/SearchModal';
+import { LoginModal } from './components/LoginModal';
 import { HomePage } from './pages/HomePage';
 import { CategoryPage } from './pages/CategoryPage';
 import { DeviceDetailPage } from './pages/DeviceDetailPage';
+import { LoginPage } from './pages/LoginPage';
+import { AddDevicePage } from './pages/AddDevicePage';
 
 // Global ScrollToTop & Clear Selection helper component
 const ScrollToTop: React.FC = () => {
@@ -22,7 +26,7 @@ const ScrollToTop: React.FC = () => {
   return null;
 };
 
-export const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('theme');
     if (saved) return saved === 'dark';
@@ -31,6 +35,8 @@ export const App: React.FC = () => {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const { isLoginModalOpen, closeLoginModal } = useAuth();
 
   useEffect(() => {
     if (darkMode) {
@@ -69,6 +75,8 @@ export const App: React.FC = () => {
               <Route path="/" element={<HomePage onOpenSearch={() => setIsSearchOpen(true)} />} />
               <Route path="/category/:categorySlug" element={<CategoryPage />} />
               <Route path="/docs/:categorySlug/:deviceId" element={<DeviceDetailPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/add-device" element={<AddDevicePage />} />
             </Routes>
           </main>
 
@@ -92,9 +100,21 @@ export const App: React.FC = () => {
 
         {/* Search Modal */}
         <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+
+        {/* Login Modal */}
+        <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} redirectTo="/add-device" />
       </div>
     </Router>
   );
 };
 
+export const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+};
+
 export default App;
+

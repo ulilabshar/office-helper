@@ -1,6 +1,7 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, Search, Sun, Moon, PanelLeftClose, PanelLeft, PlusCircle } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { BookOpen, Search, Sun, Moon, PanelLeftClose, PanelLeft, PlusCircle, UserCheck, LogOut, KeyRound } from 'lucide-react';
 
 interface HeaderProps {
   darkMode: boolean;
@@ -18,10 +19,20 @@ export const Header: React.FC<HeaderProps> = ({
   isSidebarOpen,
 }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isLoggedIn, user, logout, openLoginModal } = useAuth();
 
   const handleLogoClick = () => {
     if (location.pathname === '/') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleDeviceButtonClick = () => {
+    if (isLoggedIn) {
+      navigate('/add-device');
+    } else {
+      openLoginModal();
     }
   };
 
@@ -94,17 +105,46 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </button>
 
-          {/* Request Button */}
-          <Link
-            to="/"
-            onClick={handleLogoClick}
-            className="hidden sm:inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-500 active:scale-95 transition-all shadow-md shadow-blue-600/20"
+          {/* User Logged In Info (Desktop) */}
+          {isLoggedIn && user && (
+            <div className="hidden lg:flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                <UserCheck className="h-3.5 w-3.5" />
+                <span className="max-w-[100px] truncate">{user.name}</span>
+              </div>
+              <button
+                onClick={logout}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                title="Keluar / Logout"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Perangkat / Tambah Perangkat Action Button */}
+          <button
+            onClick={handleDeviceButtonClick}
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-500 active:scale-95 transition-all shadow-md shadow-blue-600/20"
+            title={isLoggedIn ? 'Buka Form Tambah Perangkat' : 'Login untuk Tambah Perangkat'}
           >
-            <PlusCircle className="h-3.5 w-3.5" />
-            <span>Tambah Perangkat</span>
-          </Link>
+            {isLoggedIn ? (
+              <>
+                <PlusCircle className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Tambah Perangkat</span>
+                <span className="sm:hidden">Tambah</span>
+              </>
+            ) : (
+              <>
+                <KeyRound className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Tambah Perangkat</span>
+                <span className="sm:hidden">Perangkat</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
     </header>
   );
 };
+
