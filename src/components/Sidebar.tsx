@@ -1,9 +1,8 @@
 import React from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { NavLink, useLocation } from 'react-router-dom';
 import { categoriesData } from '../data/categories';
 import { devicesData } from '../data/devices';
-import { Home, Printer, Tv, Fingerprint, ChevronRight, Sparkles, BookOpen, X, Share2, MessageCircle, Video, Monitor, PlusCircle, KeyRound, LogOut, UserCheck } from 'lucide-react';
+import { Home, Printer, Tv, Fingerprint, ChevronRight, Sparkles, BookOpen, X, Share2, MessageCircle, Video, Monitor } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -29,25 +28,12 @@ const getCategoryIcon = (iconName: string) => {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { isLoggedIn, user, logout, openLoginModal } = useAuth();
 
   // Helper function to force smooth scroll to top and clear mouse text selections
   const handleSidebarNavClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (window.getSelection) {
       window.getSelection()?.removeAllRanges();
-    }
-    if (window.innerWidth < 1024) {
-      onClose();
-    }
-  };
-
-  const handleDeviceButtonClick = () => {
-    if (isLoggedIn) {
-      navigate('/add-device');
-    } else {
-      openLoginModal();
     }
     if (window.innerWidth < 1024) {
       onClose();
@@ -85,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Main Nav */}
-          <div className="space-y-1">
+          <div>
             <div className="px-3 mb-2 text-[11px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
               Navigasi Utama
             </div>
@@ -104,40 +90,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <Home className="h-4 w-4 text-blue-500" />
               <span>Beranda Panduan</span>
             </NavLink>
-
-            {/* Tambah Perangkat / Login Menu */}
-            <button
-              onClick={handleDeviceButtonClick}
-              className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold rounded-lg text-slate-700 hover:bg-blue-50 hover:text-blue-600 dark:text-slate-300 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                {isLoggedIn ? (
-                  <PlusCircle className="h-4 w-4 text-blue-500" />
-                ) : (
-                  <KeyRound className="h-4 w-4 text-amber-500" />
-                )}
-                <span>{isLoggedIn ? 'Tambah Perangkat' : 'Login / Tambah Perangkat'}</span>
-              </div>
-              <ChevronRight className="h-3.5 w-3.5 opacity-50" />
-            </button>
-
-            {/* If logged in, show user tag in sidebar */}
-            {isLoggedIn && user && (
-              <div className="mt-2 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2 overflow-hidden">
-                  <UserCheck className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span className="truncate text-slate-700 dark:text-slate-300 font-medium">
-                    {user.name}
-                  </span>
-                </div>
-                <button
-                  onClick={logout}
-                  className="text-rose-600 dark:text-rose-400 hover:underline text-[11px] font-semibold shrink-0 ml-1"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
           </div>
 
           {/* Categories & Devices List */}
