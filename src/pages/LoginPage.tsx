@@ -8,7 +8,7 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = (location.state as any)?.from?.pathname || '/add-device';
+  const from = (location.state as any)?.from?.pathname || '/dashboard';
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -57,16 +57,23 @@ export const LoginPage: React.FC = () => {
 
           <div className="space-y-2 pt-2">
             <Link
-              to="/add-device"
+              to="/dashboard"
               className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition-all shadow-md shadow-blue-600/20"
             >
-              <span>Buka Formulir Tambah Perangkat</span>
+              <span>Buka Dashboard Admin</span>
               <ArrowRight className="h-4 w-4" />
+            </Link>
+
+            <Link
+              to="/add-device"
+              className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+            >
+              <span>Formulir Tambah Perangkat</span>
             </Link>
 
             <button
               onClick={logout}
-              className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+              className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
             >
               <span>Keluar / Ganti Akun</span>
             </button>

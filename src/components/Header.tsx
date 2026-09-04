@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, Search, Sun, Moon, PanelLeftClose, PanelLeft, PlusCircle, UserCheck, LogOut, KeyRound } from 'lucide-react';
+import { BookOpen, Search, Sun, Moon, PanelLeftClose, PanelLeft, PlusCircle, UserCheck, LogOut, KeyRound, LayoutDashboard } from 'lucide-react';
 
 interface HeaderProps {
   darkMode: boolean;
@@ -120,6 +120,18 @@ export const Header: React.FC<HeaderProps> = ({
                 <LogOut className="h-4 w-4" />
               </button>
             </div>
+          )}
+
+          {/* Admin Dashboard Quick Link for Logged In User */}
+          {isLoggedIn && (
+            <Link
+              to="/dashboard"
+              className="hidden sm:inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/40 dark:border-indigo-900/60 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors shadow-sm"
+              title="Buka Dashboard Khusus Admin"
+            >
+              <LayoutDashboard className="h-3.5 w-3.5" />
+              <span>Dashboard</span>
+            </Link>
           )}
 
           {/* Perangkat / Tambah Perangkat Action Button */}

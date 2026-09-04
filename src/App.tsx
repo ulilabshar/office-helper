@@ -10,6 +10,7 @@ import { CategoryPage } from './pages/CategoryPage';
 import { DeviceDetailPage } from './pages/DeviceDetailPage';
 import { LoginPage } from './pages/LoginPage';
 import { AddDevicePage } from './pages/AddDevicePage';
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 
 // Global ScrollToTop & Clear Selection helper component
 const ScrollToTop: React.FC = () => {
@@ -27,6 +28,9 @@ const ScrollToTop: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
+  const { pathname } = useLocation();
+  const isAdminRoute = pathname.startsWith('/dashboard');
+
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('theme');
     if (saved) return saved === 'dark';
@@ -48,8 +52,28 @@ const AppContent: React.FC = () => {
     }
   }, [darkMode]);
 
+  // Dedicated full-screen layout for Admin Dashboard
+  if (isAdminRoute) {
+    return (
+      <>
+        <ScrollToTop />
+        <Routes>
+          <Route
+            path="/dashboard"
+            element={<AdminDashboardPage darkMode={darkMode} setDarkMode={setDarkMode} />}
+          />
+          <Route
+            path="/dashboard/:tab"
+            element={<AdminDashboardPage darkMode={darkMode} setDarkMode={setDarkMode} />}
+          />
+        </Routes>
+      </>
+    );
+  }
+
+  // Standard Public User Workspace Layout
   return (
-    <Router>
+    <>
       <ScrollToTop />
       <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans transition-colors duration-200 antialiased selection:bg-blue-500 selection:text-white">
         {/* Sticky Global Top Bar Header */}
@@ -102,16 +126,18 @@ const AppContent: React.FC = () => {
         <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
         {/* Login Modal */}
-        <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} redirectTo="/add-device" />
+        <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} redirectTo="/dashboard" />
       </div>
-    </Router>
+    </>
   );
 };
 
 export const App: React.FC = () => {
   return (
     <AuthProvider>
-      <AppContent />
+      <Router>
+        <AppContent />
+      </Router>
     </AuthProvider>
   );
 };
