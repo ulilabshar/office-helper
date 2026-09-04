@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase, isSupabaseReady, getCurrentProfile, signInWithPassword, signOut as supabaseSignOut, logActivity } from '../lib/supabase';
 
 export interface User {
+  id?: string;
   username: string;
   name: string;
   role: string;
@@ -10,8 +12,8 @@ export interface User {
 interface AuthContextType {
   isLoggedIn: boolean;
   user: User | null;
-  login: (username: string, password: string) => { success: boolean; error?: string };
-  logout: () => void;
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
   openLoginModal: () => void;
   closeLoginModal: () => void;
   isLoginModalOpen: boolean;
@@ -20,6 +22,13 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = 'office_docs_auth_user';
+
+// ── Mock fallback credentials (used when Supabase is not configured) ──────────
+const MOCK_USERS: Array<{ username: string; password: string; name: string; role: string }> = [
+  { username: 'admin', password: 'admin123', name: 'Administrator IT', role: 'Admin IT' },
+  { username: 'it-support', password: 'admin123', name: 'IT Support Officer', role: 'Admin IT' },
+  { username: 'it', password: 'it123', name: 'IT Staff', role: 'Staff IT' },
+];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
@@ -33,6 +42,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
+  // ── Sync Supabase session on mount ──────────────────────────────────────────
+  useEffect(() => {
+    if (!isSupabaseReady || !supabase) return;
+
+    // Check if there's already an active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session && !user) {
+        getCurrentProfile().then((profile) => {
+          if (profile) {
+            const u: User = {
+              id: profile.id,
+              username: profile.username,
+              name: profile.full_name ?? profile.username,
+              role: profile.role,
+              email: session.user.email,
+            };
+            setUser(u);
+            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(u));
+          }
+        });
+      }
+    });
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+      } else if (event === 'SIGNED_IN' && session) {
+        const profile = await getCurrentProfile();
+        if (profile) {
+          const u: User = {
+            id: profile.id,
+            username: profile.username,
+            name: profile.full_name ?? profile.username,
+            role: profile.role,
+            email: session.user.email,
+          };
+          setUser(u);
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(u));
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Persist user to localStorage ───────────────────────────────────────────
   useEffect(() => {
     if (user) {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
@@ -41,7 +99,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
-  const login = (username: string, password: string): { success: boolean; error?: string } => {
+  // ── Login ──────────────────────────────────────────────────────────────────
+  const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
     const trimmedUser = username.trim().toLowerCase();
     const trimmedPass = password.trim();
 
@@ -49,30 +108,76 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, error: 'Username dan password wajib diisi!' };
     }
 
-    // Default account credentials: user 'admin' or 'it-support', password 'admin123'
-    if (
-      (trimmedUser === 'admin' && trimmedPass === 'admin123') ||
-      (trimmedUser === 'it-support' && trimmedPass === 'admin123') ||
-      (trimmedUser === 'it' && trimmedPass === 'it123')
-    ) {
-      const authenticatedUser: User = {
-        username: trimmedUser,
-        name: trimmedUser === 'admin' ? 'Administrator IT' : 'IT Support Officer',
-        role: 'Admin IT',
-        email: `${trimmedUser}@kantor.local`,
-      };
-      setUser(authenticatedUser);
-      setIsLoginModalOpen(false);
-      return { success: true };
+    // ── Supabase Auth ────────────────────────────────────────────────────────
+    if (isSupabaseReady && supabase) {
+      try {
+        // Try signing in using username as email (email@domain or bare email)
+        // Attempt 1: use username directly as email
+        let email = trimmedUser;
+        if (!email.includes('@')) {
+          // username is not an email; look up email from profiles table via username
+          const { data: profileData, error: profileErr } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('username', trimmedUser)
+            .single();
+
+          if (profileErr || !profileData) {
+            return { success: false, error: 'Username tidak ditemukan.' };
+          }
+
+          // Get the auth user email via admin endpoint is not possible from the client.
+          // Instead: instruct users to register with email = username@officedocs.local
+          // OR store email in profiles. For now, construct email:
+          email = `${trimmedUser}@officedocs.local`;
+        }
+
+        const authData = await signInWithPassword(email, trimmedPass);
+        const profile = await getCurrentProfile();
+
+        if (profile) {
+          const u: User = {
+            id: profile.id,
+            username: profile.username,
+            name: profile.full_name ?? profile.username,
+            role: profile.role,
+            email,
+          };
+          setUser(u);
+          setIsLoginModalOpen(false);
+
+          // Log the auth event
+          await logActivity({
+            user_id: profile.id,
+            username: profile.username,
+            action: 'AUTH',
+            target: 'Sesi Admin',
+            description: `${profile.username} berhasil login via Supabase Auth.`,
+          });
+
+          return { success: true };
+        }
+
+        // Edge case: auth succeeded but profile not found
+        await supabase.auth.signOut();
+        return { success: false, error: 'Profil admin tidak ditemukan. Hubungi superadmin.' };
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return { success: false, error: `Login gagal: ${msg}` };
+      }
     }
 
-    // Custom non-empty fallback for ease of testing
-    if (trimmedPass === '123456' || trimmedPass === 'admin123') {
+    // ── Mock Fallback (Supabase not configured) ───────────────────────────────
+    const mockMatch = MOCK_USERS.find(
+      (u) => u.username === trimmedUser && u.password === trimmedPass
+    );
+
+    if (mockMatch) {
       const authenticatedUser: User = {
-        username: trimmedUser,
-        name: trimmedUser.charAt(0).toUpperCase() + trimmedUser.slice(1),
-        role: 'Staff IT',
-        email: `${trimmedUser}@kantor.local`,
+        username: mockMatch.username,
+        name: mockMatch.name,
+        role: mockMatch.role,
+        email: `${mockMatch.username}@kantor.local`,
       };
       setUser(authenticatedUser);
       setIsLoginModalOpen(false);
@@ -81,11 +186,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return {
       success: false,
-      error: 'Username atau password salah! (Gunakan user: "admin" & password: "admin123")',
+      error: 'Username atau password salah!',
     };
   };
 
-  const logout = () => {
+  // ── Logout ─────────────────────────────────────────────────────────────────
+  const logout = async () => {
+    if (isSupabaseReady) {
+      await supabaseSignOut();
+    }
     setUser(null);
   };
 

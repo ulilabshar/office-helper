@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { AdminTab, ActivityLog, MediaAsset, SystemSetting } from '../../types/admin';
@@ -11,6 +11,19 @@ import {
   defaultSystemSettings,
   calculateDashboardStats,
 } from '../../data/adminData';
+import {
+  isSupabaseReady,
+  getDevices as sbGetDevices,
+  getCategories as sbGetCategories,
+  getFAQs as sbGetFAQs,
+  getActivityLogs as sbGetActivityLogs,
+  deleteDevice as sbDeleteDevice,
+  deleteCategory as sbDeleteCategory,
+  deleteFAQ as sbDeleteFAQ,
+  logActivity,
+  type DeviceRow,
+  type FAQ as SupabaseFAQ,
+} from '../../lib/supabase';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { AdminHeader } from '../../components/admin/AdminHeader';
 import {
@@ -82,7 +95,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Local data states for simulation
+  // Local data states (used as fallback; overwritten with Supabase data when available)
   const [devices, setDevices] = useState<Device[]>(initialDevices);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(initialActivityLogs);
   const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>(initialMediaAssets);
@@ -90,11 +103,67 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [deviceFilterStatus, setDeviceFilterStatus] = useState<string>('ALL');
   const [logFilterAction, setLogFilterAction] = useState<string>('ALL');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [supabaseConnected, setSupabaseConnected] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
+
+  // ── Supabase data fetch ──────────────────────────────────────────────────────
+  const loadSupabaseData = useCallback(async () => {
+    if (!isSupabaseReady) return;
+    setIsLoading(true);
+    try {
+      const [sbDevices, sbLogs] = await Promise.all([
+        sbGetDevices(),
+        sbGetActivityLogs(100),
+      ]);
+
+      if (sbDevices.length > 0) {
+        // Map DeviceRow → Device shape for UI compatibility
+        const mapped: Device[] = sbDevices.map((d: DeviceRow) => ({
+          id: d.id,
+          name: d.nama_perangkat,
+          category: d.categories?.title ?? '',
+          categorySlug: d.categories?.slug ?? '',
+          description: d.deskripsi_singkat ?? '',
+          status: d.status,
+          specs: d.fitur_kunci ? d.fitur_kunci.split(',').map((s) => s.trim()) : [],
+          sections: {} as Device['sections'],
+          faqs: [],
+        }));
+        setDevices(mapped);
+      }
+
+      if (sbLogs.length > 0) {
+        const mappedLogs: ActivityLog[] = sbLogs.map((l) => ({
+          id: l.id,
+          user: l.username ?? 'System',
+          action: l.action,
+          target: l.target,
+          description: l.description ?? '',
+          timestamp: new Date(l.created_at).toLocaleString('id-ID'),
+          ipAddress: l.ip_address,
+        }));
+        setActivityLogs(mappedLogs);
+      }
+
+      setSupabaseConnected(true);
+    } catch (err) {
+      console.error('Supabase fetch error:', err);
+      setSupabaseConnected(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isLoggedIn && isSupabaseReady) {
+      loadSupabaseData();
+    }
+  }, [isLoggedIn, loadSupabaseData]);
 
   const handleTabChange = (newTab: AdminTab) => {
     setActiveTab(newTab);
@@ -133,10 +202,30 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     );
   };
 
-  // Delete device simulation
-  const handleDeleteDevice = (deviceId: string, deviceName: string) => {
+  // Delete device (Supabase + local state)
+  const handleDeleteDevice = async (deviceId: string, deviceName: string) => {
     if (confirm(`Yakin ingin menghapus perangkat "${deviceName}" dari daftar?`)) {
+      // Remove from local state immediately
       setDevices((prev) => prev.filter((d) => d.id !== deviceId));
+
+      // Persist to Supabase if connected
+      if (supabaseConnected) {
+        try {
+          await sbDeleteDevice(deviceId);
+          await logActivity({
+            user_id: user?.id,
+            username: user?.name ?? 'Administrator IT',
+            action: 'DELETE',
+            target: deviceName,
+            description: `Perangkat "${deviceName}" dihapus dari sistem.`,
+          });
+        } catch (err) {
+          console.error('Delete device error:', err);
+          showToast('Gagal menghapus dari database. Cek koneksi Supabase.');
+          return;
+        }
+      }
+
       const newLog: ActivityLog = {
         id: 'log-' + Date.now(),
         user: user?.name || 'Administrator IT',
@@ -247,6 +336,28 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans transition-colors duration-200 antialiased selection:bg-blue-500 selection:text-white flex">
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 z-50 bg-slate-950/40 flex items-center justify-center backdrop-blur-sm">
+          <div className="flex items-center gap-3 bg-white dark:bg-slate-900 px-6 py-4 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700">
+            <RefreshCw className="h-5 w-5 text-blue-500 animate-spin" />
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Memuat data dari Supabase…</span>
+          </div>
+        </div>
+      )}
+
+      {/* Supabase Connection Status Badge (top-left) */}
+      {isSupabaseReady && (
+        <div className={`fixed top-4 right-4 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold shadow border ${
+          supabaseConnected
+            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800'
+            : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800'
+        }`}>
+          <span className={`h-2 w-2 rounded-full ${supabaseConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+          {supabaseConnected ? 'Supabase Connected' : 'Supabase Connecting…'}
+        </div>
+      )}
+
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 bg-slate-900 text-white dark:bg-blue-600 dark:text-white rounded-xl shadow-2xl border border-slate-700 animate-in fade-in slide-in-from-bottom-4 duration-200 text-xs font-semibold">
@@ -254,6 +365,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
           <span>{toastMessage}</span>
         </div>
       )}
+
 
       {/* Admin Dedicated Sidebar */}
       <AdminSidebar
