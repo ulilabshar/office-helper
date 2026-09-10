@@ -270,21 +270,21 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 ))}
               </div>
 
-              <div className="rounded-2xl border-2 border-slate-200 bg-white dark:border-slate-800 p-6 space-y-4">
+              <div className="rounded-2xl border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/70 p-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Activity className="h-4 w-4 text-blue-500" />
-                    <h3 className="font-bold text-sm">Aktivitas Terbaru</h3>
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">Aktivitas Terbaru</h3>
                   </div>
-                  <button onClick={() => handleTabChange('logs')} className="text-xs font-semibold text-blue-600 inline-flex items-center gap-1">
+                  <button onClick={() => handleTabChange('logs')} className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 inline-flex items-center gap-1">
                     Lihat semua <ArrowRight className="h-3 w-3" />
                   </button>
                 </div>
                 {catalog.activityLogs.slice(0, 5).map((log) => (
-                  <div key={log.id} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/60 dark:border-slate-800">
+                  <div key={log.id} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80">
                     <div className="flex justify-between gap-2">
-                      <span className="text-xs font-bold">{log.target}</span>
-                      <span className="text-[10px] text-slate-400">{log.timestamp}</span>
+                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{log.target}</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500">{log.timestamp}</span>
                     </div>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">{log.description}</p>
                   </div>
@@ -594,7 +594,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   ))}
                 </div>
               </div>
-              <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/70 divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredLogs.map((log) => (
                   <div key={log.id} className="p-4">
                     <div className="flex justify-between gap-2">
@@ -620,7 +620,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               }}
             >
               <h2 className="text-xl font-bold">Pengaturan Sistem</h2>
-              <div className="border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-4">
+              <div className="border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/70 rounded-2xl p-6 space-y-4">
                 <div>
                   <label className="block text-xs font-bold mb-1.5">Nama portal</label>
                   <input
