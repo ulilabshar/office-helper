@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, isSupabaseReady, getCurrentProfile, signInWithPassword, signOut as supabaseSignOut } from '../lib/supabase';
 
 export interface User {
@@ -108,39 +108,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // ── Supabase Auth ────────────────────────────────────────────────────────
     if (isSupabaseReady && supabase) {
       try {
-        let email = trimmedUser;
-        if (!email.includes('@')) {
-          // Cari profil berdasarkan username
-          const { data: profileData, error: profileErr } = await supabase
-            .from('profiles')
-            .select('id, password')
-            .eq('username', trimmedUser)
-            .maybeSingle();
+        // 1. Cek langsung ke tabel profiles berdasarkan username
+        const { data: profileData, error: profileErr } = await supabase
+          .from('profiles')
+          .select('id, username, password, full_name, avatar_url')
+          .eq('username', trimmedUser)
+          .maybeSingle();
 
-          if (profileErr || !profileData) {
-            return { success: false, error: 'Username tidak ditemukan di database.' };
-          }
-
-          email = `${trimmedUser}@officedocs.local`;
+        if (profileErr) {
+          console.warn('Gagal cek tabel profiles:', profileErr.message);
         }
 
-        await signInWithPassword(email, trimmedPass);
-        const profile = await getCurrentProfile();
-
-        if (profile) {
+        // Jika user ditemukan di tabel profiles dan password cocok
+        if (profileData && profileData.password === trimmedPass) {
           const u: User = {
-            id: profile.id,
-            username: profile.username,
-            name: profile.full_name ?? profile.username,
+            id: profileData.id,
+            username: profileData.username,
+            name: profileData.full_name ?? profileData.username,
             role: 'Admin IT',
-            email,
+            email: `${profileData.username}@officedocs.local`,
           };
           setUser(u);
           setIsLoginModalOpen(false);
+
+          // Coba signIn ke Supabase auth di background jika akun auth.users ada
+          try {
+            const email = `${trimmedUser}@officedocs.local`;
+            await signInWithPassword(email, trimmedPass);
+          } catch {
+            // Abaikan jika user hanya terdaftar di tabel profiles (direct db user)
+          }
+
           return { success: true };
         }
 
-        return { success: false, error: 'Profil admin tidak ditemukan.' };
+        // 2. Jika password di profiles tidak cocok atau dicoba via auth.users email
+        let email = trimmedUser;
+        if (!email.includes('@')) {
+          email = `${trimmedUser}@officedocs.local`;
+        }
+
+        try {
+          await signInWithPassword(email, trimmedPass);
+          const profile = await getCurrentProfile();
+          if (profile) {
+            const u: User = {
+              id: profile.id,
+              username: profile.username,
+              name: profile.full_name ?? profile.username,
+              role: 'Admin IT',
+              email,
+            };
+            setUser(u);
+            setIsLoginModalOpen(false);
+            return { success: true };
+          }
+        } catch {
+          // auth.users gagal
+        }
+
+        if (profileData) {
+          return { success: false, error: 'Password salah.' };
+        } else {
+          return { success: false, error: 'Username tidak ditemukan di database.' };
+        }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         return { success: false, error: `Login gagal: ${msg}` };
