@@ -1,4 +1,4 @@
-﻿-- ============================================================
+-- ============================================================
 -- Office Helper – Supabase PostgreSQL Schema (Simpel & Scalable)
 -- Jalankan seluruh script ini di Supabase SQL Editor
 -- ============================================================
@@ -285,3 +285,13 @@ insert into public.steps (device_id, title, description, konten_windows, konten_
 5. Layar Mac berhasil terhubung.',
     1
   );
+
+-- ============================================================
+-- 5. GRANT PRIVILEGES (Wajib untuk Supabase PostgREST API)
+-- ============================================================
+grant usage on schema public to postgres, anon, authenticated, service_role;
+grant all privileges on all tables in schema public to postgres, anon, authenticated, service_role;
+grant all privileges on all sequences in schema public to postgres, anon, authenticated, service_role;
+alter default privileges in schema public grant all on tables to postgres, anon, authenticated, service_role;
+alter default privileges in schema public grant all on sequences to postgres, anon, authenticated, service_role;
+
