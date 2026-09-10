@@ -1,4 +1,4 @@
-﻿import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
 // ─── Supabase Client ─────────────────────────────────────────────────────────
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
@@ -238,3 +238,30 @@ export async function deleteStep(id: string): Promise<void> {
   const { error } = await supabase.from('steps').delete().eq('id', id);
   if (error) throw error;
 }
+
+export async function syncDeviceSteps(
+  deviceId: string,
+  steps: Array<{
+    title: string;
+    description?: string | null;
+    konten_windows?: string | null;
+    konten_mac?: string | null;
+    sort_order: number;
+  }>
+): Promise<void> {
+  if (!supabase) return;
+  await supabase.from('steps').delete().eq('device_id', deviceId);
+  if (steps.length > 0) {
+    const payload = steps.map((s, idx) => ({
+      device_id: deviceId,
+      title: s.title,
+      description: s.description || null,
+      konten_windows: s.konten_windows || null,
+      konten_mac: s.konten_mac || null,
+      sort_order: s.sort_order ?? idx + 1,
+    }));
+    const { error } = await supabase.from('steps').insert(payload);
+    if (error) throw error;
+  }
+}
+

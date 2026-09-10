@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Category, Device, DeviceSection, FAQItem, SetupStep } from '../types/device';
 import { ActivityLog, MediaAsset, SystemSetting } from '../types/admin';
 import {
@@ -21,6 +21,7 @@ import {
   createDevice as sbCreateDevice,
   updateDevice as sbUpdateDevice,
   deleteDevice as sbDeleteDevice,
+  syncDeviceSteps,
 } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
@@ -256,7 +257,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           };
         });
 
-        // Simpan juga ke Supabase jika aktif
+        // Simpan langsung ke Supabase
         if (isSupabaseReady && supabase) {
           if (isNew) {
             sbCreateCategory({
@@ -264,7 +265,16 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
               description: category.description,
               icon: category.icon,
               sort_order: 0,
-            }).catch((e) => console.warn('Supabase saveCategory error:', e));
+            })
+              .then((created) => {
+                setState((prev) => ({
+                  ...prev,
+                  categories: prev.categories.map((c) =>
+                    c.id === category.id ? { ...c, id: created.id } : c
+                  ),
+                }));
+              })
+              .catch((e) => console.warn('Supabase saveCategory error:', e));
           } else {
             sbUpdateCategory(category.id, {
               title: category.title,
@@ -312,6 +322,11 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (isSupabaseReady && supabase) {
           const catObj = state.categories.find((c) => c.slug === device.categorySlug);
           if (catObj) {
+            const faqString =
+              device.faqs && device.faqs.length > 0
+                ? device.faqs.map((f) => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n')
+                : null;
+
             if (isNew) {
               sbCreateDevice({
                 category_id: catObj.id,
@@ -319,18 +334,28 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 deskripsi_singkat: device.description,
                 status: device.status,
                 tambah_os: device.specs,
-                image_url: device.image,
-                faq: device.faqs.map((f) => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n'),
+                image_url: device.image || null,
+                faq: faqString,
                 sort_order: 0,
-              }).catch((e) => console.warn('Supabase createDevice error:', e));
+              })
+                .then((created) => {
+                  setState((prev) => ({
+                    ...prev,
+                    devices: prev.devices.map((d) =>
+                      d.id === device.id ? { ...d, id: created.id } : d
+                    ),
+                  }));
+                })
+                .catch((e) => console.warn('Supabase createDevice error:', e));
             } else {
               sbUpdateDevice(device.id, {
+                category_id: catObj.id,
                 nama_perangkat: device.name,
                 deskripsi_singkat: device.description,
                 status: device.status,
                 tambah_os: device.specs,
-                image_url: device.image,
-                faq: device.faqs.map((f) => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n'),
+                image_url: device.image || null,
+                faq: faqString,
               }).catch((e) => console.warn('Supabase updateDevice error:', e));
             }
           }
@@ -370,6 +395,36 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             `Panduan "${section.title}" diperbarui.`
           ),
         }));
+
+        // Sinkronkan ke tabel steps di Supabase
+        if (isSupabaseReady && supabase) {
+          const winSteps = section.osSteps?.windows || section.steps || [];
+          const macSteps = section.osSteps?.mac || [];
+          const maxLen = Math.max(winSteps.length, macSteps.length);
+          const stepsPayload: Array<{
+            title: string;
+            description?: string | null;
+            konten_windows?: string | null;
+            konten_mac?: string | null;
+            sort_order: number;
+          }> = [];
+
+          for (let i = 0; i < maxLen; i++) {
+            const w = winSteps[i];
+            const m = macSteps[i];
+            stepsPayload.push({
+              title: w?.title || m?.title || `Langkah ${i + 1}`,
+              description: w?.description || m?.description || null,
+              konten_windows: w?.details ? w.details.join('\n') : (w?.description || null),
+              konten_mac: m?.details ? m.details.join('\n') : (m?.description || null),
+              sort_order: i + 1,
+            });
+          }
+
+          syncDeviceSteps(deviceId, stepsPayload).catch((e) =>
+            console.warn('Supabase syncDeviceSteps error:', e)
+          );
+        }
       },
       saveDeviceFaqs: (deviceId, faqs) => {
         setState((prev) => {
@@ -380,6 +435,13 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             activityLogs: pushLog(prev, 'UPDATE', device?.name || 'FAQ', `FAQ perangkat diperbarui.`),
           };
         });
+
+        if (isSupabaseReady && supabase) {
+          const faqString = faqs.map((f) => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
+          sbUpdateDevice(deviceId, { faq: faqString }).catch((e) =>
+            console.warn('Supabase updateDevice FAQ error:', e)
+          );
+        }
       },
       saveGeneralFaqs: (faqs) => {
         setState((prev) => ({

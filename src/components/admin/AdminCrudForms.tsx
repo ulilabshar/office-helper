@@ -14,26 +14,67 @@ export const DeviceFormModal: React.FC<{
   const isNew = !initial;
   const [name, setName] = useState(initial?.name ?? '');
   const [categorySlug, setCategorySlug] = useState(initial?.categorySlug ?? categories[0]?.slug ?? '');
-  const [status, setStatus] = useState<Device['status']>(initial?.status ?? 'New');
+  const [status, setStatus] = useState<Device['status']>(initial?.status ?? 'Ready');
   const [description, setDescription] = useState(initial?.description ?? '');
-  const [specsText, setSpecsText] = useState(initial?.specs.join(', ') ?? '');
+  const [osChoice, setOsChoice] = useState<'both' | 'windows' | 'mac'>(() => {
+    const s = initial?.specs || [];
+    if (s.includes('windows') && s.includes('mac')) return 'both';
+    if (s.includes('windows')) return 'windows';
+    if (s.includes('mac')) return 'mac';
+    return 'both';
+  });
+  const [imageUrl, setImageUrl] = useState(initial?.image ?? '');
+  const [faqText, setFaqText] = useState(() => {
+    if (!initial?.faqs || initial.faqs.length === 0) return '';
+    return initial.faqs.map((f) => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
+  });
 
   React.useEffect(() => {
     setName(initial?.name ?? '');
     setCategorySlug(initial?.categorySlug ?? categories[0]?.slug ?? '');
-    setStatus(initial?.status ?? 'New');
+    setStatus(initial?.status ?? 'Ready');
     setDescription(initial?.description ?? '');
-    setSpecsText(initial?.specs.join(', ') ?? '');
+    setImageUrl(initial?.image ?? '');
+    const s = initial?.specs || [];
+    if (s.includes('windows') && s.includes('mac')) setOsChoice('both');
+    else if (s.includes('windows')) setOsChoice('windows');
+    else if (s.includes('mac')) setOsChoice('mac');
+    else setOsChoice('both');
+
+    if (initial?.faqs && initial.faqs.length > 0) {
+      setFaqText(initial.faqs.map((f) => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n'));
+    } else {
+      setFaqText('');
+    }
   }, [initial, isOpen, categories]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !description.trim()) return;
     const cat = categories.find((c) => c.slug === categorySlug);
-    const specs = specsText
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const osList = osChoice === 'both' ? ['windows', 'mac'] : [osChoice];
+
+    // Parse FAQ text
+    const parsedFaqs: FAQItem[] = [];
+    if (faqText.trim()) {
+      const blocks = faqText.split(/\n\s*\n/);
+      for (const b of blocks) {
+        const lines = b.split('\n').map((l) => l.trim()).filter(Boolean);
+        const qLine = lines.find((l) => l.startsWith('Q:') || l.startsWith('Tanya:'));
+        const aLine = lines.find((l) => l.startsWith('A:') || l.startsWith('Jawab:'));
+        if (qLine && aLine) {
+          parsedFaqs.push({
+            question: qLine.replace(/^(Q:|Tanya:)\s*/i, ''),
+            answer: aLine.replace(/^(A:|Jawab:)\s*/i, ''),
+          });
+        } else if (lines.length >= 2) {
+          parsedFaqs.push({
+            question: lines[0].replace(/^Q:\s*/i, ''),
+            answer: lines.slice(1).join(' ').replace(/^A:\s*/i, ''),
+          });
+        }
+      }
+    }
 
     if (initial) {
       onSave(
@@ -44,22 +85,24 @@ export const DeviceFormModal: React.FC<{
           categorySlug,
           status,
           description: description.trim(),
-          specs,
+          image: imageUrl.trim() || undefined,
+          specs: osList,
+          faqs: parsedFaqs.length > 0 ? parsedFaqs : initial.faqs,
         },
         false
       );
     } else {
-      onSave(
-        createEmptyDevice({
-          name: name.trim(),
-          category: cat?.title ?? 'Umum',
-          categorySlug,
-          description: description.trim(),
-          status,
-          specs,
-        }),
-        true
-      );
+      const empty = createEmptyDevice({
+        name: name.trim(),
+        category: cat?.title ?? 'Umum',
+        categorySlug,
+        description: description.trim(),
+        status,
+        specs: osList,
+      });
+      empty.image = imageUrl.trim() || undefined;
+      empty.faqs = parsedFaqs;
+      onSave(empty, true);
     }
     onClose();
   };
@@ -69,14 +112,15 @@ export const DeviceFormModal: React.FC<{
       isOpen={isOpen}
       onClose={onClose}
       title={isNew ? 'Tambah Perangkat' : 'Ubah Perangkat'}
-      subtitle="Data ini tampil di situs publik setelah disimpan."
+      subtitle="Data disimpan ke Supabase PostgreSQL & langsung tampil di situs publik."
+      wide
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className={labelClass}>Nama perangkat</label>
-          <input className={fieldClass} value={name} onChange={(e) => setName(e.target.value)} required />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>Nama Perangkat</label>
+            <input className={fieldClass} value={name} onChange={(e) => setName(e.target.value)} required />
+          </div>
           <div>
             <label className={labelClass}>Kategori</label>
             <select className={fieldClass} value={categorySlug} onChange={(e) => setCategorySlug(e.target.value)}>
@@ -87,38 +131,72 @@ export const DeviceFormModal: React.FC<{
               ))}
             </select>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className={labelClass}>Status</label>
+            <label className={labelClass}>Status Perangkat</label>
             <select
               className={fieldClass}
               value={status}
               onChange={(e) => setStatus(e.target.value as Device['status'])}
             >
-              <option value="Ready">Ready</option>
-              <option value="Maintenance">Maintenance</option>
-              <option value="New">New</option>
+              <option value="Ready">Ready (Siap Digunakan)</option>
+              <option value="Maintenance">Maintenance (Dalam Perawatan)</option>
+              <option value="New">New (Perangkat Baru)</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Dukungan OS (tambah_os)</label>
+            <select
+              className={fieldClass}
+              value={osChoice}
+              onChange={(e) => setOsChoice(e.target.value as 'both' | 'windows' | 'mac')}
+            >
+              <option value="both">Bisa Dua-duanya (Windows & Mac)</option>
+              <option value="windows">Hanya Windows</option>
+              <option value="mac">Hanya macOS</option>
             </select>
           </div>
         </div>
+
         <div>
-          <label className={labelClass}>Deskripsi</label>
+          <label className={labelClass}>Deskripsi Singkat</label>
           <textarea
-            className={`${fieldClass} min-h-[88px]`}
+            className={`${fieldClass} min-h-[72px]`}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
+            placeholder="Deskripsi fungsi dan lokasi perangkat di kantor..."
           />
         </div>
+
         <div>
-          <label className={labelClass}>Spesifikasi (pisahkan dengan koma)</label>
-          <input className={fieldClass} value={specsText} onChange={(e) => setSpecsText(e.target.value)} />
+          <label className={labelClass}>URL Gambar Perangkat (Opsional)</label>
+          <input
+            className={fieldClass}
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="https://images.unsplash.com/... atau link foto perangkat"
+          />
         </div>
-        <div className="flex justify-end gap-2 pt-2">
+
+        <div>
+          <label className={labelClass}>FAQ / Tanya Jawab (Format: Q: ... \n A: ...)</label>
+          <textarea
+            className={`${fieldClass} min-h-[80px] font-mono text-[11px]`}
+            value={faqText}
+            onChange={(e) => setFaqText(e.target.value)}
+            placeholder={"Q: Mengapa printer tidak terdeteksi?\nA: Pastikan terhubung ke Wi-Fi 2.4 GHz kantor.\n\nQ: Bagaimana cara cetak bolak-balik?\nA: Aktifkan opsi Duplex Printing."}
+          />
+        </div>
+
+        <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
           <button type="button" onClick={onClose} className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700">
             Batal
           </button>
           <button type="submit" className="px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white">
-            Simpan
+            Simpan Perangkat
           </button>
         </div>
       </form>
