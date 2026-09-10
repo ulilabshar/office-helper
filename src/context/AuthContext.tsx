@@ -1,5 +1,5 @@
 ﻿import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase, isSupabaseReady, getCurrentProfile, signInWithPassword, signOut as supabaseSignOut, logActivity } from '../lib/supabase';
+import { supabase, isSupabaseReady, getCurrentProfile, signInWithPassword, signOut as supabaseSignOut } from '../lib/supabase';
 
 export interface User {
   id?: string;
@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = 'office_docs_auth_user';
 
-// ── Mock fallback credentials (used when Supabase is not configured) ──────────
+// ── Mock fallback credentials (digunakan jika Supabase belum dikonfigurasi) ───
 const MOCK_USERS: Array<{ username: string; password: string; name: string; role: string }> = [
   { username: 'admin', password: 'admin123', name: 'Administrator IT', role: 'Admin IT' },
   { username: 'it-support', password: 'admin123', name: 'IT Support Officer', role: 'Admin IT' },
@@ -42,11 +42,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  // ── Sync Supabase session on mount ──────────────────────────────────────────
+  // ── Sync Supabase session saat mount ─────────────────────────────────────────
   useEffect(() => {
     if (!isSupabaseReady || !supabase) return;
 
-    // Check if there's already an active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session && !user) {
         getCurrentProfile().then((profile) => {
@@ -55,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               id: profile.id,
               username: profile.username,
               name: profile.full_name ?? profile.username,
-              role: profile.role,
+              role: 'Admin IT',
               email: session.user.email,
             };
             setUser(u);
@@ -65,7 +64,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
         setUser(null);
@@ -77,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: profile.id,
             username: profile.username,
             name: profile.full_name ?? profile.username,
-            role: profile.role,
+            role: 'Admin IT',
             email: session.user.email,
           };
           setUser(u);
@@ -87,10 +85,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => subscription.unsubscribe();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Persist user to localStorage ───────────────────────────────────────────
+  // ── Simpan user ke localStorage ─────────────────────────────────────────────
   useEffect(() => {
     if (user) {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
@@ -111,28 +108,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // ── Supabase Auth ────────────────────────────────────────────────────────
     if (isSupabaseReady && supabase) {
       try {
-        // Try signing in using username as email (email@domain or bare email)
-        // Attempt 1: use username directly as email
         let email = trimmedUser;
         if (!email.includes('@')) {
-          // username is not an email; look up email from profiles table via username
+          // Cari profil berdasarkan username
           const { data: profileData, error: profileErr } = await supabase
             .from('profiles')
-            .select('id')
+            .select('id, password')
             .eq('username', trimmedUser)
-            .single();
+            .maybeSingle();
 
           if (profileErr || !profileData) {
-            return { success: false, error: 'Username tidak ditemukan.' };
+            return { success: false, error: 'Username tidak ditemukan di database.' };
           }
 
-          // Get the auth user email via admin endpoint is not possible from the client.
-          // Instead: instruct users to register with email = username@officedocs.local
-          // OR store email in profiles. For now, construct email:
           email = `${trimmedUser}@officedocs.local`;
         }
 
-        const authData = await signInWithPassword(email, trimmedPass);
+        await signInWithPassword(email, trimmedPass);
         const profile = await getCurrentProfile();
 
         if (profile) {
@@ -140,34 +132,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: profile.id,
             username: profile.username,
             name: profile.full_name ?? profile.username,
-            role: profile.role,
+            role: 'Admin IT',
             email,
           };
           setUser(u);
           setIsLoginModalOpen(false);
-
-          // Log the auth event
-          await logActivity({
-            user_id: profile.id,
-            username: profile.username,
-            action: 'AUTH',
-            target: 'Sesi Admin',
-            description: `${profile.username} berhasil login via Supabase Auth.`,
-          });
-
           return { success: true };
         }
 
-        // Edge case: auth succeeded but profile not found
-        await supabase.auth.signOut();
-        return { success: false, error: 'Profil admin tidak ditemukan. Hubungi superadmin.' };
+        return { success: false, error: 'Profil admin tidak ditemukan.' };
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         return { success: false, error: `Login gagal: ${msg}` };
       }
     }
 
-    // ── Mock Fallback (Supabase not configured) ───────────────────────────────
+    // ── Mock Fallback (jika Supabase belum disetup) ───────────────────────────
     const mockMatch = MOCK_USERS.find(
       (u) => u.username === trimmedUser && u.password === trimmedPass
     );
@@ -204,7 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider
       value={{
-        isLoggedIn: !!user,
+        isLoggedIn: Boolean(user),
         user,
         login,
         logout,

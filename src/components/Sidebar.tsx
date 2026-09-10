@@ -1,7 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { categoriesData } from '../data/categories';
-import { devicesData } from '../data/devices';
+import { useCatalog } from '../context/CatalogContext';
 import { Home, Printer, Tv, Fingerprint, ChevronRight, Sparkles, BookOpen, X, Share2, MessageCircle, Video, Monitor } from 'lucide-react';
 
 interface SidebarProps {
@@ -28,6 +27,7 @@ const getCategoryIcon = (iconName: string) => {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const location = useLocation();
+  const { categories, devices } = useCatalog();
 
   // Helper function to force smooth scroll to top and clear mouse text selections
   const handleSidebarNavClick = () => {
@@ -98,9 +98,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               Kategori Alat Kantor
             </div>
 
-            {categoriesData.map((category) => {
+            {categories.map((category) => {
               const IconComponent = getCategoryIcon(category.icon);
-              const categoryDevices = devicesData.filter((d) => d.categorySlug === category.slug);
+              const categoryDevices = devices.filter((d) => d.categorySlug === category.slug);
 
               return (
                 <div key={category.id} className="space-y-1">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { searchDevices } from '../data/devices';
+import { useCatalog } from '../context/CatalogContext';
 import { Search, X, Printer, ChevronRight } from 'lucide-react';
 
 interface SearchModalProps {
@@ -11,6 +11,7 @@ interface SearchModalProps {
 export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
+  const { searchDevices } = useCatalog();
 
   const results = searchDevices(query);
 

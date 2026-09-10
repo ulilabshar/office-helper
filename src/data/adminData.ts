@@ -125,13 +125,14 @@ export const defaultSystemSettings: SystemSetting = {
 
 export function calculateDashboardStats(
   devices: Device[] = devicesData,
-  categories: Category[] = categoriesData
+  categories: Category[] = categoriesData,
+  generalFaqCount = 0
 ): DashboardStats {
   const totalDevices = devices.length;
   const totalCategories = categories.length;
 
   let totalGuides = 0;
-  let totalFaqs = 4; // default base faqs
+  let totalFaqs = generalFaqCount;
 
   let readyDevicesCount = 0;
   let maintenanceDevicesCount = 0;

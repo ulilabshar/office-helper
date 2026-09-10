@@ -97,7 +97,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Quick CTA: Tambah Perangkat */}
           <button
-            onClick={onOpenAddDevice || (() => navigate('/add-device'))}
+            onClick={onOpenAddDevice || (() => navigate('/dashboard/devices'))}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-500 active:scale-95 transition-all shadow-sm shadow-blue-600/25"
           >
             <PlusCircle className="h-3.5 w-3.5" />
@@ -127,6 +127,11 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             <span>Web Publik</span>
             <ExternalLink className="h-3 w-3 opacity-60" />
           </Link>
+          {user && (
+            <span className="hidden lg:inline text-[11px] font-semibold text-slate-500 truncate max-w-[120px]">
+              {user.name}
+            </span>
+          )}
         </div>
       </div>
     </header>

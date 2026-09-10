@@ -1,11 +1,9 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { categoriesData } from '../data/categories';
-import { devicesData } from '../data/devices';
 import { CategoryCard } from '../components/CategoryCard';
 import { DeviceCard } from '../components/DeviceCard';
 import { NoticeBoard } from '../components/NoticeBoard';
 import { AccordionFaq } from '../components/AccordionFaq';
+import { useCatalog } from '../context/CatalogContext';
 import { Sparkles, Search, ArrowRight, ShieldCheck, Cpu, BookOpen } from 'lucide-react';
 
 interface HomePageProps {
@@ -13,24 +11,7 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
-  const defaultFaqs = [
-    {
-      question: 'Bagaimana jika perangkat printer tidak terdeteksi saat koneksi Wi-Fi?',
-      answer: 'Pastikan komputer atau laptop kamu terhubung ke SSID Wi-Fi kantor yang sama (frekuensi 2.4 GHz). Coba matikan dan nyalakan kembali (power cycle) printer dan router Wi-Fi.',
-    },
-    {
-      question: 'Di mana saya bisa mengunduh installer driver printer yang resmi?',
-      answer: 'Setiap halaman panduan spesifik printer pada website ini telah menyediakan link installer resmi dan langkah setup driver yang sesuai untuk Windows & macOS.',
-    },
-    {
-      question: 'Bagaimana cara membagikan link dokumen agar tidak bisa diubah orang lain?',
-      answer: 'Pilih level izin "Viewer" pada menu Share link agar pengakses hanya dapat membaca isi dokumen tanpa bisa mengedit atau mengubah data.',
-    },
-    {
-      question: 'Bagaimana cara menambahkan alat kantor baru (misal: Proyektor / Mesin Absensi)?',
-      answer: 'Struktur folder website ini dibangun secara modular. Kamu cukup menambahkan file konfigurasi data perangkat baru pada folder `src/data/devices/` tanpa mengubah komponen utama.',
-    },
-  ];
+  const { categories, devices, generalFaqs } = useCatalog();
 
   const handleScrollToAllGuides = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -94,7 +75,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {categoriesData.map((cat) => (
+          {categories.map((cat) => (
             <CategoryCard key={cat.id} category={cat} />
           ))}
         </div>
@@ -121,7 +102,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {devicesData.map((device) => (
+          {devices.map((device) => (
             <DeviceCard key={device.id} device={device} />
           ))}
         </div>
@@ -157,7 +138,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
               </li>
               <li className="flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                <span>Struktur folder mudah dikembangkan (Scalable)</span>
+                <span>Konten dikelola dari dashboard admin</span>
               </li>
               <li className="flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
@@ -168,7 +149,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
 
           <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
             <span className="flex items-center gap-1">
-              <Cpu className="h-3.5 w-3.5" /> Static Site Docs
+              <Cpu className="h-3.5 w-3.5" /> Dokumentasi baca saja
             </span>
             <span className="font-mono text-[10px]">v1.4.0</span>
           </div>
@@ -177,7 +158,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
 
       {/* FAQ Section */}
       <section>
-        <AccordionFaq items={defaultFaqs} />
+        <AccordionFaq items={generalFaqs} />
       </section>
     </div>
   );

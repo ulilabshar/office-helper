@@ -1,7 +1,6 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { categoriesData } from '../data/categories';
-import { getDevicesByCategory } from '../data/devices';
+import { useCatalog } from '../context/CatalogContext';
 import { DeviceCard } from '../components/DeviceCard';
 import { Printer, ChevronRight, Home, Layers, Share2, Tv, Fingerprint, FileText } from 'lucide-react';
 
@@ -23,8 +22,9 @@ const getCategoryHeaderIcon = (iconName: string) => {
 export const CategoryPage: React.FC = () => {
   const { categorySlug, catSlug } = useParams<{ categorySlug?: string; catSlug?: string }>();
   const activeSlug = categorySlug || catSlug || '';
+  const { categories, getDevicesByCategory } = useCatalog();
 
-  const category = categoriesData.find((c) => c.slug === activeSlug);
+  const category = categories.find((c) => c.slug === activeSlug);
   const devices = getDevicesByCategory(activeSlug);
 
   if (!category) {

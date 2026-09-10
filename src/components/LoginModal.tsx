@@ -42,13 +42,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
-    setTimeout(() => {
-      const result = login(username, password);
+    try {
+      const result = await login(username, password);
       setIsLoading(false);
 
       if (result.success) {
@@ -59,7 +59,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
       } else {
         setError(result.error || 'Gagal login. Periksa username dan password Anda.');
       }
-    }, 400);
+    } catch (err: unknown) {
+      setIsLoading(false);
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg || 'Terjadi kesalahan saat login.');
+    }
   };
 
   const handleFillDemoCredentials = () => {

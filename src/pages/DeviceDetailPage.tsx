@@ -1,12 +1,13 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getDeviceById } from '../data/devices';
+import { useCatalog } from '../context/CatalogContext';
 import { StepGuide } from '../components/StepGuide';
 import { AccordionFaq } from '../components/AccordionFaq';
 import { Printer, ChevronRight, Home, Tag, ArrowLeft, Share2 } from 'lucide-react';
 
 export const DeviceDetailPage: React.FC = () => {
   const { deviceId } = useParams<{ deviceId: string }>();
+  const { getDeviceById } = useCatalog();
   const device = getDeviceById(deviceId || '');
 
   if (!device) {

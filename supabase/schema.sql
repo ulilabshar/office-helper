@@ -1,24 +1,21 @@
 ﻿-- ============================================================
--- Office Helper – Supabase PostgreSQL Schema
--- Run this in the Supabase SQL Editor
+-- Office Helper – Supabase PostgreSQL Schema (Simpel & Scalable)
+-- Jalankan seluruh script ini di Supabase SQL Editor
 -- ============================================================
 
--- Enable required extensions
-create extension if not exists "uuid-ossp";
+-- Bersihkan tabel lama jika ada
+drop table if exists public.steps cascade;
+drop table if exists public.devices cascade;
+drop table if exists public.categories cascade;
+drop table if exists public.profiles cascade;
+drop table if exists public.sections cascade;
+drop table if exists public.faqs cascade;
+drop table if exists public.activity_logs cascade;
 
--- ============================================================
--- 1. PROFILES
--- ============================================================
-create table if not exists public.profiles (
-  id          uuid primary key references auth.users(id) on delete cascade,
-  username    text unique not null,
-  full_name   text,
-  role        text not null default 'admin' check (role in ('admin', 'superadmin')),
-  avatar_url  text,
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
-);
+-- Enable UUID extension jika belum aktif
+create extension if not exists "pgcrypto";
 
+-- Function otomatis perbarui updated_at
 create or replace function public.handle_updated_at()
 returns trigger language plpgsql as $$
 begin
@@ -27,21 +24,32 @@ begin
 end;
 $$;
 
+-- ============================================================
+-- 1. TABEL PROFILES (Terhubung ke Supabase auth.users)
+-- ============================================================
+create table public.profiles (
+  id          uuid primary key references auth.users(id) on delete cascade,
+  full_name   text,
+  username    text unique not null,
+  password    text not null,
+  avatar_url  text,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
 create trigger profiles_updated_at
   before update on public.profiles
   for each row execute procedure public.handle_updated_at();
 
 -- ============================================================
--- 2. CATEGORIES
+-- 2. TABEL CATEGORIES
 -- ============================================================
-create table if not exists public.categories (
-  id          uuid primary key default uuid_generate_v4(),
-  slug        text unique not null,
+create table public.categories (
+  id          uuid primary key default gen_random_uuid(),
   title       text not null,
   description text,
   icon        text not null default 'Monitor',
-  available   boolean not null default true,
-  sort_order  int not null default 0,
+  sort_order  int4 not null default 0,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
@@ -50,189 +58,230 @@ create trigger categories_updated_at
   before update on public.categories
   for each row execute procedure public.handle_updated_at();
 
-create index if not exists idx_categories_slug on public.categories(slug);
-create index if not exists idx_categories_available on public.categories(available);
-
 -- ============================================================
--- 3. DEVICES
+-- 3. TABEL DEVICES
 -- ============================================================
-create table if not exists public.devices (
-  id                 uuid primary key default uuid_generate_v4(),
-  category_id        uuid not null references public.categories(id) on delete restrict,
+create table public.devices (
+  id                 uuid primary key default gen_random_uuid(),
+  category_id        uuid not null references public.categories(id) on delete cascade,
   nama_perangkat     text not null,
   deskripsi_singkat  text,
-  status             text not null default 'Ready' check (status in ('Ready', 'Maintenance', 'New')),
-  fitur_kunci        text,
+  status             text not null default 'Ready',
   tambah_os          text[] default '{}',
   image_url          text,
-  sort_order         int not null default 0,
+  faq                text,
+  sort_order         int4 not null default 0,
   created_at         timestamptz not null default now(),
   updated_at         timestamptz not null default now()
 );
+
+create index idx_devices_category_id on public.devices(category_id);
 
 create trigger devices_updated_at
   before update on public.devices
   for each row execute procedure public.handle_updated_at();
 
-create index if not exists idx_devices_category_id on public.devices(category_id);
-create index if not exists idx_devices_status on public.devices(status);
-
 -- ============================================================
--- 4. SECTIONS
+-- 4. TABEL STEPS (Panduan langkah: Windows & Mac)
 -- ============================================================
-create table if not exists public.sections (
-  id          uuid primary key default uuid_generate_v4(),
-  device_id   uuid not null references public.devices(id) on delete cascade,
-  title       text not null,
-  tab_label   text,
-  icon_name   text not null default 'BookOpen',
-  badge       text,
-  sort_order  int not null default 0,
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
-);
-
-create trigger sections_updated_at
-  before update on public.sections
-  for each row execute procedure public.handle_updated_at();
-
-create index if not exists idx_sections_device_id on public.sections(device_id);
-
--- ============================================================
--- 5. STEPS (konten_panduan - 2 kolom: windows & mac)
--- ============================================================
-create table if not exists public.steps (
-  id              uuid primary key default uuid_generate_v4(),
-  section_id      uuid not null references public.sections(id) on delete cascade,
+create table public.steps (
+  id              uuid primary key default gen_random_uuid(),
+  device_id       uuid not null references public.devices(id) on delete cascade,
   title           text not null,
   description     text,
   konten_windows  text,
   konten_mac      text,
-  os_target       text not null default 'all' check (os_target in ('all', 'windows', 'mac')),
-  code_snippet    text,
-  warning         text,
-  tip             text,
-  sort_order      int not null default 0,
+  sort_order      int4 not null default 0,
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
 );
+
+create index idx_steps_device_id on public.steps(device_id);
 
 create trigger steps_updated_at
   before update on public.steps
   for each row execute procedure public.handle_updated_at();
 
-create index if not exists idx_steps_section_id on public.steps(section_id);
-
 -- ============================================================
--- 6. FAQS
+-- ROW LEVEL SECURITY (RLS) POLICIES
 -- ============================================================
-create table if not exists public.faqs (
-  id          uuid primary key default uuid_generate_v4(),
-  device_id   uuid references public.devices(id) on delete cascade,
-  question    text not null,
-  answer      text not null,
-  sort_order  int not null default 0,
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
-);
+alter table public.profiles   enable row level security;
+alter table public.categories enable row level security;
+alter table public.devices    enable row level security;
+alter table public.steps      enable row level security;
 
-create trigger faqs_updated_at
-  before update on public.faqs
-  for each row execute procedure public.handle_updated_at();
-
-create index if not exists idx_faqs_device_id on public.faqs(device_id);
-
--- ============================================================
--- 7. ACTIVITY_LOGS
--- ============================================================
-create table if not exists public.activity_logs (
-  id          uuid primary key default uuid_generate_v4(),
-  user_id     uuid references public.profiles(id) on delete set null,
-  username    text,
-  action      text not null check (action in ('CREATE', 'UPDATE', 'DELETE', 'AUTH', 'SYSTEM')),
-  target      text not null,
-  description text,
-  ip_address  text,
-  created_at  timestamptz not null default now()
-);
-
-create index if not exists idx_activity_logs_user_id on public.activity_logs(user_id);
-create index if not exists idx_activity_logs_action on public.activity_logs(action);
-create index if not exists idx_activity_logs_created_at on public.activity_logs(created_at desc);
-
--- ============================================================
--- ROW LEVEL SECURITY (RLS)
--- ============================================================
-alter table public.profiles       enable row level security;
-alter table public.categories     enable row level security;
-alter table public.devices        enable row level security;
-alter table public.sections       enable row level security;
-alter table public.steps          enable row level security;
-alter table public.faqs           enable row level security;
-alter table public.activity_logs  enable row level security;
-
-create or replace function public.is_admin()
-returns boolean language sql security definer as $$
-  select exists (
-    select 1 from public.profiles
-    where id = auth.uid() and role in ('admin', 'superadmin')
-  );
-$$;
-
--- PROFILES
-create policy "profiles_select_own" on public.profiles for select using (auth.uid() = id);
+-- Profiles: Publik dapat membaca username untuk verifikasi login, update hanya pemilik akun
+create policy "profiles_read_all" on public.profiles for select using (true);
+create policy "profiles_insert_auth" on public.profiles for insert with check (true);
 create policy "profiles_update_own" on public.profiles for update using (auth.uid() = id);
 
--- CATEGORIES
+-- Categories: Publik dapat melihat (read), Admin/Authenticated dapat kelola (CUD)
 create policy "categories_public_read" on public.categories for select using (true);
-create policy "categories_admin_insert" on public.categories for insert with check (public.is_admin());
-create policy "categories_admin_update" on public.categories for update using (public.is_admin());
-create policy "categories_admin_delete" on public.categories for delete using (public.is_admin());
+create policy "categories_auth_all" on public.categories for all using (auth.role() = 'authenticated');
 
--- DEVICES
+-- Devices: Publik dapat melihat (read), Admin/Authenticated dapat kelola (CUD)
 create policy "devices_public_read" on public.devices for select using (true);
-create policy "devices_admin_insert" on public.devices for insert with check (public.is_admin());
-create policy "devices_admin_update" on public.devices for update using (public.is_admin());
-create policy "devices_admin_delete" on public.devices for delete using (public.is_admin());
+create policy "devices_auth_all" on public.devices for all using (auth.role() = 'authenticated');
 
--- SECTIONS
-create policy "sections_public_read" on public.sections for select using (true);
-create policy "sections_admin_insert" on public.sections for insert with check (public.is_admin());
-create policy "sections_admin_update" on public.sections for update using (public.is_admin());
-create policy "sections_admin_delete" on public.sections for delete using (public.is_admin());
-
--- STEPS
+-- Steps: Publik dapat melihat (read), Admin/Authenticated dapat kelola (CUD)
 create policy "steps_public_read" on public.steps for select using (true);
-create policy "steps_admin_insert" on public.steps for insert with check (public.is_admin());
-create policy "steps_admin_update" on public.steps for update using (public.is_admin());
-create policy "steps_admin_delete" on public.steps for delete using (public.is_admin());
-
--- FAQS
-create policy "faqs_public_read" on public.faqs for select using (true);
-create policy "faqs_admin_insert" on public.faqs for insert with check (public.is_admin());
-create policy "faqs_admin_update" on public.faqs for update using (public.is_admin());
-create policy "faqs_admin_delete" on public.faqs for delete using (public.is_admin());
-
--- ACTIVITY LOGS
-create policy "logs_admin_select" on public.activity_logs for select using (public.is_admin());
-create policy "logs_admin_insert" on public.activity_logs for insert with check (public.is_admin());
+create policy "steps_auth_all" on public.steps for all using (auth.role() = 'authenticated');
 
 -- ============================================================
--- AUTO-CREATE PROFILE ON SIGNUP
+-- DATA DUMMY (SEED DATA)
 -- ============================================================
-create or replace function public.handle_new_user()
-returns trigger language plpgsql security definer as $$
-begin
-  insert into public.profiles (id, username, full_name)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)),
-    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'username')
+
+-- 1. Kategori
+insert into public.categories (id, title, description, icon, sort_order) values
+  ('11111111-1111-1111-1111-111111111101', 'Printer Kantor', 'Panduan setup Wi-Fi, driver percetakan, dan cetak nirkabel.', 'Printer', 1),
+  ('11111111-1111-1111-1111-111111111102', 'Pembagian Link Dokumen', 'Panduan hak akses (Viewer, Commenter, Editor) Google Docs, Sheets, OneDrive.', 'Share2', 2),
+  ('11111111-1111-1111-1111-111111111103', 'Smart TV, Proyektor & Display', 'Panduan koneksi HDMI, Smart View, Miracast, dan Apple AirPlay.', 'Projector', 3),
+  ('11111111-1111-1111-1111-111111111104', 'Video Conference & Meeting', 'Setup kamera PTZ Lumens, mic speakerphone, Zoom, Google Meet & Teams.', 'Tv', 4),
+  ('11111111-1111-1111-1111-111111111105', 'Mesin Absensi', 'Pendaftaran sidik jari, face recognition, dan verifikasi jam kerja.', 'Fingerprint', 5);
+
+-- 2. Perangkat (Devices)
+insert into public.devices (id, category_id, nama_perangkat, deskripsi_singkat, status, tambah_os, image_url, faq, sort_order) values
+  (
+    '22222222-2222-2222-2222-222222222201',
+    '11111111-1111-1111-1111-111111111101',
+    'Epson EcoTank L3250',
+    'Printer All-in-One Ink Tank dengan konektivitas Wi-Fi & Wi-Fi Direct untuk area kerja kantor.',
+    'Ready',
+    array['windows', 'mac'],
+    'https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?auto=format&fit=crop&q=80&w=800',
+    'Q: Mengapa printer offline di Windows?
+A: Pastikan laptop terhubung ke SSID Wi-Fi kantor "Kantor-Utama" (2.4 GHz) dan printer sudah dinyalakan.
+
+Q: Bagaimana cara cetak tanpa driver di macOS?
+A: macOS mendukung fitur Apple AirPrint otomatis tanpa perlu instalasi driver manual.',
+    1
+  ),
+  (
+    '22222222-2222-2222-2222-222222222202',
+    '11111111-1111-1111-1111-111111111101',
+    'Epson WorkForce Pro WF-C879R',
+    'Printer Multifungsi Warna A3+ volume tinggi dengan fitur Network LAN dan Secure PIN Print.',
+    'Ready',
+    array['windows', 'mac'],
+    'https://images.unsplash.com/photo-1544652478-6653e09f18a2?auto=format&fit=crop&q=80&w=800',
+    'Q: Bagaimana mencetak dokumen rahasia dengan PIN?
+A: Pada dialog print, aktifkan "Confidential Job / PIN Print", masukkan 4 digit PIN, lalu masukkan PIN pada panel layar printer untuk mulai mencetak.',
+    2
+  ),
+  (
+    '22222222-2222-2222-2222-222222222203',
+    '11111111-1111-1111-1111-111111111102',
+    'Panduan Pembagian Link Dokumen',
+    'Standar operasional pembagian link Google Docs, Sheets, Slides, dan Microsoft OneDrive yang aman.',
+    'Ready',
+    array['windows', 'mac'],
+    'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&q=80&w=800',
+    'Q: Apa beda level akses Viewer vs Commenter?
+A: Viewer hanya dapat membaca dokumen tanpa bisa mengubah isi. Commenter dapat menambahkan saran/catatan tanpa merubah teks asli.',
+    1
+  ),
+  (
+    '22222222-2222-2222-2222-222222222204',
+    '11111111-1111-1111-1111-111111111103',
+    'Samsung Crystal UHD 4K Smart TV 55"',
+    'Smart TV Ruang Meeting Utama dengan dukungan Wireless Screen Mirroring (Smart View, Miracast, AirPlay 2).',
+    'Ready',
+    array['windows', 'mac'],
+    'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&q=80&w=800',
+    'Q: Apa PIN AirPlay untuk Smart TV?
+A: PIN 4 angka akan tampil otomatis di layar TV saat pertama kali MacBook mencoba mirroring.',
+    1
+  ),
+  (
+    '22222222-2222-2222-2222-222222222205',
+    '11111111-1111-1111-1111-111111111103',
+    'Interactive Display 75" Touchscreen',
+    'Papan tulis digital interaktif 4K UHD dengan multi-touch 20 titik dan wireless presentation dongle.',
+    'Ready',
+    array['windows', 'mac'],
+    'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=800',
+    'Q: Bagaimana mengaktifkan fungsi touchscreen di laptop?
+A: Hubungkan kabel USB Touch (Type-A ke Type-B) selain kabel HDMI display.',
+    2
+  ),
+  (
+    '22222222-2222-2222-2222-222222222206',
+    '11111111-1111-1111-1111-111111111104',
+    'Lumens PTZ Camera & Speakerphone',
+    'Kamera konferensi PTZ 12x Optical Zoom dengan omnidirectional microphone untuk ruang rapat hybrid.',
+    'Ready',
+    array['windows', 'mac'],
+    'https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?auto=format&fit=crop&q=80&w=800',
+    'Q: Kenapa suara speakerphone feedback / menggema?
+A: Pastikan mic laptop dinonaktifkan dan hanya gunakan Lumens Speakerphone sebagai Microphone sekaligus Speaker pada Zoom/Meet.',
+    1
   );
-  return new;
-end;
-$$;
 
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
+-- 3. Langkah-langkah Panduan (Steps)
+insert into public.steps (device_id, title, description, konten_windows, konten_mac, sort_order) values
+  -- Epson L3250
+  (
+    '22222222-2222-2222-2222-222222222201',
+    'Langkah 1: Koneksi Jaringan Wi-Fi',
+    'Menghubungkan printer ke jaringan Wi-Fi lokal kantor.',
+    '1. Nyalakan printer dengan menekan tombol Power.
+2. Pastikan lampu indikator Wi-Fi menyala hijau.
+3. Hubungkan laptop Windows ke SSID: "Kantor-Utama" (2.4 GHz).
+4. Masuk ke Settings -> Bluetooth & devices -> Printers & scanners.
+5. Klik "Add device" dan pilih "EPSON L3250 Series".',
+    '1. Nyalakan printer dan pastikan terhubung ke Wi-Fi kantor.
+2. Hubungkan MacBook ke SSID Wi-Fi yang sama ("Kantor-Utama").
+3. Buka System Settings -> Printers & Scanners.
+4. Klik "Add Printer, Scanner, or Fax...".
+5. Pilih "EPSON L3250 Series" dengan protokol AirPrint.',
+    1
+  ),
+  (
+    '22222222-2222-2222-2222-222222222201',
+    'Langkah 2: Instalasi Driver & Cetak Dokumen',
+    'Pengujian cetak dokumen pertama kali.',
+    '1. Buka file dokumen (Word atau PDF), tekan Ctrl + P.
+2. Pilih printer "EPSON L3250 Series".
+3. Pastikan ukuran kertas diatur ke A4.
+4. Klik Print untuk mencetak halaman uji.',
+    '1. Buka dokumen di Preview atau aplikasi lainnya, tekan Cmd + P.
+2. Pilih printer "EPSON L3250 Series".
+3. Pastikan Paper Size diatur ke A4.
+4. Klik Print untuk mencetak halaman uji.',
+    2
+  ),
+  -- Panduan Pembagian Link Dokumen
+  (
+    '22222222-2222-2222-2222-222222222203',
+    'Langkah 1: Pengaturan Hak Akses Link',
+    'Menentukan hak akses yang tepat sebelum membagikan link.',
+    '1. Buka dokumen Google Docs atau Sheets Anda.
+2. Klik tombol "Bagikan / Share" di pojok kanan atas.
+3. Pada bagian "Akses umum", pilih opsi:
+   - Viewer: hanya membaca dokumen
+   - Commenter: hanya memberi komentar
+   - Editor: dapat mengubah dokumen
+4. Klik "Salin Link / Copy link".',
+    '1. Buka dokumen Google Docs / Sheets di Safari atau Chrome.
+2. Klik tombol "Share" warna biru di kanan atas.
+3. Atur General Access: pilih "Restricted" atau "Anyone with the link".
+4. Tentukan peran (Viewer, Commenter, Editor).
+5. Klik "Copy link" lalu klik "Done".',
+    1
+  ),
+  -- Samsung Smart TV
+  (
+    '22222222-2222-2222-2222-222222222204',
+    'Langkah 1: Screen Mirroring Nirkabel',
+    'Menampilkan layar laptop ke Smart TV tanpa kabel.',
+    '1. Tekan tombol Windows + K pada keyboard laptop Anda.
+2. Pada panel Cast di sisi kanan, pilih "Meeting-Room-TV".
+3. Pilih mode proyeksi: "Duplicate" (tampilan sama) atau "Extend" (layar kedua).
+4. Layar laptop Anda langsung terproyeksi ke TV.',
+    '1. Klik ikon Control Center di pojok kanan atas menu bar Mac.
+2. Pilih menu "Screen Mirroring".
+3. Pilih "Meeting-Room-TV" dari daftar perangkat.
+4. Masukkan kode AirPlay 4 digit yang muncul di layar TV.
+5. Layar Mac berhasil terhubung.',
+    1
+  );
