@@ -215,6 +215,7 @@ export const CategoryFormModal: React.FC<{
   const [slug, setSlug] = useState(initial?.slug ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [icon, setIcon] = useState(initial?.icon ?? 'Monitor');
+  const [sortOrder, setSortOrder] = useState<number>(initial?.sort_order ?? 1);
   const [available, setAvailable] = useState(initial?.available ?? true);
 
   React.useEffect(() => {
@@ -222,6 +223,7 @@ export const CategoryFormModal: React.FC<{
     setSlug(initial?.slug ?? '');
     setDescription(initial?.description ?? '');
     setIcon(initial?.icon ?? 'Monitor');
+    setSortOrder(initial?.sort_order ?? 1);
     setAvailable(initial?.available ?? true);
   }, [initial, isOpen]);
 
@@ -236,6 +238,7 @@ export const CategoryFormModal: React.FC<{
         description: description.trim(),
         icon,
         available,
+        sort_order: Number(sortOrder) || 1,
         deviceCount: initial?.deviceCount ?? 0,
       },
       isNew
@@ -247,7 +250,7 @@ export const CategoryFormModal: React.FC<{
     <CrudModal isOpen={isOpen} onClose={onClose} title={isNew ? 'Tambah Kategori' : 'Ubah Kategori'}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className={labelClass}>Nama kategori</label>
+          <label className={labelClass}>Nama Kategori</label>
           <input
             className={fieldClass}
             value={title}
@@ -256,18 +259,31 @@ export const CategoryFormModal: React.FC<{
               if (isNew) setSlug(slugify(e.target.value));
             }}
             required
+            placeholder="Contoh: Printer Kantor, Smart TV, dll."
           />
         </div>
-        <div>
-          <label className={labelClass}>Slug URL</label>
-          <input className={fieldClass} value={slug} onChange={(e) => setSlug(e.target.value)} required />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>Slug URL</label>
+            <input className={fieldClass} value={slug} onChange={(e) => setSlug(e.target.value)} required />
+          </div>
+          <div>
+            <label className={labelClass}>Urutan (sort_order)</label>
+            <input
+              type="number"
+              className={fieldClass}
+              value={sortOrder}
+              onChange={(e) => setSortOrder(Number(e.target.value))}
+              min={1}
+            />
+          </div>
         </div>
         <div>
           <label className={labelClass}>Ikon (Printer, Share2, Projector, Tv, Fingerprint, Monitor)</label>
           <input className={fieldClass} value={icon} onChange={(e) => setIcon(e.target.value)} />
         </div>
         <div>
-          <label className={labelClass}>Deskripsi</label>
+          <label className={labelClass}>Deskripsi Kategori</label>
           <textarea className={`${fieldClass} min-h-[80px]`} value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
         <label className="flex items-center gap-2 text-xs font-semibold">
@@ -279,7 +295,7 @@ export const CategoryFormModal: React.FC<{
             Batal
           </button>
           <button type="submit" className="px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white">
-            Simpan
+            Simpan Kategori
           </button>
         </div>
       </form>
@@ -332,6 +348,13 @@ const StepFields: React.FC<{
   </div>
 );
 
+interface StepRowItem {
+  title: string;
+  description: string;
+  konten_windows: string;
+  konten_mac: string;
+}
+
 export const GuideFormModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -342,28 +365,71 @@ export const GuideFormModal: React.FC<{
   const section = device && sectionKey ? device.sections[sectionKey] : undefined;
   const [title, setTitle] = useState(section?.title ?? '');
   const [tabLabel, setTabLabel] = useState(section?.tabLabel ?? '');
-  const [windows, setWindows] = useState<SetupStep[]>(section?.osSteps?.windows ?? section?.steps ?? []);
-  const [mac, setMac] = useState<SetupStep[]>(section?.osSteps?.mac ?? []);
+  const [steps, setSteps] = useState<StepRowItem[]>([]);
 
   React.useEffect(() => {
-    setTitle(section?.title ?? '');
-    setTabLabel(section?.tabLabel ?? '');
-    setWindows(section?.osSteps?.windows ?? section?.steps ?? []);
-    setMac(section?.osSteps?.mac ?? []);
+    setTitle(section?.title ?? 'Langkah Panduan Setup');
+    setTabLabel(section?.tabLabel ?? '1. Setup');
+    const win = section?.osSteps?.windows || section?.steps || [];
+    const mac = section?.osSteps?.mac || [];
+    const maxLen = Math.max(win.length, mac.length, 1);
+    const rows: StepRowItem[] = [];
+    for (let i = 0; i < maxLen; i++) {
+      const w = win[i];
+      const m = mac[i];
+      rows.push({
+        title: w?.title || m?.title || `Langkah ${i + 1}`,
+        description: w?.description || m?.description || '',
+        konten_windows: w?.details ? w.details.join('\n') : (w?.description || ''),
+        konten_mac: m?.details ? m.details.join('\n') : (m?.description || ''),
+      });
+    }
+    setSteps(rows);
   }, [section, isOpen]);
 
   if (!section) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const winSteps: SetupStep[] = steps.map((s) => ({
+      title: s.title,
+      description: s.description,
+      details: s.konten_windows.split('\n').map((l) => l.trim()).filter(Boolean),
+    }));
+    const macSteps: SetupStep[] = steps.map((s) => ({
+      title: s.title,
+      description: s.description,
+      details: s.konten_mac.split('\n').map((l) => l.trim()).filter(Boolean),
+    }));
+
     onSave({
       ...section,
-      title,
-      tabLabel,
-      osSteps: { windows, mac },
+      title: title.trim(),
+      tabLabel: tabLabel.trim(),
+      osSteps: { windows: winSteps, mac: macSteps },
       steps: undefined,
     });
     onClose();
+  };
+
+  const addStep = () => {
+    setSteps([
+      ...steps,
+      {
+        title: `Langkah ${steps.length + 1}`,
+        description: '',
+        konten_windows: '',
+        konten_mac: '',
+      },
+    ]);
+  };
+
+  const removeStep = (idx: number) => {
+    setSteps(steps.filter((_, i) => i !== idx));
+  };
+
+  const updateStep = (idx: number, patch: Partial<StepRowItem>) => {
+    setSteps(steps.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
   };
 
   return (
@@ -371,37 +437,119 @@ export const GuideFormModal: React.FC<{
       wide
       isOpen={isOpen}
       onClose={onClose}
-      title={`Ubah panduan: ${section.title}`}
-      subtitle={device?.name}
+      title={`Kelola Panduan: ${section.title}`}
+      subtitle={`${device?.name} (Disimpan ke tabel steps di Supabase)`}
     >
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
           <div>
-            <label className={labelClass}>Judul modul</label>
-            <input className={fieldClass} value={title} onChange={(e) => setTitle(e.target.value)} />
+            <label className={labelClass}>Judul Modul Panduan</label>
+            <input className={fieldClass} value={title} onChange={(e) => setTitle(e.target.value)} required />
           </div>
           <div>
-            <label className={labelClass}>Label tab</label>
-            <input className={fieldClass} value={tabLabel} onChange={(e) => setTabLabel(e.target.value)} />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h3 className="text-xs font-bold mb-2">Windows</h3>
-            <StepFields steps={windows} onChange={setWindows} />
-          </div>
-          <div>
-            <h3 className="text-xs font-bold mb-2">macOS</h3>
-            <StepFields steps={mac} onChange={setMac} />
+            <label className={labelClass}>Label Tab</label>
+            <input className={fieldClass} value={tabLabel} onChange={(e) => setTabLabel(e.target.value)} required />
           </div>
         </div>
-        <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700">
-            Batal
+
+        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+          {steps.map((step, idx) => (
+            <div
+              key={idx}
+              className="p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
+                  Langkah #{idx + 1}
+                </span>
+                {steps.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeStep(idx)}
+                    className="text-xs font-semibold text-rose-600 hover:underline"
+                  >
+                    Hapus Langkah
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className={labelClass}>Judul Langkah (title)</label>
+                  <input
+                    className={fieldClass}
+                    value={step.title}
+                    onChange={(e) => updateStep(idx, { title: e.target.value })}
+                    required
+                    placeholder="Contoh: Langkah 1: Sambungkan Wi-Fi"
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Deskripsi Ringkas (description)</label>
+                  <input
+                    className={fieldClass}
+                    value={step.description}
+                    onChange={(e) => updateStep(idx, { description: e.target.value })}
+                    placeholder="Penjelasan singkat tujuan langkah ini..."
+                  />
+                </div>
+              </div>
+
+              {/* 2 Kolom: Windows & Mac */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    🪟 Konten Panduan Windows (konten_windows)
+                  </label>
+                  <textarea
+                    className={`${fieldClass} min-h-[96px] font-mono text-[11px] leading-relaxed`}
+                    value={step.konten_windows}
+                    onChange={(e) => updateStep(idx, { konten_windows: e.target.value })}
+                    placeholder={"1. Nyalakan printer.\n2. Hubungkan ke SSID Wi-Fi kantor.\n3. Tambahkan di Windows Settings."}
+                  />
+                  <span className="text-[10px] text-slate-400">Dapat berupa instruksi baris bernomor (1, 2, 3...)</span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    🍎 Konten Panduan macOS (konten_mac)
+                  </label>
+                  <textarea
+                    className={`${fieldClass} min-h-[96px] font-mono text-[11px] leading-relaxed`}
+                    value={step.konten_mac}
+                    onChange={(e) => updateStep(idx, { konten_mac: e.target.value })}
+                    placeholder={"1. Nyalakan printer.\n2. Pastikan Mac terhubung ke Wi-Fi yang sama.\n3. Tambahkan via Printers & Scanners."}
+                  />
+                  <span className="text-[10px] text-slate-400">Dapat berupa instruksi baris bernomor (1, 2, 3...)</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
+          <button
+            type="button"
+            onClick={addStep}
+            className="px-3.5 py-2 text-xs font-bold rounded-xl border-2 border-dashed border-blue-400 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+          >
+            + Tambah Langkah Baru
           </button>
-          <button type="submit" className="px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white">
-            Simpan panduan
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500"
+            >
+              Simpan Semua Langkah
+            </button>
+          </div>
         </div>
       </form>
     </CrudModal>

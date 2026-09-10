@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { CatalogProvider } from './context/CatalogContext';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -26,8 +26,7 @@ const ScrollToTop: React.FC = () => {
 
 const AppContent: React.FC = () => {
   const { pathname } = useLocation();
-  const isAdminRoute = pathname.startsWith('/dashboard');
-  const isLoginRoute = pathname === '/login';
+  const { isLoggedIn } = useAuth();
 
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('theme');
@@ -48,7 +47,15 @@ const AppContent: React.FC = () => {
     }
   }, [darkMode]);
 
-  if (isAdminRoute) {
+  // ── ATURAN PEMISAHAN PENUH: ADMIN & PUBLIK ──
+  // 1. Jika Admin Login: HARUS selalu berada di /dashboard.
+  //    Jika mengakses halaman publik (/, /category/..., /docs/..., /login),
+  //    otomatis langsung diarahkan ke /dashboard.
+  if (isLoggedIn) {
+    if (!pathname.startsWith('/dashboard')) {
+      return <Navigate to="/dashboard" replace />;
+    }
+
     return (
       <>
         <ScrollToTop />
@@ -61,12 +68,19 @@ const AppContent: React.FC = () => {
             path="/dashboard/:tab"
             element={<AdminDashboardPage darkMode={darkMode} setDarkMode={setDarkMode} />}
           />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </>
     );
   }
 
-  if (isLoginRoute) {
+  // 2. Jika Bukan Admin / Tidak Login (Pengunjung Publik):
+  //    Akses ke /dashboard langsung diarahkan ke /login.
+  if (pathname.startsWith('/dashboard')) {
+    return <Navigate to="/login" replace state={{ from: { pathname } }} />;
+  }
+
+  if (pathname === '/login') {
     return (
       <>
         <ScrollToTop />

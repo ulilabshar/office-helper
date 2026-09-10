@@ -40,6 +40,7 @@ export interface Device {
   image?: string;
   status: 'Ready' | 'Maintenance' | 'New';
   specs: string[];
+  sort_order?: number;
   sections: {
     wifi: DeviceSection;
     bluetooth: DeviceSection;
@@ -57,4 +58,6 @@ export interface Category {
   icon: string;
   deviceCount: number;
   available: boolean;
+  sort_order?: number;
 }
+

@@ -64,9 +64,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
+  const handleLogout = async () => {
+    await logout();
+    navigate('/', { replace: true });
   };
 
   return (
@@ -88,7 +88,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         <div className="flex flex-col flex-1 overflow-y-auto">
           {/* Header Brand */}
           <div className="h-16 flex items-center justify-between px-5 border-b border-slate-200 dark:border-slate-800">
-            <Link to="/" className="flex items-center gap-2.5 group">
+            <Link to="/dashboard" className="flex items-center gap-2.5 group">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-500/25 group-hover:bg-blue-500 transition-colors">
                 <ShieldCheck className="h-5 w-5" />
               </div>
@@ -157,21 +157,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               </nav>
             </div>
 
-            {/* Quick Link to Public Docs */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
-              <div className="px-3 mb-2 text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
-                Akses Pengguna
+            {/* Notice Sesi Admin */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 px-3 py-2">
+              <div className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase mb-1">
+                Mode Admin Aktif
               </div>
-              <Link
-                to="/"
-                className="flex items-center justify-between px-3.5 py-2 text-xs font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50/70 dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-blue-950/30 rounded-xl transition-colors"
-              >
-                <div className="flex items-center gap-2.5">
-                  <BookOpen className="h-4 w-4 text-blue-500" />
-                  <span>Lihat Website Publik</span>
-                </div>
-                <ExternalLink className="h-3.5 w-3.5 opacity-60" />
-              </Link>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                Anda berada di area Dashboard. Logout untuk kembali ke tampilan website publik.
+              </p>
             </div>
           </div>
         </div>

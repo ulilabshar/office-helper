@@ -343,9 +343,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                         <td className="px-5 py-4">{d.status}</td>
                         <td className="px-5 py-4">
                           <div className="flex items-center justify-end gap-1.5">
-                            <Link to={`/docs/${d.categorySlug}/${d.id}`} className="p-1.5 rounded-lg hover:bg-slate-100" title="Lihat publik">
-                              <Eye className="h-4 w-4" />
-                            </Link>
                             <button
                               onClick={() => setDeviceModal({ open: true, device: d })}
                               className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600"
@@ -433,14 +430,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               <div className="space-y-4">
                 {catalog.devices.map((device) => (
                   <div key={device.id} className="border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4">
-                    <div className="flex justify-between gap-2">
+                    <div className="flex justify-between items-center gap-2">
                       <div>
                         <h3 className="font-bold">{device.name}</h3>
                         <span className="text-xs text-slate-500">{device.category}</span>
                       </div>
-                      <Link to={`/docs/${device.categorySlug}/${device.id}`} className="text-xs font-semibold text-blue-600 inline-flex items-center gap-1">
-                        <Eye className="h-3.5 w-3.5" /> Publik
-                      </Link>
+                      <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                        {device.status}
+                      </span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       {(Object.entries(device.sections) as [keyof Device['sections'], NonNullable<Device['sections'][keyof Device['sections']]>][])
