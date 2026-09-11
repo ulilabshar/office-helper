@@ -37,7 +37,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
           </h1>
 
           <p className="text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
-            Temukan panduan langkah demi langkah disini agar tidak bingung..
+            Temukan panduan langkah demi langkah disini agar tidak bingung...
           </p>
 
           <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
@@ -66,10 +66,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-              Kategori Alat Kantor
+              Semua Kategori Panduan
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-              Pilih jenis peralatan kantor yang ingin diatur koneksinya.
+              Pilih jenis panduan yang ingin dipelajari, mulai dari perangkat keras hingga perangkat lunak.
             </p>
           </div>
         </div>
@@ -89,7 +89,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
               Semua Panduan Aktif
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-              Daftar seluruh panduan penggunaan perangkat dan pembagian dokumen kantor yang siap dipakai.
+              Daftar seluruh panduan penggunaan perangkat keras dan perangkat lunak yang tersedia di sistem dokumentasi ini.
             </p>
           </div>
           <button
@@ -156,10 +156,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section>
-        <AccordionFaq items={generalFaqs} />
-      </section>
+
     </div>
   );
 };
