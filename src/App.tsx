@@ -114,7 +114,7 @@ const AppContent: React.FC = () => {
             <Routes>
               <Route path="/" element={<HomePage onOpenSearch={() => setIsSearchOpen(true)} />} />
               <Route path="/category/:categorySlug" element={<CategoryPage />} />
-              <Route path="/docs/:categorySlug/:deviceId" element={<DeviceDetailPage />} />
+              <Route path="/docs/:categorySlug/:deviceSlug" element={<DeviceDetailPage />} />
             </Routes>
           </main>
 

@@ -57,6 +57,7 @@ interface CatalogContextType {
   settings: SystemSetting;
   isLoadingSupabase: boolean;
   getDeviceById: (id: string) => Device | undefined;
+  getDeviceBySlug: (slugOrId: string) => Device | undefined;
   getDevicesByCategory: (slug: string) => Device[];
   searchDevices: (query: string) => Device[];
   saveCategory: (category: Category, isNew: boolean) => void;
@@ -132,6 +133,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             return {
               id: d.id,
               name: d.nama_perangkat,
+              slug: slugify(d.nama_perangkat),
               category: catTitle,
               categorySlug: catSlug,
               description: d.deskripsi_singkat || '',
@@ -227,7 +229,20 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
       activityLogs: state.activityLogs,
       settings: state.settings,
       isLoadingSupabase,
-      getDeviceById: (id) => state.devices.find((d) => d.id === id),
+      getDeviceById: (id) =>
+        state.devices.find(
+          (d) =>
+            d.id === id ||
+            (d.slug && d.slug === id) ||
+            slugify(d.name) === id
+        ),
+      getDeviceBySlug: (slugOrId) =>
+        state.devices.find(
+          (d) =>
+            (d.slug && d.slug === slugOrId) ||
+            slugify(d.name) === slugOrId ||
+            d.id === slugOrId
+        ),
       getDevicesByCategory: (slug) => state.devices.filter((d) => d.categorySlug === slug),
       searchDevices: (query) => {
         const q = query.toLowerCase().trim();

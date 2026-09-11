@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCatalog } from '../context/CatalogContext';
+import { slugify } from '../utils/slugify';
 import {
   Search,
   X,
@@ -87,9 +88,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
     onClose();
   };
 
-  const handleSelect = (categorySlug: string, deviceId: string) => {
+  const handleSelect = (categorySlug: string, deviceSlug: string) => {
     handleCloseModal();
-    navigate(`/docs/${categorySlug}/${deviceId}`);
+    navigate(`/docs/${categorySlug}/${deviceSlug}`);
   };
 
   const isSearching = query.trim().length > 0;
@@ -173,7 +174,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
               return (
                 <button
                   key={device.id}
-                  onClick={() => handleSelect(device.categorySlug, device.id)}
+                  onClick={() =>
+                    handleSelect(
+                      device.categorySlug,
+                      device.slug || slugify(device.name)
+                    )
+                  }
                   className="w-full flex items-center justify-between p-3 rounded-xl text-left hover:bg-slate-100 dark:hover:bg-slate-800/70 transition-colors group"
                 >
                   <div className="flex items-center gap-3.5 min-w-0">

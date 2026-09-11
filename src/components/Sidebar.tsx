@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useCatalog } from '../context/CatalogContext';
+import { slugify } from '../utils/slugify';
 import { Home, Printer, Tv, Fingerprint, ChevronRight, Sparkles, BookOpen, X, Share2, MessageCircle, Video, Monitor } from 'lucide-react';
 
 interface SidebarProps {
@@ -141,7 +142,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                       {categoryDevices.map((device) => (
                         <NavLink
                           key={device.id}
-                          to={`/docs/${category.slug}/${device.id}`}
+                          to={`/docs/${category.slug}/${device.slug || slugify(device.name)}`}
                           onClick={handleSidebarNavClick}
                           className={({ isActive }) =>
                             `flex items-center justify-between px-3 py-1.5 text-xs font-medium rounded-md transition-all ${

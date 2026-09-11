@@ -34,6 +34,7 @@ export interface FAQItem {
 export interface Device {
   id: string;
   name: string;
+  slug?: string;
   category: string;
   categorySlug: string;
   description: string;

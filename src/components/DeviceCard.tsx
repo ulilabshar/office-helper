@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Device } from '../types/device';
+import { slugify } from '../utils/slugify';
 import { Printer, ChevronRight, Wifi, Bluetooth, Settings, Share2, Lock, Eye, Copy, Tv, Fingerprint, FileText, Video, Monitor } from 'lucide-react';
 
 interface DeviceCardProps {
@@ -68,7 +69,7 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device }) => {
       </div>
 
       <Link
-        to={`/docs/${device.categorySlug}/${device.id}`}
+        to={`/docs/${device.categorySlug}/${device.slug || slugify(device.name)}`}
         className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-600/10 dark:text-blue-400 dark:border-blue-500/30 group-hover:bg-blue-600 group-hover:text-white group-hover:border-transparent transition-all shadow-sm"
       >
         <span>Buka Panduan Lengkap</span>

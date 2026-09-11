@@ -6,9 +6,11 @@ import { AccordionFaq } from '../components/AccordionFaq';
 import { Printer, ChevronRight, Home, Tag, ArrowLeft, Share2 } from 'lucide-react';
 
 export const DeviceDetailPage: React.FC = () => {
-  const { deviceId } = useParams<{ deviceId: string }>();
-  const { getDeviceById } = useCatalog();
-  const device = getDeviceById(deviceId || '');
+  const { deviceSlug, deviceId } = useParams<{ deviceSlug?: string; deviceId?: string }>();
+  const { getDeviceBySlug, getDeviceById } = useCatalog();
+
+  const slugOrId = deviceSlug || deviceId || '';
+  const device = getDeviceBySlug ? getDeviceBySlug(slugOrId) : getDeviceById(slugOrId);
 
   if (!device) {
     return (
@@ -17,7 +19,7 @@ export const DeviceDetailPage: React.FC = () => {
           Panduan Tidak Ditemukan
         </h1>
         <p className="text-slate-600 dark:text-slate-400 text-sm">
-          Perangkat atau dokumen dengan ID "{deviceId}" tidak terdaftar dalam sistem.
+          Perangkat atau dokumen dengan kata kunci "{slugOrId}" tidak terdaftar dalam sistem.
         </p>
         <Link
           to="/"
