@@ -1,17 +1,15 @@
-import React from 'react';
+﻿import React from 'react';
 import { CategoryCard } from '../components/CategoryCard';
 import { DeviceCard } from '../components/DeviceCard';
-import { NoticeBoard } from '../components/NoticeBoard';
-import { AccordionFaq } from '../components/AccordionFaq';
 import { useCatalog } from '../context/CatalogContext';
-import { Sparkles, Search, ArrowRight, ShieldCheck, Cpu, BookOpen } from 'lucide-react';
+import { Sparkles, Search, ArrowRight, BookOpen } from 'lucide-react';
 
 interface HomePageProps {
   onOpenSearch: () => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
-  const { categories, devices, generalFaqs } = useCatalog();
+  const { categories, devices } = useCatalog();
 
   const handleScrollToAllGuides = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -37,7 +35,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
           </h1>
 
           <p className="text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
-            Temukan panduan langkah demi langkah disini agar tidak bingung...
+            Temukan panduan langkah demi langkah disini agar tidak bingung..
           </p>
 
           <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
@@ -66,10 +64,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-              Semua Kategori Panduan
+              Kategori Alat Kantor
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-              Pilih jenis panduan yang ingin dipelajari, mulai dari perangkat keras hingga perangkat lunak.
+              Pilih jenis peralatan kantor yang ingin diatur koneksinya.
             </p>
           </div>
         </div>
@@ -89,7 +87,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
               Semua Panduan Aktif
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-              Daftar seluruh panduan penggunaan perangkat keras dan perangkat lunak yang tersedia di sistem dokumentasi ini.
+              Daftar seluruh panduan penggunaan perangkat dan pembagian dokumen kantor yang siap dipakai.
             </p>
           </div>
           <button
@@ -107,56 +105,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
           ))}
         </div>
       </section>
-
-      {/* Update Notice & Features Section Grid */}
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Notice Board Column */}
-        <div className="lg:col-span-2">
-          <NoticeBoard />
-        </div>
-
-        {/* System Features Card Column */}
-        <div className="border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/40 rounded-xl p-5 backdrop-blur-sm flex flex-col justify-between space-y-4 shadow-sm transition-colors">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-emerald-500" />
-              <h3 className="font-bold text-lg text-slate-900 dark:text-white">
-                Fitur Sistem Dokumentasi
-              </h3>
-            </div>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Website ini dirancang untuk mempermudah onboarding pegawai dan menghemat waktu tim IT.
-            </p>
-            <ul className="space-y-2 text-xs text-slate-700 dark:text-slate-300">
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                <span>Sakelar OS (Windows vs macOS) per panduan</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                <span>Panduan Pembagian Link (Google Docs, Sheet, OneDrive)</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                <span>Konten dikelola dari dashboard admin</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                <span>Mode Gelap & Terang (Dark/Light theme)</span>
-              </li>
-            </ul>
-          </div>
-
-          <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
-            <span className="flex items-center gap-1">
-              <Cpu className="h-3.5 w-3.5" /> Dokumentasi baca saja
-            </span>
-            <span className="font-mono text-[10px]">v1.4.0</span>
-          </div>
-        </div>
-      </section>
-
-
     </div>
   );
 };
