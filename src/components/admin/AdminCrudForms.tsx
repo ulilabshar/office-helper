@@ -759,3 +759,296 @@ export const MediaFormModal: React.FC<{
     </CrudModal>
   );
 };
+
+export const SingleStepModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  devices: Device[];
+  initial?: SetupStep | null;
+  preselectedDeviceId?: string;
+  onSave: (step: SetupStep, isNew: boolean) => Promise<void> | void;
+}> = ({ isOpen, onClose, devices, initial, preselectedDeviceId, onSave }) => {
+  const isNew = !initial;
+  const [deviceId, setDeviceId] = useState(initial?.device_id || preselectedDeviceId || devices[0]?.id || '');
+  const [title, setTitle] = useState(initial?.title ?? '');
+  const [description, setDescription] = useState(initial?.description ?? '');
+  const [kontenWindows, setKontenWindows] = useState(
+    initial?.konten_windows || (initial?.details ? initial.details.join('\n') : '')
+  );
+  const [kontenMac, setKontenMac] = useState(
+    initial?.konten_mac || (initial?.details ? initial.details.join('\n') : '')
+  );
+  const [sortOrder, setSortOrder] = useState<number>(initial?.sort_order ?? 1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  React.useEffect(() => {
+    setDeviceId(initial?.device_id || preselectedDeviceId || devices[0]?.id || '');
+    setTitle(initial?.title ?? '');
+    setDescription(initial?.description ?? '');
+    setKontenWindows(initial?.konten_windows || (initial?.details ? initial.details.join('\n') : ''));
+    setKontenMac(initial?.konten_mac || (initial?.details ? initial.details.join('\n') : ''));
+    setSortOrder(initial?.sort_order ?? 1);
+    setIsSubmitting(false);
+  }, [initial, preselectedDeviceId, devices, isOpen]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !deviceId) return;
+    setIsSubmitting(true);
+    try {
+      await onSave(
+        {
+          id: initial?.id,
+          device_id: deviceId,
+          title: title.trim(),
+          description: description.trim(),
+          konten_windows: kontenWindows.trim(),
+          konten_mac: kontenMac.trim(),
+          sort_order: Number(sortOrder) || 1,
+        },
+        isNew
+      );
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <CrudModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isNew ? 'Tambah Langkah Panduan' : 'Ubah Langkah Panduan'}
+      subtitle="Panduan alur linear langkah demi langkah untuk perangkat tertentu."
+      wide
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="sm:col-span-2">
+            <label className={labelClass}>Target Perangkat</label>
+            <select
+              className={fieldClass}
+              value={deviceId}
+              onChange={(e) => setDeviceId(e.target.value)}
+              required
+            >
+              {devices.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name} ({d.category})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Urutan Langkah (1, 2, ...)</label>
+            <input
+              type="number"
+              className={fieldClass}
+              value={sortOrder}
+              onChange={(e) => setSortOrder(Number(e.target.value))}
+              min={1}
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className={labelClass}>Judul Langkah</label>
+          <input
+            className={fieldClass}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+            placeholder="Contoh: Langkah 1: Hubungkan Printer ke Wi-Fi Kantor"
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>Deskripsi Ringkas</label>
+          <textarea
+            className={`${fieldClass} min-h-[60px]`}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Penjelasan singkat tujuan atau hal penting di langkah ini."
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+          <div className="space-y-1.5 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-blue-600 dark:text-blue-400">
+                Panduan Windows
+              </label>
+              <span className="text-[10px] text-slate-400">Gunakan baris baru untuk sub-langkah</span>
+            </div>
+            <textarea
+              className={`${fieldClass} min-h-[120px] font-mono text-xs`}
+              value={kontenWindows}
+              onChange={(e) => setKontenWindows(e.target.value)}
+              placeholder="1. Buka Settings > Devices & Printers&#10;2. Klik Add Printer & Scanner&#10;3. Pilih printer dari daftar Wi-Fi"
+            />
+          </div>
+
+          <div className="space-y-1.5 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                Panduan macOS
+              </label>
+              <span className="text-[10px] text-slate-400">Gunakan baris baru untuk sub-langkah</span>
+            </div>
+            <textarea
+              className={`${fieldClass} min-h-[120px] font-mono text-xs`}
+              value={kontenMac}
+              onChange={(e) => setKontenMac(e.target.value)}
+              placeholder="1. Buka Apple Menu > System Settings > Printers & Scanners&#10;2. Klik Add Printer (+)...&#10;3. Hubungkan via AirPrint atau Bonjour"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="px-5 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
+          >
+            {isSubmitting ? 'Menyimpan...' : isNew ? 'Tambah Langkah' : 'Simpan Perubahan'}
+          </button>
+        </div>
+      </form>
+    </CrudModal>
+  );
+};
+
+export const SingleFaqModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  devices: Device[];
+  initial?: FAQItem | null;
+  preselectedDeviceId?: string | null;
+  onSave: (faq: FAQItem, isNew: boolean) => Promise<void> | void;
+}> = ({ isOpen, onClose, devices, initial, preselectedDeviceId, onSave }) => {
+  const isNew = !initial;
+  const [deviceId, setDeviceId] = useState<string>(
+    initial ? (initial.device_id || '') : (preselectedDeviceId || '')
+  );
+  const [question, setQuestion] = useState(initial?.question ?? '');
+  const [answer, setAnswer] = useState(initial?.answer ?? '');
+  const [sortOrder, setSortOrder] = useState<number>(initial?.sort_order ?? 1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  React.useEffect(() => {
+    setDeviceId(initial ? (initial.device_id || '') : (preselectedDeviceId || ''));
+    setQuestion(initial?.question ?? '');
+    setAnswer(initial?.answer ?? '');
+    setSortOrder(initial?.sort_order ?? 1);
+    setIsSubmitting(false);
+  }, [initial, preselectedDeviceId, isOpen]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!question.trim() || !answer.trim()) return;
+    setIsSubmitting(true);
+    try {
+      await onSave(
+        {
+          id: initial?.id,
+          device_id: deviceId || null,
+          question: question.trim(),
+          answer: answer.trim(),
+          sort_order: Number(sortOrder) || 1,
+        },
+        isNew
+      );
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <CrudModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isNew ? 'Tambah FAQ' : 'Ubah FAQ'}
+      subtitle="Pertanyaan & jawaban bantuan. Tersimpan langsung ke database Supabase."
+      wide
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="sm:col-span-2">
+            <label className={labelClass}>Target FAQ</label>
+            <select
+              className={fieldClass}
+              value={deviceId}
+              onChange={(e) => setDeviceId(e.target.value)}
+            >
+              <option value="">FAQ Umum (Tampil di Beranda)</option>
+              {devices.map((d) => (
+                <option key={d.id} value={d.id}>
+                  Perangkat: {d.name} ({d.category})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Urutan Tampil (sort_order)</label>
+            <input
+              type="number"
+              className={fieldClass}
+              value={sortOrder}
+              onChange={(e) => setSortOrder(Number(e.target.value))}
+              min={1}
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className={labelClass}>Pertanyaan (Question)</label>
+          <input
+            className={fieldClass}
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            required
+            placeholder="Contoh: Bagaimana jika printer tidak terdeteksi di Wi-Fi?"
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>Jawaban Solusi (Answer)</label>
+          <textarea
+            className={`${fieldClass} min-h-[120px]`}
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            required
+            placeholder="Tuliskan solusi langkah demi langkah secara jelas..."
+          />
+        </div>
+
+        <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="px-5 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
+          >
+            {isSubmitting ? 'Menyimpan...' : isNew ? 'Tambah FAQ' : 'Simpan Perubahan'}
+          </button>
+        </div>
+      </form>
+    </CrudModal>
+  );
+};

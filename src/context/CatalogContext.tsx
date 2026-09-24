@@ -23,7 +23,12 @@ import {
   deleteCategory as sbDeleteCategory,
   createDevice as sbCreateDevice,
   updateDevice as sbUpdateDevice,
-  deleteDevice as sbDeleteDevice,
+  createStep,
+  updateStep,
+  deleteStep,
+  createFaq,
+  updateFaq,
+  deleteFaq,
   syncDeviceSteps,
   syncDeviceFaqs,
   syncGeneralFaqs,
@@ -70,9 +75,13 @@ interface CatalogContextType {
   saveDevice: (device: Device, isNew: boolean) => Promise<void>;
   deleteDevice: (id: string) => Promise<void>;
   saveDeviceSteps: (deviceId: string, steps: SetupStep[]) => Promise<void>;
+  saveSingleStep: (step: SetupStep, isNew: boolean) => Promise<void>;
+  deleteSingleStep: (stepId: string, deviceId: string) => Promise<void>;
   saveDeviceSection: (deviceId: string, sectionKey: keyof NonNullable<Device['sections']>, section: DeviceSection) => Promise<void>;
   saveDeviceFaqs: (deviceId: string, faqs: FAQItem[]) => Promise<void>;
   saveGeneralFaqs: (faqs: FAQItem[]) => Promise<void>;
+  saveSingleFaq: (faq: FAQItem, isNew: boolean) => Promise<void>;
+  deleteSingleFaq: (faqId: string, deviceId?: string | null) => Promise<void>;
   saveMedia: (asset: MediaAsset, isNew: boolean) => void;
   deleteMedia: (id: string) => void;
   saveSettings: (settings: SystemSetting) => void;
@@ -481,6 +490,124 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           await syncDeviceSteps(deviceId, payload);
         }
       },
+      saveSingleStep: async (step, isNew) => {
+        if (!step.device_id) throw new Error('Target perangkat wajib dipilih!');
+
+        if (isSupabaseReady && supabase) {
+          if (isNew) {
+            const created = await createStep({
+              device_id: step.device_id,
+              title: step.title.trim(),
+              description: step.description?.trim() || null,
+              konten_windows: step.konten_windows?.trim() || null,
+              konten_mac: step.konten_mac?.trim() || null,
+              sort_order: step.sort_order ?? 1,
+            });
+
+            const newStepObj: SetupStep = {
+              id: created.id,
+              device_id: created.device_id,
+              title: created.title,
+              description: created.description || '',
+              konten_windows: created.konten_windows || '',
+              konten_mac: created.konten_mac || '',
+              sort_order: created.sort_order,
+            };
+
+            setState((prev) => ({
+              ...prev,
+              devices: prev.devices.map((d) =>
+                d.id === step.device_id
+                  ? {
+                      ...d,
+                      steps: [...(d.steps || []), newStepObj].sort(
+                        (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+                      ),
+                    }
+                  : d
+              ),
+              activityLogs: pushLog(
+                prev,
+                'CREATE',
+                step.title,
+                `Langkah panduan "${step.title}" ditambahkan.`
+              ),
+            }));
+          } else {
+            if (!step.id) throw new Error('ID Langkah tidak valid!');
+            await updateStep(step.id, {
+              title: step.title.trim(),
+              description: step.description?.trim() || null,
+              konten_windows: step.konten_windows?.trim() || null,
+              konten_mac: step.konten_mac?.trim() || null,
+              sort_order: step.sort_order ?? 1,
+            });
+
+            setState((prev) => ({
+              ...prev,
+              devices: prev.devices.map((d) =>
+                d.id === step.device_id
+                  ? {
+                      ...d,
+                      steps: (d.steps || [])
+                        .map((s) => (s.id === step.id ? { ...s, ...step } : s))
+                        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+                    }
+                  : d
+              ),
+              activityLogs: pushLog(
+                prev,
+                'UPDATE',
+                step.title,
+                `Langkah panduan "${step.title}" diperbarui.`
+              ),
+            }));
+          }
+        } else {
+          const fakeId = step.id || `step-${Date.now()}`;
+          const stepWithId = { ...step, id: fakeId };
+          setState((prev) => ({
+            ...prev,
+            devices: prev.devices.map((d) => {
+              if (d.id !== step.device_id) return d;
+              const exists = (d.steps || []).some((s) => s.id === step.id);
+              const steps = exists
+                ? (d.steps || []).map((s) => (s.id === step.id ? stepWithId : s))
+                : [...(d.steps || []), stepWithId];
+              return {
+                ...d,
+                steps: steps.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+              };
+            }),
+            activityLogs: pushLog(
+              prev,
+              isNew ? 'CREATE' : 'UPDATE',
+              step.title,
+              `Langkah panduan "${step.title}" disimpan.`
+            ),
+          }));
+        }
+      },
+      deleteSingleStep: async (stepId, deviceId) => {
+        if (isSupabaseReady && supabase) {
+          await deleteStep(stepId);
+        }
+
+        setState((prev) => ({
+          ...prev,
+          devices: prev.devices.map((d) =>
+            d.id === deviceId
+              ? { ...d, steps: (d.steps || []).filter((s) => s.id !== stepId) }
+              : d
+          ),
+          activityLogs: pushLog(
+            prev,
+            'DELETE',
+            'Langkah Panduan',
+            'Langkah panduan berhasil dihapus.'
+          ),
+        }));
+      },
       saveDeviceSection: async (deviceId, sectionKey, section) => {
         setState((prev) => ({
           ...prev,
@@ -554,6 +681,181 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (isSupabaseReady && supabase) {
           await syncGeneralFaqs(faqs);
         }
+      },
+      saveSingleFaq: async (faq, isNew) => {
+        if (!faq.question.trim() || !faq.answer.trim()) {
+          throw new Error('Pertanyaan dan jawaban FAQ wajib diisi!');
+        }
+
+        if (isSupabaseReady && supabase) {
+          if (isNew) {
+            const created = await createFaq({
+              device_id: faq.device_id || null,
+              question: faq.question.trim(),
+              answer: faq.answer.trim(),
+              sort_order: faq.sort_order ?? 1,
+            });
+
+            const newFaqItem: FAQItem = {
+              id: created.id,
+              device_id: created.device_id,
+              question: created.question,
+              answer: created.answer,
+              sort_order: created.sort_order,
+            };
+
+            setState((prev) => {
+              if (!created.device_id) {
+                return {
+                  ...prev,
+                  generalFaqs: [...prev.generalFaqs, newFaqItem].sort(
+                    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+                  ),
+                  activityLogs: pushLog(
+                    prev,
+                    'CREATE',
+                    faq.question,
+                    `FAQ Umum "${faq.question}" ditambahkan.`
+                  ),
+                };
+              } else {
+                return {
+                  ...prev,
+                  devices: prev.devices.map((d) =>
+                    d.id === created.device_id
+                      ? {
+                          ...d,
+                          faqs: [...(d.faqs || []), newFaqItem].sort(
+                            (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+                          ),
+                        }
+                      : d
+                  ),
+                  activityLogs: pushLog(
+                    prev,
+                    'CREATE',
+                    faq.question,
+                    `FAQ Perangkat "${faq.question}" ditambahkan.`
+                  ),
+                };
+              }
+            });
+          } else {
+            if (!faq.id) throw new Error('ID FAQ tidak valid!');
+            await updateFaq(faq.id, {
+              device_id: faq.device_id || null,
+              question: faq.question.trim(),
+              answer: faq.answer.trim(),
+              sort_order: faq.sort_order ?? 1,
+            });
+
+            setState((prev) => {
+              if (!faq.device_id) {
+                return {
+                  ...prev,
+                  generalFaqs: prev.generalFaqs
+                    .map((f) => (f.id === faq.id ? { ...f, ...faq } : f))
+                    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+                  activityLogs: pushLog(
+                    prev,
+                    'UPDATE',
+                    faq.question,
+                    `FAQ Umum "${faq.question}" diperbarui.`
+                  ),
+                };
+              } else {
+                return {
+                  ...prev,
+                  devices: prev.devices.map((d) =>
+                    d.id === faq.device_id
+                      ? {
+                          ...d,
+                          faqs: (d.faqs || [])
+                            .map((f) => (f.id === faq.id ? { ...f, ...faq } : f))
+                            .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+                        }
+                      : d
+                  ),
+                  activityLogs: pushLog(
+                    prev,
+                    'UPDATE',
+                    faq.question,
+                    `FAQ Perangkat "${faq.question}" diperbarui.`
+                  ),
+                };
+              }
+            });
+          }
+        } else {
+          const fakeId = faq.id || `faq-${Date.now()}`;
+          const faqWithId = { ...faq, id: fakeId };
+          setState((prev) => {
+            if (!faq.device_id) {
+              const exists = prev.generalFaqs.some((f) => f.id === faq.id);
+              const list = exists
+                ? prev.generalFaqs.map((f) => (f.id === faq.id ? faqWithId : f))
+                : [...prev.generalFaqs, faqWithId];
+              return {
+                ...prev,
+                generalFaqs: list.sort(
+                  (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+                ),
+                activityLogs: pushLog(
+                  prev,
+                  isNew ? 'CREATE' : 'UPDATE',
+                  faq.question,
+                  `FAQ disimpan.`
+                ),
+              };
+            } else {
+              return {
+                ...prev,
+                devices: prev.devices.map((d) => {
+                  if (d.id !== faq.device_id) return d;
+                  const exists = (d.faqs || []).some((f) => f.id === faq.id);
+                  const list = exists
+                    ? (d.faqs || []).map((f) => (f.id === faq.id ? faqWithId : f))
+                    : [...(d.faqs || []), faqWithId];
+                  return {
+                    ...d,
+                    faqs: list.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+                  };
+                }),
+                activityLogs: pushLog(
+                  prev,
+                  isNew ? 'CREATE' : 'UPDATE',
+                  faq.question,
+                  `FAQ disimpan.`
+                ),
+              };
+            }
+          });
+        }
+      },
+      deleteSingleFaq: async (faqId, deviceId) => {
+        if (isSupabaseReady && supabase) {
+          await deleteFaq(faqId);
+        }
+
+        setState((prev) => {
+          if (!deviceId) {
+            return {
+              ...prev,
+              generalFaqs: prev.generalFaqs.filter((f) => f.id !== faqId),
+              activityLogs: pushLog(prev, 'DELETE', 'FAQ', 'FAQ Umum dihapus.'),
+            };
+          } else {
+            return {
+              ...prev,
+              devices: prev.devices.map((d) =>
+                d.id === deviceId
+                  ? { ...d, faqs: (d.faqs || []).filter((f) => f.id !== faqId) }
+                  : d
+              ),
+              activityLogs: pushLog(prev, 'DELETE', 'FAQ', 'FAQ Perangkat dihapus.'),
+            };
+          }
+        });
       },
       saveMedia: (asset, isNew) => {
         setState((prev) => {

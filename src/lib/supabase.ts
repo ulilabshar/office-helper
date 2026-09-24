@@ -367,4 +367,47 @@ export async function syncGeneralFaqs(
   }
 }
 
+export async function createFaq(faq: {
+  device_id?: string | null;
+  question: string;
+  answer: string;
+  sort_order?: number;
+}): Promise<FaqRow> {
+  if (!supabase) throw new Error('Supabase belum dikonfigurasi');
+  const payload = {
+    device_id: faq.device_id || null,
+    question: faq.question.trim(),
+    answer: faq.answer.trim(),
+    sort_order: faq.sort_order ?? 0,
+  };
+  const { data, error } = await supabase.from('faqs').insert(payload).select().single();
+  if (error) throw error;
+  return data as FaqRow;
+}
+
+export async function updateFaq(id: string, updates: Partial<FaqRow>): Promise<FaqRow> {
+  if (!supabase) throw new Error('Supabase belum dikonfigurasi');
+  const payload: any = { ...updates };
+  delete payload.id;
+  delete payload.created_at;
+  delete payload.updated_at;
+  if ('device_id' in payload && !payload.device_id) {
+    payload.device_id = null;
+  }
+  const { data, error } = await supabase
+    .from('faqs')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as FaqRow;
+}
+
+export async function deleteFaq(id: string): Promise<void> {
+  if (!supabase) throw new Error('Supabase belum dikonfigurasi');
+  const { error } = await supabase.from('faqs').delete().eq('id', id);
+  if (error) throw error;
+}
+
 
