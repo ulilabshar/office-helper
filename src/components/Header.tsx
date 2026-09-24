@@ -92,6 +92,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           <Link
             to="/login"
+            state={{ returnTo: location.pathname }}
             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
             title="Masuk ke dashboard admin"
           >

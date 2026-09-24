@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -28,22 +28,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, setDarkMode }) =
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || '/dashboard';
-
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Ref to ensure both mouse-down and mouse-up occurred on the empty backdrop
+  const isBackdropMouseDown = useRef(false);
+
   const handleClose = () => {
-    const fromPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
-    if (fromPath && !fromPath.startsWith('/dashboard')) {
-      navigate(fromPath);
-    } else if (window.history.state && window.history.state.idx > 0) {
-      navigate(-1);
+    const stateObj = location.state as { returnTo?: string; from?: { pathname?: string } } | null;
+    const target = stateObj?.returnTo || stateObj?.from?.pathname;
+
+    if (target && !target.startsWith('/dashboard') && !target.startsWith('/login')) {
+      navigate(target, { replace: true });
     } else {
-      navigate('/');
+      navigate('/', { replace: true });
     }
   };
 
@@ -57,6 +58,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, setDarkMode }) =
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const handleBackdropMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    isBackdropMouseDown.current = e.target === e.currentTarget;
+  };
+
+  const handleBackdropMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isBackdropMouseDown.current && e.target === e.currentTarget) {
+      handleClose();
+    }
+    isBackdropMouseDown.current = false;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -65,7 +77,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, setDarkMode }) =
     setIsLoading(false);
 
     if (result.success) {
-      navigate(from, { replace: true });
+      const fromPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
+      const destination = fromPath && fromPath.startsWith('/dashboard') ? fromPath : '/dashboard';
+      navigate(destination, { replace: true });
     } else {
       setError(result.error || 'Gagal login. Periksa username dan password Anda.');
     }
@@ -73,18 +87,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, setDarkMode }) =
 
   return (
     <div
-      onClick={handleClose}
+      onMouseDown={handleBackdropMouseDown}
+      onMouseUp={handleBackdropMouseUp}
       className="min-h-screen bg-slate-100/70 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between"
     >
       <header
         className="flex items-center justify-between px-4 sm:px-8 h-16 border-b border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 backdrop-blur-sm z-10"
+        onMouseDown={(e) => e.stopPropagation()}
+        onMouseUp={(e) => e.stopPropagation()}
       >
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleClose();
-          }}
+          onClick={handleClose}
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
@@ -95,10 +109,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, setDarkMode }) =
           {setDarkMode && (
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setDarkMode(!darkMode);
-              }}
+              onClick={() => setDarkMode(!darkMode)}
               className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
               title={darkMode ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
             >
@@ -108,10 +119,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, setDarkMode }) =
 
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleClose();
-            }}
+            onClick={handleClose}
             className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 dark:hover:bg-slate-800 dark:hover:text-white transition-colors"
             title="Tutup halaman login"
             aria-label="Tutup halaman login"
@@ -123,10 +131,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, setDarkMode }) =
 
       <div
         className="flex-1 flex items-center justify-center px-4 py-8"
-        onClick={handleClose}
+        onMouseDown={handleBackdropMouseDown}
+        onMouseUp={handleBackdropMouseUp}
       >
         <div
-          className="w-full max-w-md cursor-default"
+          className="w-full max-w-md"
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >
           {isLoggedIn && user ? (
