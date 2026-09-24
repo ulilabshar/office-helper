@@ -32,7 +32,6 @@ const tabTitles: Record<AdminTab, { title: string; subtitle: string }> = {
   guides: { title: 'Langkah Panduan OS', subtitle: 'Kelola panduan multi-OS (Windows & macOS)' },
   faq: { title: 'Bank FAQ & Troubleshooting', subtitle: 'Tanya jawab dan solusi permasalahan perangkat' },
   media: { title: 'Media & Driver Repository', subtitle: 'Tautan installer driver resmi dan dokumen SOP' },
-  logs: { title: 'Activity Logs & Audit', subtitle: 'Riwayat aktivitas admin dan audit trail sistem' },
   settings: { title: 'Pengaturan Sistem', subtitle: 'Konfigurasi kontak support, backup, dan metadata' },
 };
 

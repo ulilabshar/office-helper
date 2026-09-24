@@ -27,7 +27,6 @@ import {
   Trash2,
   Edit3,
   Eye,
-  Activity,
   Lock,
   User,
   ArrowRight,
@@ -56,7 +55,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     'guides',
     'faq',
     'media',
-    'logs',
     'settings',
   ];
   const currentTab: AdminTab = validTabs.includes(tab as AdminTab) ? (tab as AdminTab) : 'dashboard';
@@ -70,7 +68,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [deviceFilterStatus, setDeviceFilterStatus] = useState('ALL');
   const [guideFilterDevice, setGuideFilterDevice] = useState<string>('ALL');
   const [faqFilterTarget, setFaqFilterTarget] = useState<string>('ALL');
-  const [logFilterAction, setLogFilterAction] = useState('ALL');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [settingsDraft, setSettingsDraft] = useState(catalog.settings);
 
@@ -215,16 +212,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     return matchesSearch && matchesStatus;
   });
 
-  const filteredLogs = catalog.activityLogs.filter((log) => {
-    const q = searchQuery.toLowerCase();
-    const matchesSearch =
-      log.target.toLowerCase().includes(q) ||
-      log.description.toLowerCase().includes(q) ||
-      log.user.toLowerCase().includes(q);
-    const matchesAction = logFilterAction === 'ALL' || log.action === logFilterAction;
-    return matchesSearch && matchesAction;
-  });
-
   const handleExportBackup = () => {
     const backupData = {
       exportDate: new Date().toISOString(),
@@ -364,27 +351,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     <div className="text-3xl font-black">{card.value}</div>
                     <p className="text-xs font-bold mt-1">{card.label}</p>
                   </button>
-                ))}
-              </div>
-
-              <div className="rounded-2xl border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/70 p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-blue-500" />
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">Aktivitas Terbaru</h3>
-                  </div>
-                  <button onClick={() => handleTabChange('logs')} className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 inline-flex items-center gap-1">
-                    Lihat semua <ArrowRight className="h-3 w-3" />
-                  </button>
-                </div>
-                {catalog.activityLogs.slice(0, 5).map((log) => (
-                  <div key={log.id} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80">
-                    <div className="flex justify-between gap-2">
-                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{log.target}</span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500">{log.timestamp}</span>
-                    </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">{log.description}</p>
-                  </div>
                 ))}
               </div>
             </div>
@@ -893,40 +859,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                         </button>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'logs' && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row justify-between gap-4">
-                <h2 className="text-xl font-bold">Activity Logs ({filteredLogs.length})</h2>
-                <div className="flex flex-wrap gap-2">
-                  {['ALL', 'CREATE', 'UPDATE', 'DELETE', 'AUTH'].map((act) => (
-                    <button
-                      key={act}
-                      onClick={() => setLogFilterAction(act)}
-                      className={`px-3 py-1 text-xs font-semibold rounded-xl border ${
-                        logFilterAction === act ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-200 dark:border-slate-800'
-                      }`}
-                    >
-                      {act}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/70 divide-y divide-slate-100 dark:divide-slate-800">
-                {filteredLogs.map((log) => (
-                  <div key={log.id} className="p-4">
-                    <div className="flex justify-between gap-2">
-                      <span className="text-xs font-bold">
-                        {log.action} · {log.target}
-                      </span>
-                      <span className="text-[10px] text-slate-400">{log.timestamp}</span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">{log.description}</p>
                   </div>
                 ))}
               </div>

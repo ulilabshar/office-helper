@@ -9,7 +9,6 @@ import {
   BookOpenCheck,
   HelpCircle,
   FolderArchive,
-  Activity,
   Settings,
   BookOpen,
   ArrowLeft,
@@ -53,7 +52,6 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'guides', label: 'Guides', icon: BookOpenCheck },
     { id: 'faq', label: 'FAQ', icon: HelpCircle },
     { id: 'media', label: 'Media', icon: FolderArchive },
-    { id: 'logs', label: 'Activity Logs', icon: Activity, badge: 'Live', badgeColor: 'bg-emerald-500' },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
