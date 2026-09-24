@@ -66,16 +66,27 @@ export function createEmptyDevice(input: {
   description: string;
   status: Device['status'];
   specs: string[];
+  slug?: string;
 }): Device {
-  const base = slugify(input.name) || 'perangkat';
+  const base = input.slug || slugify(input.name) || 'perangkat';
   return {
     id: `${base}-${Date.now().toString(36)}`,
     name: input.name,
+    slug: base,
     category: input.category,
     categorySlug: input.categorySlug,
     description: input.description,
     status: input.status,
+    supported_os: ['windows', 'mac'],
     specs: input.specs,
+    steps: [
+      {
+        title: 'Langkah 1: Menghubungkan Perangkat ke Jaringan',
+        description: 'Pastikan perangkat menyala dan terhubung ke jaringan kantor.',
+        konten_windows: '1. Nyalakan perangkat.\n2. Hubungkan ke Wi-Fi kantor "Kantor-Utama".',
+        konten_mac: '1. Nyalakan perangkat.\n2. Hubungkan Mac ke Wi-Fi kantor "Kantor-Utama".',
+      },
+    ],
     sections: {
       wifi: createEmptySection('wifi', 'Langkah Koneksi Wi-Fi', '1. Koneksi Wi-Fi', 'Wifi', 'Jaringan'),
       bluetooth: createEmptySection(
@@ -89,6 +100,54 @@ export function createEmptyDevice(input: {
     },
     faqs: [],
   };
+}
+
+export function extractDeviceSteps(device: Device): SetupStep[] {
+  if (device.steps && device.steps.length > 0) {
+    return device.steps;
+  }
+
+  if (!device.sections) return [];
+
+  const result: SetupStep[] = [];
+  const sectionKeys: (keyof NonNullable<Device['sections']>)[] = [
+    'wifi',
+    'bluetooth',
+    'finish',
+    'troubleshooting',
+  ];
+
+  for (const key of sectionKeys) {
+    const sec = device.sections[key];
+    if (!sec) continue;
+
+    if (sec.osSteps) {
+      const win = sec.osSteps.windows || [];
+      const mac = sec.osSteps.mac || [];
+      const maxLen = Math.max(win.length, mac.length);
+
+      for (let i = 0; i < maxLen; i++) {
+        const w = win[i];
+        const m = mac[i];
+        result.push({
+          title: w?.title || m?.title || `${sec.title} - Bagian ${i + 1}`,
+          description: w?.description || m?.description || '',
+          konten_windows: w?.details ? w.details.join('\n') : (w?.description || ''),
+          konten_mac: m?.details ? m.details.join('\n') : (m?.description || ''),
+          details: w?.details || m?.details,
+          codeSnippet: w?.codeSnippet || m?.codeSnippet,
+          tip: w?.tip || m?.tip,
+          warning: w?.warning || m?.warning,
+        });
+      }
+    } else if (sec.steps && sec.steps.length > 0) {
+      result.push(...sec.steps);
+    } else if (sec.commonSteps && sec.commonSteps.length > 0) {
+      result.push(...sec.commonSteps);
+    }
+  }
+
+  return result;
 }
 
 export function emptyStep(title = 'Langkah baru'): SetupStep {

@@ -107,14 +107,14 @@ export const DeviceDetailPage: React.FC = () => {
       </div>
 
       {/* Main Interactive Stepper Guide */}
-      <StepGuide sections={device.sections} />
+      <StepGuide steps={device.steps} sections={device.sections} />
 
       {/* Device Specific FAQ */}
       {device.faqs && device.faqs.length > 0 && (
         <AccordionFaq
           items={device.faqs}
           title={`FAQ ${device.name}`}
-          subtitle="Pertanyaan umum seputar keamanan dan hak akses pembagian link dokumen."
+          subtitle={`Pertanyaan umum dan solusi kendala terkait panduan ${device.name}.`}
         />
       )}
     </div>

@@ -35,9 +35,11 @@ export interface Profile {
 export interface Category {
   id: string;
   title: string;
+  slug?: string;
   description?: string | null;
   icon: string;
   sort_order: number;
+  is_active?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -46,15 +48,17 @@ export interface DeviceRow {
   id: string;
   category_id: string;
   nama_perangkat: string;
+  slug?: string;
   deskripsi_singkat?: string | null;
   status: string;
+  supported_os?: string[] | null;
+  specs?: string[] | null;
   tambah_os?: string[] | null;
   image_url?: string | null;
   faq?: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
-  // relasi jika di-join
   categories?: Category;
 }
 
@@ -68,6 +72,16 @@ export interface Step {
   sort_order: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface FaqRow {
+  id: string;
+  device_id?: string | null;
+  question: string;
+  answer: string;
+  sort_order: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // ─── Auth Helpers ─────────────────────────────────────────────────────────────
@@ -204,7 +218,33 @@ export async function deleteDevice(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function fetchDeviceBySlug(slug: string): Promise<DeviceRow | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('devices')
+    .select('*, categories(*)')
+    .eq('slug', slug)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as DeviceRow;
+}
+
 // ─── Steps CRUD ───────────────────────────────────────────────────────────────
+
+export async function fetchAllSteps(): Promise<Step[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('steps')
+    .select('*')
+    .order('sort_order', { ascending: true });
+
+  if (error) {
+    console.warn('fetchAllSteps error:', error);
+    return [];
+  }
+  return (data as Step[]) ?? [];
+}
 
 export async function fetchStepsByDeviceId(deviceId: string): Promise<Step[]> {
   if (!supabase) return [];
@@ -250,7 +290,7 @@ export async function syncDeviceSteps(
     description?: string | null;
     konten_windows?: string | null;
     konten_mac?: string | null;
-    sort_order: number;
+    sort_order?: number;
   }>
 ): Promise<void> {
   if (!supabase) return;
@@ -268,4 +308,100 @@ export async function syncDeviceSteps(
     if (error) throw error;
   }
 }
+
+// ─── FAQs CRUD ────────────────────────────────────────────────────────────────
+
+export async function fetchAllFaqs(): Promise<FaqRow[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('faqs')
+      .select('*')
+      .order('sort_order', { ascending: true });
+
+    if (error) return [];
+    return (data as FaqRow[]) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchGeneralFaqs(): Promise<FaqRow[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('faqs')
+      .select('*')
+      .is('device_id', null)
+      .order('sort_order', { ascending: true });
+
+    if (error) return [];
+    return (data as FaqRow[]) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchFaqsByDeviceId(deviceId: string): Promise<FaqRow[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('faqs')
+      .select('*')
+      .eq('device_id', deviceId)
+      .order('sort_order', { ascending: true });
+
+    if (error) return [];
+    return (data as FaqRow[]) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function syncDeviceFaqs(
+  deviceId: string,
+  faqs: Array<{ question: string; answer: string; sort_order?: number }>
+): Promise<void> {
+  if (!supabase) return;
+  // Always update legacy faq field on device for resilience
+  const faqString = faqs.map((f) => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
+  await supabase.from('devices').update({ faq: faqString }).eq('id', deviceId).catch(() => {});
+
+  // Update faqs table if it exists
+  try {
+    await supabase.from('faqs').delete().eq('device_id', deviceId);
+    if (faqs.length > 0) {
+      const payload = faqs.map((f, idx) => ({
+        device_id: deviceId,
+        question: f.question,
+        answer: f.answer,
+        sort_order: f.sort_order ?? idx + 1,
+      }));
+      await supabase.from('faqs').insert(payload);
+    }
+  } catch {
+    // Table may not exist yet if user hasn't run schema.sql
+  }
+}
+
+export async function syncGeneralFaqs(
+  faqs: Array<{ question: string; answer: string; sort_order?: number }>
+): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.from('faqs').delete().is('device_id', null);
+    if (faqs.length > 0) {
+      const payload = faqs.map((f, idx) => ({
+        device_id: null,
+        question: f.question,
+        answer: f.answer,
+        sort_order: f.sort_order ?? idx + 1,
+      }));
+      await supabase.from('faqs').insert(payload);
+    }
+  } catch {
+    // Table may not exist yet
+  }
+}
+
 

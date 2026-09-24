@@ -5,6 +5,7 @@ import { AdminTab, MediaAsset } from '../../types/admin';
 import { Device, Category, FAQItem } from '../../types/device';
 import { calculateDashboardStats } from '../../data/adminData';
 import { useCatalog } from '../../context/CatalogContext';
+import { slugify, extractDeviceSteps } from '../../lib/catalog';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { AdminHeader } from '../../components/admin/AdminHeader';
 import {
@@ -80,8 +81,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [guideModal, setGuideModal] = useState<{
     open: boolean;
     device: Device | null;
-    sectionKey: keyof Device['sections'] | null;
-  }>({ open: false, device: null, sectionKey: null });
+  }>({ open: false, device: null });
   const [faqModal, setFaqModal] = useState<{
     open: boolean;
     title: string;
@@ -426,42 +426,62 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
           {activeTab === 'guides' && (
             <div className="space-y-6">
-              <h2 className="text-xl font-bold">Panduan Setup ({stats.totalGuides} modul & langkah)</h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-bold">Panduan Langkah Setup ({catalog.devices.length} Perangkat)</h2>
+                  <p className="text-xs text-slate-500">
+                    Kelola alur langkah linear (1, 2, 3...) untuk masing-masing perangkat.
+                  </p>
+                </div>
+              </div>
+
               <div className="space-y-4">
-                {catalog.devices.map((device) => (
-                  <div key={device.id} className="border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4">
-                    <div className="flex justify-between items-center gap-2">
-                      <div>
-                        <h3 className="font-bold">{device.name}</h3>
-                        <span className="text-xs text-slate-500">{device.category}</span>
-                      </div>
-                      <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
-                        {device.status}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {(Object.entries(device.sections) as [keyof Device['sections'], NonNullable<Device['sections'][keyof Device['sections']]>][])
-                        .filter(([, sec]) => sec)
-                        .map(([key, sec]) => (
-                          <div key={key} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800">
-                            <div className="flex justify-between items-start gap-2">
-                              <span className="font-bold text-xs">{sec.title}</span>
-                              <button
-                                onClick={() => setGuideModal({ open: true, device, sectionKey: key })}
-                                className="text-blue-600"
-                                title="Ubah"
-                              >
-                                <Edit3 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                            <p className="text-[11px] text-slate-500 mt-1">
-                              Win {sec.osSteps?.windows?.length || sec.steps?.length || 0} · Mac {sec.osSteps?.mac?.length || 0}
-                            </p>
+                {catalog.devices.map((device) => {
+                  const stepsCount =
+                    device.steps && device.steps.length > 0
+                      ? device.steps.length
+                      : extractDeviceSteps(device).length;
+
+                  return (
+                    <div
+                      key={device.id}
+                      className="border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 bg-white dark:bg-slate-900/60"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                              {device.name}
+                            </h3>
+                            <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                              {device.status}
+                            </span>
                           </div>
-                        ))}
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-slate-500">{device.category}</span>
+                            <span className="text-slate-300 dark:text-slate-700">•</span>
+                            <span className="text-xs font-mono text-slate-400">
+                              /docs/{device.categorySlug}/{device.slug || slugify(device.name)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <span className="px-3 py-1 text-xs font-bold rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                            {stepsCount} Langkah Panduan
+                          </span>
+                          <button
+                            onClick={() => setGuideModal({ open: true, device })}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 transition-colors shadow-sm"
+                          >
+                            <Edit3 className="h-3.5 w-3.5" />
+                            <span>Kelola Langkah</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -679,12 +699,15 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       />
       <GuideFormModal
         isOpen={guideModal.open}
-        onClose={() => setGuideModal({ open: false, device: null, sectionKey: null })}
+        onClose={() => setGuideModal({ open: false, device: null })}
         device={guideModal.device}
-        sectionKey={guideModal.sectionKey}
+        onSaveSteps={(deviceId, steps) => {
+          catalog.saveDeviceSteps(deviceId, steps);
+          showToast('Langkah panduan berhasil disimpan ke Supabase.');
+        }}
         onSave={(section) => {
-          if (guideModal.device && guideModal.sectionKey) {
-            catalog.saveDeviceSection(guideModal.device.id, guideModal.sectionKey, section);
+          if (guideModal.device) {
+            catalog.saveDeviceSection(guideModal.device.id, 'wifi', section);
             showToast('Panduan disimpan.');
           }
         }}

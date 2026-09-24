@@ -8,13 +8,16 @@ import {
   saveCatalog,
   slugify,
   withDeviceCounts,
+  DEFAULT_GENERAL_FAQS,
+  extractDeviceSteps,
 } from '../lib/catalog';
 import {
   supabase,
   isSupabaseReady,
   fetchCategories,
   fetchDevices,
-  fetchStepsByDeviceId,
+  fetchAllSteps,
+  fetchAllFaqs,
   createCategory as sbCreateCategory,
   updateCategory as sbUpdateCategory,
   deleteCategory as sbDeleteCategory,
@@ -22,6 +25,8 @@ import {
   updateDevice as sbUpdateDevice,
   deleteDevice as sbDeleteDevice,
   syncDeviceSteps,
+  syncDeviceFaqs,
+  syncGeneralFaqs,
 } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
@@ -64,7 +69,8 @@ interface CatalogContextType {
   deleteCategory: (id: string) => void;
   saveDevice: (device: Device, isNew: boolean) => void;
   deleteDevice: (id: string) => void;
-  saveDeviceSection: (deviceId: string, sectionKey: keyof Device['sections'], section: DeviceSection) => void;
+  saveDeviceSteps: (deviceId: string, steps: SetupStep[]) => void;
+  saveDeviceSection: (deviceId: string, sectionKey: keyof NonNullable<Device['sections']>, section: DeviceSection) => void;
   saveDeviceFaqs: (deviceId: string, faqs: FAQItem[]) => void;
   saveGeneralFaqs: (faqs: FAQItem[]) => void;
   saveMedia: (asset: MediaAsset, isNew: boolean) => void;
@@ -87,32 +93,44 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const loadFromSupabase = async () => {
       try {
         setIsLoadingSupabase(true);
-        const [sbCats, sbDevs] = await Promise.all([
+        const [sbCats, sbDevs, sbSteps, sbFaqs] = await Promise.all([
           fetchCategories(),
           fetchDevices(),
+          fetchAllSteps(),
+          fetchAllFaqs(),
         ]);
 
         if (sbCats.length > 0 && isMounted) {
-          // Ambil steps untuk masing-masing device
-          const allSteps = await Promise.all(
-            sbDevs.map((d) => fetchStepsByDeviceId(d.id).catch(() => []))
-          );
-
           const mappedCategories: Category[] = sbCats.map((c) => ({
             id: c.id,
-            slug: slugify(c.title),
+            slug: c.slug || slugify(c.title),
             title: c.title,
             description: c.description || '',
             icon: c.icon || 'Monitor',
             deviceCount: 0,
-            available: true,
+            available: c.is_active ?? true,
+            sort_order: c.sort_order,
           }));
 
-          const mappedDevices: Device[] = sbDevs.map((d, index) => {
+          const mappedDevices: Device[] = sbDevs.map((d) => {
             const catObj = sbCats.find((c) => c.id === d.category_id);
             const catTitle = catObj?.title || 'Umum';
-            const catSlug = slugify(catTitle);
-            const devSteps = allSteps[index] || [];
+            const catSlug = catObj?.slug || slugify(catTitle);
+            const devSteps = sbSteps.filter((s) => s.device_id === d.id);
+            const devFaqs = sbFaqs.filter((f) => f.device_id === d.id);
+
+            const stepsList: SetupStep[] = devSteps.map((s) => ({
+              id: s.id,
+              device_id: s.device_id,
+              title: s.title,
+              description: s.description || '',
+              konten_windows: s.konten_windows || '',
+              konten_mac: s.konten_mac || '',
+              details: s.konten_windows
+                ? s.konten_windows.split('\n').map((l) => l.trim()).filter(Boolean)
+                : [],
+              sort_order: s.sort_order,
+            }));
 
             const winSteps: SetupStep[] = devSteps.map((s) => ({
               title: s.title,
@@ -130,16 +148,37 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 : [],
             }));
 
+            const faqsList: FAQItem[] =
+              devFaqs.length > 0
+                ? devFaqs.map((f) => ({
+                    id: f.id,
+                    device_id: f.device_id,
+                    question: f.question,
+                    answer: f.answer,
+                    sort_order: f.sort_order,
+                  }))
+                : parseFaqText(d.faq);
+
+            const rawSpecs =
+              d.specs && d.specs.length > 0
+                ? d.specs
+                : d.tambah_os && d.tambah_os.length > 0
+                ? d.tambah_os
+                : ['windows', 'mac'];
+
             return {
               id: d.id,
               name: d.nama_perangkat,
-              slug: slugify(d.nama_perangkat),
+              slug: d.slug || slugify(d.nama_perangkat),
               category: catTitle,
               categorySlug: catSlug,
               description: d.deskripsi_singkat || '',
               image: d.image_url || undefined,
               status: (d.status as Device['status']) || 'Ready',
-              specs: d.tambah_os && d.tambah_os.length > 0 ? d.tambah_os : ['windows', 'mac'],
+              supported_os: d.supported_os || ['windows', 'mac'],
+              specs: rawSpecs,
+              sort_order: d.sort_order,
+              steps: stepsList,
               sections: {
                 wifi: {
                   id: 'wifi',
@@ -169,14 +208,27 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
                   osSteps: { windows: [], mac: [] },
                 },
               },
-              faqs: parseFaqText(d.faq),
+              faqs: faqsList,
             };
           });
+
+          const generalFaqsFromDb: FAQItem[] = sbFaqs
+            .filter((f) => !f.device_id)
+            .map((f) => ({
+              id: f.id,
+              question: f.question,
+              answer: f.answer,
+              sort_order: f.sort_order,
+            }));
+
+          const finalGeneralFaqs =
+            generalFaqsFromDb.length > 0 ? generalFaqsFromDb : DEFAULT_GENERAL_FAQS;
 
           setState((prev) => ({
             ...prev,
             categories: withDeviceCounts(mappedCategories, mappedDevices),
             devices: mappedDevices,
+            generalFaqs: finalGeneralFaqs,
           }));
         }
       } catch (err) {
@@ -277,10 +329,12 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (isNew) {
             sbCreateCategory({
               title: category.title,
+              slug: category.slug,
               description: category.description,
               icon: category.icon,
-              sort_order: 0,
-            })
+              sort_order: category.sort_order ?? 0,
+              is_active: category.available,
+            } as any)
               .then((created) => {
                 setState((prev) => ({
                   ...prev,
@@ -293,9 +347,12 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           } else {
             sbUpdateCategory(category.id, {
               title: category.title,
+              slug: category.slug,
               description: category.description,
               icon: category.icon,
-            }).catch((e) => console.warn('Supabase updateCategory error:', e));
+              sort_order: category.sort_order ?? 0,
+              is_active: category.available,
+            } as any).catch((e) => console.warn('Supabase updateCategory error:', e));
           }
         }
       },
@@ -342,17 +399,22 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 ? device.faqs.map((f) => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n')
                 : null;
 
+            const payload: any = {
+              category_id: catObj.id,
+              nama_perangkat: device.name,
+              slug: device.slug || slugify(device.name),
+              deskripsi_singkat: device.description,
+              status: device.status,
+              supported_os: device.supported_os || ['windows', 'mac'],
+              specs: device.specs,
+              tambah_os: device.specs,
+              image_url: device.image || null,
+              faq: faqString,
+              sort_order: device.sort_order ?? 0,
+            };
+
             if (isNew) {
-              sbCreateDevice({
-                category_id: catObj.id,
-                nama_perangkat: device.name,
-                deskripsi_singkat: device.description,
-                status: device.status,
-                tambah_os: device.specs,
-                image_url: device.image || null,
-                faq: faqString,
-                sort_order: 0,
-              })
+              sbCreateDevice(payload)
                 .then((created) => {
                   setState((prev) => ({
                     ...prev,
@@ -360,18 +422,21 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
                       d.id === device.id ? { ...d, id: created.id } : d
                     ),
                   }));
+
+                  // Sinkronkan steps awal jika ada
+                  if (device.steps && device.steps.length > 0) {
+                    syncDeviceSteps(created.id, device.steps as any).catch(() => {});
+                  }
+                  // Sinkronkan faqs awal jika ada
+                  if (device.faqs && device.faqs.length > 0) {
+                    syncDeviceFaqs(created.id, device.faqs).catch(() => {});
+                  }
                 })
                 .catch((e) => console.warn('Supabase createDevice error:', e));
             } else {
-              sbUpdateDevice(device.id, {
-                category_id: catObj.id,
-                nama_perangkat: device.name,
-                deskripsi_singkat: device.description,
-                status: device.status,
-                tambah_os: device.specs,
-                image_url: device.image || null,
-                faq: faqString,
-              }).catch((e) => console.warn('Supabase updateDevice error:', e));
+              sbUpdateDevice(device.id, payload).catch((e) =>
+                console.warn('Supabase updateDevice error:', e)
+              );
             }
           }
         }
@@ -395,12 +460,44 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           sbDeleteDevice(id).catch((e) => console.warn('Supabase deleteDevice error:', e));
         }
       },
+      saveDeviceSteps: (deviceId, steps) => {
+        setState((prev) => ({
+          ...prev,
+          devices: prev.devices.map((d) =>
+            d.id === deviceId ? { ...d, steps } : d
+          ),
+          activityLogs: pushLog(
+            prev,
+            'UPDATE',
+            'Panduan Langkah',
+            `Langkah panduan perangkat diperbarui.`
+          ),
+        }));
+
+        if (isSupabaseReady && supabase) {
+          const payload = steps.map((s, idx) => ({
+            title: s.title,
+            description: s.description || null,
+            konten_windows: s.konten_windows || (s.details ? s.details.join('\n') : null),
+            konten_mac: s.konten_mac || (s.details ? s.details.join('\n') : null),
+            sort_order: s.sort_order ?? idx + 1,
+          }));
+          syncDeviceSteps(deviceId, payload).catch((e) =>
+            console.warn('Supabase syncDeviceSteps error:', e)
+          );
+        }
+      },
       saveDeviceSection: (deviceId, sectionKey, section) => {
         setState((prev) => ({
           ...prev,
           devices: prev.devices.map((d) =>
             d.id === deviceId
-              ? { ...d, sections: { ...d.sections, [sectionKey]: section } }
+              ? {
+                  ...d,
+                  sections: d.sections
+                    ? { ...d.sections, [sectionKey]: section }
+                    : { [sectionKey]: section } as any,
+                }
               : d
           ),
           activityLogs: pushLog(
@@ -452,9 +549,8 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         });
 
         if (isSupabaseReady && supabase) {
-          const faqString = faqs.map((f) => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
-          sbUpdateDevice(deviceId, { faq: faqString }).catch((e) =>
-            console.warn('Supabase updateDevice FAQ error:', e)
+          syncDeviceFaqs(deviceId, faqs).catch((e) =>
+            console.warn('Supabase syncDeviceFaqs error:', e)
           );
         }
       },
@@ -464,6 +560,12 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           generalFaqs: faqs,
           activityLogs: pushLog(prev, 'UPDATE', 'FAQ Umum', 'Bank FAQ umum diperbarui.'),
         }));
+
+        if (isSupabaseReady && supabase) {
+          syncGeneralFaqs(faqs).catch((e) =>
+            console.warn('Supabase syncGeneralFaqs error:', e)
+          );
+        }
       },
       saveMedia: (asset, isNew) => {
         setState((prev) => {

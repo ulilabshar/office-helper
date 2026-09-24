@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Category, Device, DeviceSection, FAQItem, SetupStep } from '../../types/device';
 import { MediaAsset } from '../../types/admin';
-import { createEmptyDevice, emptyStep, slugify } from '../../lib/catalog';
+import { createEmptyDevice, emptyStep, slugify, extractDeviceSteps } from '../../lib/catalog';
 import { CrudModal, fieldClass, labelClass } from './CrudModal';
 
 export const DeviceFormModal: React.FC<{
@@ -13,11 +13,13 @@ export const DeviceFormModal: React.FC<{
 }> = ({ isOpen, onClose, categories, initial, onSave }) => {
   const isNew = !initial;
   const [name, setName] = useState(initial?.name ?? '');
+  const [slug, setSlug] = useState(initial?.slug ?? '');
   const [categorySlug, setCategorySlug] = useState(initial?.categorySlug ?? categories[0]?.slug ?? '');
   const [status, setStatus] = useState<Device['status']>(initial?.status ?? 'Ready');
   const [description, setDescription] = useState(initial?.description ?? '');
+  const [specsText, setSpecsText] = useState((initial?.specs || []).join(', '));
   const [osChoice, setOsChoice] = useState<'both' | 'windows' | 'mac'>(() => {
-    const s = initial?.specs || [];
+    const s = initial?.supported_os || initial?.specs || [];
     if (s.includes('windows') && s.includes('mac')) return 'both';
     if (s.includes('windows')) return 'windows';
     if (s.includes('mac')) return 'mac';
@@ -31,11 +33,13 @@ export const DeviceFormModal: React.FC<{
 
   React.useEffect(() => {
     setName(initial?.name ?? '');
+    setSlug(initial?.slug ?? (initial?.name ? slugify(initial.name) : ''));
     setCategorySlug(initial?.categorySlug ?? categories[0]?.slug ?? '');
     setStatus(initial?.status ?? 'Ready');
     setDescription(initial?.description ?? '');
     setImageUrl(initial?.image ?? '');
-    const s = initial?.specs || [];
+    setSpecsText((initial?.specs || []).join(', '));
+    const s = initial?.supported_os || initial?.specs || [];
     if (s.includes('windows') && s.includes('mac')) setOsChoice('both');
     else if (s.includes('windows')) setOsChoice('windows');
     else if (s.includes('mac')) setOsChoice('mac');
@@ -53,6 +57,12 @@ export const DeviceFormModal: React.FC<{
     if (!name.trim() || !description.trim()) return;
     const cat = categories.find((c) => c.slug === categorySlug);
     const osList = osChoice === 'both' ? ['windows', 'mac'] : [osChoice];
+    const finalSlug = slugify(slug || name);
+    const parsedSpecs = specsText
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const finalSpecs = parsedSpecs.length > 0 ? parsedSpecs : osList;
 
     // Parse FAQ text
     const parsedFaqs: FAQItem[] = [];
@@ -81,12 +91,14 @@ export const DeviceFormModal: React.FC<{
         {
           ...initial,
           name: name.trim(),
+          slug: finalSlug,
           category: cat?.title ?? initial.category,
           categorySlug,
           status,
           description: description.trim(),
           image: imageUrl.trim() || undefined,
-          specs: osList,
+          supported_os: osList,
+          specs: finalSpecs,
           faqs: parsedFaqs.length > 0 ? parsedFaqs : initial.faqs,
         },
         false
@@ -94,13 +106,15 @@ export const DeviceFormModal: React.FC<{
     } else {
       const empty = createEmptyDevice({
         name: name.trim(),
+        slug: finalSlug,
         category: cat?.title ?? 'Umum',
         categorySlug,
         description: description.trim(),
         status,
-        specs: osList,
+        specs: finalSpecs,
       });
       empty.image = imageUrl.trim() || undefined;
+      empty.supported_os = osList;
       empty.faqs = parsedFaqs;
       onSave(empty, true);
     }
@@ -116,11 +130,33 @@ export const DeviceFormModal: React.FC<{
       wide
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="sm:col-span-2">
             <label className={labelClass}>Nama Perangkat</label>
-            <input className={fieldClass} value={name} onChange={(e) => setName(e.target.value)} required />
+            <input
+              className={fieldClass}
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (isNew) setSlug(slugify(e.target.value));
+              }}
+              required
+              placeholder="Contoh: Epson EcoTank L3250"
+            />
           </div>
+          <div>
+            <label className={labelClass}>Slug URL</label>
+            <input
+              className={fieldClass}
+              value={slug}
+              onChange={(e) => setSlug(slugify(e.target.value))}
+              required
+              placeholder="epson-ecotank-l3250"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className={labelClass}>Kategori</label>
             <select className={fieldClass} value={categorySlug} onChange={(e) => setCategorySlug(e.target.value)}>
@@ -131,9 +167,6 @@ export const DeviceFormModal: React.FC<{
               ))}
             </select>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={labelClass}>Status Perangkat</label>
             <select
@@ -147,7 +180,7 @@ export const DeviceFormModal: React.FC<{
             </select>
           </div>
           <div>
-            <label className={labelClass}>Dukungan OS (tambah_os)</label>
+            <label className={labelClass}>Dukungan OS</label>
             <select
               className={fieldClass}
               value={osChoice}
@@ -158,6 +191,16 @@ export const DeviceFormModal: React.FC<{
               <option value="mac">Hanya macOS</option>
             </select>
           </div>
+        </div>
+
+        <div>
+          <label className={labelClass}>Poin Penting / Fitur (specs, pisahkan dengan koma)</label>
+          <input
+            className={fieldClass}
+            value={specsText}
+            onChange={(e) => setSpecsText(e.target.value)}
+            placeholder="Contoh: All-in-One, Wi-Fi Direct, Resolusi 4K, PIN Print"
+          />
         </div>
 
         <div>
@@ -195,7 +238,7 @@ export const DeviceFormModal: React.FC<{
           <button type="button" onClick={onClose} className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700">
             Batal
           </button>
-          <button type="submit" className="px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white">
+          <button type="submit" className="px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500">
             Simpan Perangkat
           </button>
         </div>
@@ -359,56 +402,74 @@ export const GuideFormModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   device: Device | null;
-  sectionKey: keyof Device['sections'] | null;
-  onSave: (section: DeviceSection) => void;
-}> = ({ isOpen, onClose, device, sectionKey, onSave }) => {
-  const section = device && sectionKey ? device.sections[sectionKey] : undefined;
-  const [title, setTitle] = useState(section?.title ?? '');
-  const [tabLabel, setTabLabel] = useState(section?.tabLabel ?? '');
+  onSave?: (section: DeviceSection) => void;
+  onSaveSteps?: (deviceId: string, steps: SetupStep[]) => void;
+  sectionKey?: keyof Device['sections'] | null;
+}> = ({ isOpen, onClose, device, onSave, onSaveSteps, sectionKey }) => {
   const [steps, setSteps] = useState<StepRowItem[]>([]);
 
   React.useEffect(() => {
-    setTitle(section?.title ?? 'Langkah Panduan Setup');
-    setTabLabel(section?.tabLabel ?? '1. Setup');
-    const win = section?.osSteps?.windows || section?.steps || [];
-    const mac = section?.osSteps?.mac || [];
-    const maxLen = Math.max(win.length, mac.length, 1);
-    const rows: StepRowItem[] = [];
-    for (let i = 0; i < maxLen; i++) {
-      const w = win[i];
-      const m = mac[i];
+    if (!device) {
+      setSteps([]);
+      return;
+    }
+    const devSteps =
+      device.steps && device.steps.length > 0
+        ? device.steps
+        : extractDeviceSteps(device);
+
+    const rows: StepRowItem[] = devSteps.map((s, i) => ({
+      title: s.title || `Langkah ${i + 1}`,
+      description: s.description || '',
+      konten_windows: s.konten_windows || (s.details ? s.details.join('\n') : ''),
+      konten_mac: s.konten_mac || (s.details ? s.details.join('\n') : ''),
+    }));
+
+    if (rows.length === 0) {
       rows.push({
-        title: w?.title || m?.title || `Langkah ${i + 1}`,
-        description: w?.description || m?.description || '',
-        konten_windows: w?.details ? w.details.join('\n') : (w?.description || ''),
-        konten_mac: m?.details ? m.details.join('\n') : (m?.description || ''),
+        title: 'Langkah 1: Hubungkan Perangkat ke Jaringan',
+        description: 'Pastikan perangkat menyala dan terhubung ke jaringan kantor.',
+        konten_windows: '1. Nyalakan perangkat.\n2. Hubungkan ke SSID Wi-Fi kantor "Kantor-Utama".',
+        konten_mac: '1. Nyalakan perangkat.\n2. Hubungkan Mac ke SSID Wi-Fi kantor "Kantor-Utama".',
       });
     }
-    setSteps(rows);
-  }, [section, isOpen]);
 
-  if (!section) return null;
+    setSteps(rows);
+  }, [device, isOpen]);
+
+  if (!device) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const winSteps: SetupStep[] = steps.map((s) => ({
-      title: s.title,
-      description: s.description,
-      details: s.konten_windows.split('\n').map((l) => l.trim()).filter(Boolean),
-    }));
-    const macSteps: SetupStep[] = steps.map((s) => ({
-      title: s.title,
-      description: s.description,
-      details: s.konten_mac.split('\n').map((l) => l.trim()).filter(Boolean),
+    const finalSteps: SetupStep[] = steps.map((s, i) => ({
+      title: s.title.trim(),
+      description: s.description.trim(),
+      konten_windows: s.konten_windows.trim(),
+      konten_mac: s.konten_mac.trim(),
+      sort_order: i + 1,
     }));
 
-    onSave({
-      ...section,
-      title: title.trim(),
-      tabLabel: tabLabel.trim(),
-      osSteps: { windows: winSteps, mac: macSteps },
-      steps: undefined,
-    });
+    if (onSaveSteps) {
+      onSaveSteps(device.id, finalSteps);
+    } else if (onSave) {
+      const winSteps: SetupStep[] = finalSteps.map((s) => ({
+        title: s.title,
+        description: s.description,
+        details: s.konten_windows ? s.konten_windows.split('\n').map((l) => l.trim()).filter(Boolean) : [],
+      }));
+      const macSteps: SetupStep[] = finalSteps.map((s) => ({
+        title: s.title,
+        description: s.description,
+        details: s.konten_mac ? s.konten_mac.split('\n').map((l) => l.trim()).filter(Boolean) : [],
+      }));
+      onSave({
+        id: sectionKey || 'wifi',
+        title: 'Panduan Alur Langkah',
+        tabLabel: 'Langkah Panduan',
+        iconName: 'CheckCircle2',
+        osSteps: { windows: winSteps, mac: macSteps },
+      });
+    }
     onClose();
   };
 
@@ -416,7 +477,7 @@ export const GuideFormModal: React.FC<{
     setSteps([
       ...steps,
       {
-        title: `Langkah ${steps.length + 1}`,
+        title: `Langkah ${steps.length + 1}: `,
         description: '',
         konten_windows: '',
         konten_mac: '',
@@ -437,21 +498,10 @@ export const GuideFormModal: React.FC<{
       wide
       isOpen={isOpen}
       onClose={onClose}
-      title={`Kelola Panduan: ${section.title}`}
-      subtitle={`${device?.name} (Disimpan ke tabel steps di Supabase)`}
+      title={`Kelola Panduan Langkah: ${device.name}`}
+      subtitle={`Panduan berurutan linear yang disimpan ke tabel steps di Supabase (${steps.length} langkah).`}
     >
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
-          <div>
-            <label className={labelClass}>Judul Modul Panduan</label>
-            <input className={fieldClass} value={title} onChange={(e) => setTitle(e.target.value)} required />
-          </div>
-          <div>
-            <label className={labelClass}>Label Tab</label>
-            <input className={fieldClass} value={tabLabel} onChange={(e) => setTabLabel(e.target.value)} required />
-          </div>
-        </div>
-
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
           {steps.map((step, idx) => (
             <div
@@ -507,7 +557,7 @@ export const GuideFormModal: React.FC<{
                     onChange={(e) => updateStep(idx, { konten_windows: e.target.value })}
                     placeholder={"1. Nyalakan printer.\n2. Hubungkan ke SSID Wi-Fi kantor.\n3. Tambahkan di Windows Settings."}
                   />
-                  <span className="text-[10px] text-slate-400">Dapat berupa instruksi baris bernomor (1, 2, 3...)</span>
+                  <span className="text-[10px] text-slate-400">Instruksi baris per baris (1, 2, 3...)</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -520,7 +570,7 @@ export const GuideFormModal: React.FC<{
                     onChange={(e) => updateStep(idx, { konten_mac: e.target.value })}
                     placeholder={"1. Nyalakan printer.\n2. Pastikan Mac terhubung ke Wi-Fi yang sama.\n3. Tambahkan via Printers & Scanners."}
                   />
-                  <span className="text-[10px] text-slate-400">Dapat berupa instruksi baris bernomor (1, 2, 3...)</span>
+                  <span className="text-[10px] text-slate-400">Instruksi baris per baris (1, 2, 3...)</span>
                 </div>
               </div>
             </div>

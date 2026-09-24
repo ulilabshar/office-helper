@@ -1,13 +1,18 @@
 export type TargetOS = 'windows' | 'mac';
 
 export interface SetupStep {
+  id?: string;
+  device_id?: string;
   title: string;
-  description: string;
+  description?: string;
+  konten_windows?: string;
+  konten_mac?: string;
   details?: string[];
   codeSnippet?: string;
   warning?: string;
   tip?: string;
   osTarget?: 'all' | 'windows' | 'mac';
+  sort_order?: number;
 }
 
 export interface OsSpecificSteps {
@@ -23,12 +28,15 @@ export interface DeviceSection {
   badge?: string;
   commonSteps?: SetupStep[];
   osSteps?: OsSpecificSteps;
-  steps?: SetupStep[]; // Backward compatibility fallback
+  steps?: SetupStep[];
 }
 
 export interface FAQItem {
+  id?: string;
+  device_id?: string | null;
   question: string;
   answer: string;
+  sort_order?: number;
 }
 
 export interface Device {
@@ -40,12 +48,14 @@ export interface Device {
   description: string;
   image?: string;
   status: 'Ready' | 'Maintenance' | 'New';
+  supported_os?: string[];
   specs: string[];
   sort_order?: number;
-  sections: {
-    wifi: DeviceSection;
-    bluetooth: DeviceSection;
-    finish: DeviceSection;
+  steps?: SetupStep[];
+  sections?: {
+    wifi?: DeviceSection;
+    bluetooth?: DeviceSection;
+    finish?: DeviceSection;
     troubleshooting?: DeviceSection;
   };
   faqs: FAQItem[];
@@ -61,4 +71,5 @@ export interface Category {
   available: boolean;
   sort_order?: number;
 }
+
 
