@@ -123,7 +123,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, setDarkMode }) =
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder="admin"
+                      placeholder="admin@gmail.com"
                       className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl"
                       autoFocus
                       required
@@ -156,13 +156,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, setDarkMode }) =
                 <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200 dark:bg-blue-950/30 dark:border-blue-900/50 flex items-center justify-between gap-2 text-xs">
                   <span className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300 font-medium">
                     <ShieldCheck className="h-4 w-4" />
-                    Demo: <strong>admin</strong> / <strong>admin123</strong>
+                    Akun: <strong>admin@gmail.com</strong> / <strong>admin</strong>
                   </span>
                   <button
                     type="button"
                     onClick={() => {
-                      setUsername('admin');
-                      setPassword('admin123');
+                      setUsername('admin@gmail.com');
+                      setPassword('admin');
                       setError(null);
                     }}
                     className="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-semibold"

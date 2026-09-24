@@ -23,11 +23,44 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = 'office_docs_auth_user';
 
-// ── Mock fallback credentials (digunakan jika Supabase offline/belum setup) ───
-const MOCK_USERS: Array<{ username: string; password: string; name: string; role: string }> = [
-  { username: 'admin', password: 'admin123', name: 'Administrator IT', role: 'Admin IT' },
-  { username: 'it-support', password: 'admin123', name: 'IT Support Officer', role: 'Admin IT' },
-  { username: 'it', password: 'it123', name: 'IT Staff', role: 'Staff IT' },
+// ── Mock fallback credentials (digunakan untuk demo / fallback jika Supabase offline) ───
+interface MockUser {
+  username: string;
+  email: string;
+  passwords: string[];
+  name: string;
+  role: string;
+}
+
+const MOCK_USERS: MockUser[] = [
+  {
+    username: 'admin',
+    email: 'admin@gmail.com',
+    passwords: ['admin', 'admin123'],
+    name: 'Administrator IT',
+    role: 'Admin IT',
+  },
+  {
+    username: 'admin@gmail.com',
+    email: 'admin@gmail.com',
+    passwords: ['admin', 'admin123'],
+    name: 'Administrator IT',
+    role: 'Admin IT',
+  },
+  {
+    username: 'it-support',
+    email: 'it-support@officedocs.local',
+    passwords: ['admin123'],
+    name: 'IT Support Officer',
+    role: 'Admin IT',
+  },
+  {
+    username: 'it',
+    email: 'it@officedocs.local',
+    passwords: ['it123'],
+    name: 'IT Staff',
+    role: 'Staff IT',
+  },
 ];
 
 function formatAuthUser(authUser: any, fallbackUsername?: string): User {
@@ -103,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, error: 'Username/email dan password wajib diisi!' };
     }
 
-    // ── Supabase Native Auth ─────────────────────────────────────────────────
+    // ── 1. Supabase Native Auth ──────────────────────────────────────────────
     if (isSupabaseReady && supabase) {
       try {
         let email = trimmedUser;
@@ -119,29 +152,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { success: true };
         }
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (msg.toLowerCase().includes('invalid login credentials')) {
-          return { success: false, error: 'Username/email atau password salah!' };
-        }
-        return { success: false, error: `Login gagal: ${msg}` };
+        console.warn('Supabase Auth error, checking fallback accounts:', err);
       }
     }
 
-    // ── Mock Fallback (jika Supabase belum disetup / offline) ─────────────────
+    // ── 2. Mock Fallback (jika Supabase belum siap / error / akun demo) ───────
     const mockMatch = MOCK_USERS.find(
       (u) =>
-        (u.username === trimmedUser ||
-          `${u.username}@kantor.local` === trimmedUser ||
-          `${u.username}@officedocs.local` === trimmedUser) &&
-        u.password === trimmedPass
+        (u.username.toLowerCase() === trimmedUser ||
+          u.email.toLowerCase() === trimmedUser ||
+          `${u.username.toLowerCase()}@kantor.local` === trimmedUser ||
+          `${u.username.toLowerCase()}@officedocs.local` === trimmedUser) &&
+        u.passwords.includes(trimmedPass)
     );
 
     if (mockMatch) {
       const authenticatedUser: User = {
+        id: 'mock-' + mockMatch.username,
         username: mockMatch.username,
         name: mockMatch.name,
         role: mockMatch.role,
-        email: `${mockMatch.username}@kantor.local`,
+        email: mockMatch.email,
       };
       setUser(authenticatedUser);
       setIsLoginModalOpen(false);
@@ -150,7 +181,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return {
       success: false,
-      error: 'Username atau password salah!',
+      error: 'Username/email atau password salah!',
     };
   };
 

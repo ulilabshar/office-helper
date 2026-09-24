@@ -3,7 +3,10 @@
 -- Jalankan seluruh script ini di Supabase SQL Editor
 -- ============================================================
 
--- Bersihkan tabel lama jika ada
+-- Bersihkan tabel & trigger lama jika ada
+drop trigger if exists on_auth_user_created on auth.users;
+drop function if exists public.handle_new_user() cascade;
+drop function if exists public.is_admin() cascade;
 drop table if exists public.steps cascade;
 drop table if exists public.faqs cascade;
 drop table if exists public.devices cascade;

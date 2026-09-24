@@ -67,8 +67,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
   };
 
   const handleFillDemoCredentials = () => {
-    setUsername('admin');
-    setPassword('admin123');
+    setUsername('admin@gmail.com');
+    setPassword('admin');
     setError(null);
   };
 
@@ -129,7 +129,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Contoh: admin"
+                placeholder="Contoh: admin@gmail.com"
                 className="w-full pl-9 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 autoFocus
                 required
@@ -173,9 +173,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
               className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium inline-flex items-center gap-1 hover:underline"
             >
               <ShieldCheck className="h-3.5 w-3.5" />
-              <span>Gunakan Akun Demo (admin)</span>
+              <span>Gunakan Akun (admin@gmail.com)</span>
             </button>
-            <span className="text-[11px] text-slate-400">Password: admin123</span>
+            <span className="text-[11px] text-slate-400">Password: admin</span>
           </div>
 
           {/* Submit Button */}
