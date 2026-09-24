@@ -26,10 +26,6 @@ export const DeviceFormModal: React.FC<{
     return 'both';
   });
   const [imageUrl, setImageUrl] = useState(initial?.image ?? '');
-  const [faqText, setFaqText] = useState(() => {
-    if (!initial?.faqs || initial.faqs.length === 0) return '';
-    return initial.faqs.map((f) => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
-  });
 
   React.useEffect(() => {
     setName(initial?.name ?? '');
@@ -44,12 +40,6 @@ export const DeviceFormModal: React.FC<{
     else if (s.includes('windows')) setOsChoice('windows');
     else if (s.includes('mac')) setOsChoice('mac');
     else setOsChoice('both');
-
-    if (initial?.faqs && initial.faqs.length > 0) {
-      setFaqText(initial.faqs.map((f) => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n'));
-    } else {
-      setFaqText('');
-    }
   }, [initial, isOpen, categories]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -64,28 +54,6 @@ export const DeviceFormModal: React.FC<{
       .filter(Boolean);
     const finalSpecs = parsedSpecs.length > 0 ? parsedSpecs : osList;
 
-    // Parse FAQ text
-    const parsedFaqs: FAQItem[] = [];
-    if (faqText.trim()) {
-      const blocks = faqText.split(/\n\s*\n/);
-      for (const b of blocks) {
-        const lines = b.split('\n').map((l) => l.trim()).filter(Boolean);
-        const qLine = lines.find((l) => l.startsWith('Q:') || l.startsWith('Tanya:'));
-        const aLine = lines.find((l) => l.startsWith('A:') || l.startsWith('Jawab:'));
-        if (qLine && aLine) {
-          parsedFaqs.push({
-            question: qLine.replace(/^(Q:|Tanya:)\s*/i, ''),
-            answer: aLine.replace(/^(A:|Jawab:)\s*/i, ''),
-          });
-        } else if (lines.length >= 2) {
-          parsedFaqs.push({
-            question: lines[0].replace(/^Q:\s*/i, ''),
-            answer: lines.slice(1).join(' ').replace(/^A:\s*/i, ''),
-          });
-        }
-      }
-    }
-
     if (initial) {
       onSave(
         {
@@ -99,7 +67,7 @@ export const DeviceFormModal: React.FC<{
           image: imageUrl.trim() || undefined,
           supported_os: osList,
           specs: finalSpecs,
-          faqs: parsedFaqs.length > 0 ? parsedFaqs : initial.faqs,
+          faqs: initial.faqs,
         },
         false
       );
@@ -115,7 +83,7 @@ export const DeviceFormModal: React.FC<{
       });
       empty.image = imageUrl.trim() || undefined;
       empty.supported_os = osList;
-      empty.faqs = parsedFaqs;
+      empty.faqs = [];
       onSave(empty, true);
     }
     onClose();
@@ -221,16 +189,6 @@ export const DeviceFormModal: React.FC<{
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
             placeholder="https://images.unsplash.com/... atau link foto perangkat"
-          />
-        </div>
-
-        <div>
-          <label className={labelClass}>FAQ / Tanya Jawab (Format: Q: ... \n A: ...)</label>
-          <textarea
-            className={`${fieldClass} min-h-[80px] font-mono text-[11px]`}
-            value={faqText}
-            onChange={(e) => setFaqText(e.target.value)}
-            placeholder={"Q: Mengapa printer tidak terdeteksi?\nA: Pastikan terhubung ke Wi-Fi 2.4 GHz kantor.\n\nQ: Bagaimana cara cetak bolak-balik?\nA: Aktifkan opsi Duplex Printing."}
           />
         </div>
 
