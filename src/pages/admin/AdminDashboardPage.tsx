@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { AdminTab, MediaAsset } from '../../types/admin';
+import { AdminTab } from '../../types/admin';
 import { Device, Category, FAQItem, SetupStep } from '../../types/device';
 import { calculateDashboardStats } from '../../data/adminData';
 import { useCatalog } from '../../context/CatalogContext';
@@ -13,7 +13,6 @@ import {
   DeviceFormModal,
   FaqFormModal,
   GuideFormModal,
-  MediaFormModal,
   SingleStepModal,
   SingleFaqModal,
 } from '../../components/admin/AdminCrudForms';
@@ -54,7 +53,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     'categories',
     'guides',
     'faq',
-    'media',
     'settings',
   ];
   const currentTab: AdminTab = validTabs.includes(tab as AdminTab) ? (tab as AdminTab) : 'dashboard';
@@ -100,11 +98,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     faq: FAQItem | null;
     preselectedDeviceId?: string | null;
   }>({ open: false, faq: null });
-
-  const [mediaModal, setMediaModal] = useState<{ open: boolean; asset: MediaAsset | null }>({
-    open: false,
-    asset: null,
-  });
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -819,52 +812,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             </div>
           )}
 
-          {activeTab === 'media' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold">Media & Driver ({catalog.mediaAssets.length})</h2>
-                <button
-                  onClick={() => setMediaModal({ open: true, asset: null })}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold"
-                >
-                  <PlusCircle className="h-3.5 w-3.5" />
-                  Tambah media
-                </button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {catalog.mediaAssets.map((media) => (
-                  <div key={media.id} className="border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
-                    <h3 className="font-bold text-sm">{media.name}</h3>
-                    <p className="text-xs text-slate-500">
-                      {media.type} · {media.targetDevice} · {media.targetOs}
-                    </p>
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
-                      <a href={media.url} target="_blank" rel="noreferrer" className="text-xs font-bold text-blue-600 inline-flex items-center gap-1">
-                        <ExternalLink className="h-3.5 w-3.5" /> Buka
-                      </a>
-                      <div className="flex gap-1">
-                        <button onClick={() => setMediaModal({ open: true, asset: media })} className="p-1.5 text-blue-600">
-                          <Edit3 className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm(`Hapus "${media.name}"?`)) {
-                              catalog.deleteMedia(media.id);
-                              showToast('Media dihapus.');
-                            }
-                          }}
-                          className="p-1.5 text-rose-600"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {activeTab === 'settings' && (
             <form
               className="space-y-6 max-w-4xl"
@@ -976,15 +923,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
           onSave={faqModal.onSave}
         />
       )}
-      <MediaFormModal
-        isOpen={mediaModal.open}
-        onClose={() => setMediaModal({ open: false, asset: null })}
-        initial={mediaModal.asset}
-        onSave={(asset, isNew) => {
-          catalog.saveMedia(asset, isNew);
-          showToast(isNew ? 'Media ditambahkan.' : 'Media diperbarui.');
-        }}
-      />
       <SingleStepModal
         isOpen={singleStepModal.open}
         onClose={() => setSingleStepModal({ open: false, step: null })}

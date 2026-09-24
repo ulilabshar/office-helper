@@ -4,7 +4,6 @@ export type AdminTab =
   | 'categories'
   | 'guides'
   | 'faq'
-  | 'media'
   | 'settings';
 
 export interface ActivityLog {

@@ -31,7 +31,6 @@ const tabTitles: Record<AdminTab, { title: string; subtitle: string }> = {
   categories: { title: 'Kategori Alat', subtitle: 'Kelola grup dan klasifikasi perangkat' },
   guides: { title: 'Langkah Panduan OS', subtitle: 'Kelola panduan multi-OS (Windows & macOS)' },
   faq: { title: 'Bank FAQ & Troubleshooting', subtitle: 'Tanya jawab dan solusi permasalahan perangkat' },
-  media: { title: 'Media & Driver Repository', subtitle: 'Tautan installer driver resmi dan dokumen SOP' },
   settings: { title: 'Pengaturan Sistem', subtitle: 'Konfigurasi kontak support, backup, dan metadata' },
 };
 

@@ -8,7 +8,6 @@ import {
   FolderTree,
   BookOpenCheck,
   HelpCircle,
-  FolderArchive,
   Settings,
   BookOpen,
   ArrowLeft,
@@ -51,7 +50,6 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'categories', label: 'Categories', icon: FolderTree, badge: categoryCount },
     { id: 'guides', label: 'Guides', icon: BookOpenCheck },
     { id: 'faq', label: 'FAQ', icon: HelpCircle },
-    { id: 'media', label: 'Media', icon: FolderArchive },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
