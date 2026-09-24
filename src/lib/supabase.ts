@@ -22,16 +22,6 @@ export const isSupabaseReady = hasSupabaseConfig;
 
 // ─── TypeScript Interfaces matching the DB schema ─────────────────────────────
 
-export interface Profile {
-  id: string;
-  full_name?: string | null;
-  username: string;
-  password?: string;
-  avatar_url?: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface Category {
   id: string;
   title: string;
@@ -101,34 +91,14 @@ export async function signOut() {
   await supabase.auth.signOut();
 }
 
-export async function getCurrentProfile(): Promise<Profile | null> {
+export async function getCurrentAuthUser() {
   if (!supabase) return null;
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-
-  if (error || !data) return null;
-  return data as Profile;
+  return user ?? null;
 }
 
-export async function getProfileByUsername(username: string): Promise<Profile | null> {
-  if (!supabase) return null;
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('username', username)
-    .maybeSingle();
-
-  if (error || !data) return null;
-  return data as Profile;
-}
 
 // ─── Categories CRUD ──────────────────────────────────────────────────────────
 

@@ -23,24 +23,7 @@ end;
 $$;
 
 -- ============================================================
--- 1. TABEL PROFILES (Terhubung ke Supabase auth.users)
--- ============================================================
-create table public.profiles (
-  id          uuid primary key references auth.users(id) on delete cascade,
-  full_name   text,
-  username    text unique not null,
-  password    text not null,
-  avatar_url  text,
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
-);
-
-create trigger profiles_updated_at
-  before update on public.profiles
-  for each row execute procedure public.handle_updated_at();
-
--- ============================================================
--- 2. TABEL CATEGORIES
+-- 1. TABEL CATEGORIES
 -- ============================================================
 create table public.categories (
   id          uuid primary key default gen_random_uuid(),
@@ -59,7 +42,7 @@ create trigger categories_updated_at
   for each row execute procedure public.handle_updated_at();
 
 -- ============================================================
--- 3. TABEL DEVICES
+-- 2. TABEL DEVICES
 -- ============================================================
 create table public.devices (
   id                 uuid primary key default gen_random_uuid(),
@@ -84,7 +67,7 @@ create trigger devices_updated_at
   for each row execute procedure public.handle_updated_at();
 
 -- ============================================================
--- 4. TABEL STEPS (Panduan Alur Linear: Windows & Mac)
+-- 3. TABEL STEPS (Panduan Alur Linear: Windows & Mac)
 -- ============================================================
 create table public.steps (
   id              uuid primary key default gen_random_uuid(),
@@ -105,7 +88,7 @@ create trigger steps_updated_at
   for each row execute procedure public.handle_updated_at();
 
 -- ============================================================
--- 5. TABEL FAQS (FAQ Umum & FAQ Spesifik Perangkat)
+-- 4. TABEL FAQS (FAQ Umum & FAQ Spesifik Perangkat)
 -- ============================================================
 create table public.faqs (
   id          uuid primary key default gen_random_uuid(),
@@ -126,16 +109,10 @@ create trigger faqs_updated_at
 -- ============================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- ============================================================
-alter table public.profiles   enable row level security;
 alter table public.categories enable row level security;
 alter table public.devices    enable row level security;
 alter table public.steps      enable row level security;
 alter table public.faqs       enable row level security;
-
--- Profiles
-create policy "profiles_read_all" on public.profiles for select using (true);
-create policy "profiles_insert_auth" on public.profiles for insert with check (true);
-create policy "profiles_update_own" on public.profiles for update using (auth.uid() = id);
 
 -- Categories
 create policy "categories_public_read" on public.categories for select using (true);
