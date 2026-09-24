@@ -12,7 +12,6 @@ import {
   ShieldCheck,
   Bell,
   LogOut,
-  ExternalLink,
 } from 'lucide-react';
 
 interface AdminHeaderProps {
@@ -45,6 +44,11 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/', { replace: true });
+  };
 
   const currentTabInfo = tabTitles[activeTab] || { title: 'Admin Panel', subtitle: 'Office Helper' };
 
@@ -116,20 +120,21 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             )}
           </button>
 
-          {/* Direct Link to Public Web */}
-          <Link
-            to="/"
-            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-colors"
-            title="Buka Website Publik"
-          >
-            <span>Web Publik</span>
-            <ExternalLink className="h-3 w-3 opacity-60" />
-          </Link>
           {user && (
             <span className="hidden lg:inline text-[11px] font-semibold text-slate-500 truncate max-w-[120px]">
               {user.name}
             </span>
           )}
+
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 transition-colors"
+            title="Keluar dari Akun Admin"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            <span>Logout</span>
+          </button>
         </div>
       </div>
     </header>
