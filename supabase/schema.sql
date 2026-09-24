@@ -111,6 +111,7 @@ create trigger faqs_updated_at
 
 -- ============================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
+-- Buka akses penuh CRUD untuk dashboard (publik & authenticated)
 -- ============================================================
 alter table public.categories enable row level security;
 alter table public.devices    enable row level security;
@@ -118,20 +119,28 @@ alter table public.steps      enable row level security;
 alter table public.faqs       enable row level security;
 
 -- Categories
-create policy "categories_public_read" on public.categories for select using (true);
-create policy "categories_auth_all" on public.categories for all using (auth.role() = 'authenticated');
+drop policy if exists "categories_public_read" on public.categories;
+drop policy if exists "categories_auth_all" on public.categories;
+drop policy if exists "categories_all" on public.categories;
+create policy "categories_all" on public.categories for all using (true) with check (true);
 
 -- Devices
-create policy "devices_public_read" on public.devices for select using (true);
-create policy "devices_auth_all" on public.devices for all using (auth.role() = 'authenticated');
+drop policy if exists "devices_public_read" on public.devices;
+drop policy if exists "devices_auth_all" on public.devices;
+drop policy if exists "devices_all" on public.devices;
+create policy "devices_all" on public.devices for all using (true) with check (true);
 
 -- Steps
-create policy "steps_public_read" on public.steps for select using (true);
-create policy "steps_auth_all" on public.steps for all using (auth.role() = 'authenticated');
+drop policy if exists "steps_public_read" on public.steps;
+drop policy if exists "steps_auth_all" on public.steps;
+drop policy if exists "steps_all" on public.steps;
+create policy "steps_all" on public.steps for all using (true) with check (true);
 
 -- FAQs
-create policy "faqs_public_read" on public.faqs for select using (true);
-create policy "faqs_auth_all" on public.faqs for all using (auth.role() = 'authenticated');
+drop policy if exists "faqs_public_read" on public.faqs;
+drop policy if exists "faqs_auth_all" on public.faqs;
+drop policy if exists "faqs_all" on public.faqs;
+create policy "faqs_all" on public.faqs for all using (true) with check (true);
 
 -- ============================================================
 -- DATA AWAL LENGKAP (SEED DATA)

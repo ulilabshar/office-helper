@@ -351,10 +351,15 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                               <Edit3 className="h-4 w-4" />
                             </button>
                             <button
-                              onClick={() => {
+                              onClick={async () => {
                                 if (confirm(`Hapus perangkat "${d.name}"?`)) {
-                                  catalog.deleteDevice(d.id);
-                                  showToast(`"${d.name}" dihapus.`);
+                                  try {
+                                    await catalog.deleteDevice(d.id);
+                                    showToast(`"${d.name}" berhasil dihapus.`);
+                                  } catch (err: unknown) {
+                                    const msg = err instanceof Error ? err.message : String(err);
+                                    showToast(`Gagal menghapus: ${msg}`);
+                                  }
                                 }
                               }}
                               className="p-1.5 rounded-lg hover:bg-rose-50 text-rose-600"
@@ -406,10 +411,15 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                           <Edit3 className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             if (confirm(`Hapus kategori "${cat.title}" beserta perangkatnya?`)) {
-                              catalog.deleteCategory(cat.id);
-                              showToast('Kategori dihapus.');
+                              try {
+                                await catalog.deleteCategory(cat.id);
+                                showToast('Kategori berhasil dihapus.');
+                              } catch (err: unknown) {
+                                const msg = err instanceof Error ? err.message : String(err);
+                                showToast(`Gagal menghapus: ${msg}`);
+                              }
                             }
                           }}
                           className="p-1.5 text-rose-600"
@@ -683,32 +693,52 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         onClose={() => setDeviceModal({ open: false, device: null })}
         categories={catalog.categories}
         initial={deviceModal.device}
-        onSave={(device, isNew) => {
-          catalog.saveDevice(device, isNew);
-          showToast(isNew ? 'Perangkat ditambahkan.' : 'Perangkat diperbarui.');
+        onSave={async (device, isNew) => {
+          try {
+            await catalog.saveDevice(device, isNew);
+            showToast(isNew ? 'Perangkat berhasil ditambahkan ke database.' : 'Perangkat berhasil diperbarui.');
+          } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err);
+            showToast(`Gagal menyimpan perangkat: ${msg}`);
+          }
         }}
       />
       <CategoryFormModal
         isOpen={categoryModal.open}
         onClose={() => setCategoryModal({ open: false, category: null })}
         initial={categoryModal.category}
-        onSave={(category, isNew) => {
-          catalog.saveCategory(category, isNew);
-          showToast(isNew ? 'Kategori ditambahkan.' : 'Kategori diperbarui.');
+        onSave={async (category, isNew) => {
+          try {
+            await catalog.saveCategory(category, isNew);
+            showToast(isNew ? 'Kategori berhasil ditambahkan ke database.' : 'Kategori berhasil diperbarui.');
+          } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err);
+            showToast(`Gagal menyimpan kategori: ${msg}`);
+          }
         }}
       />
       <GuideFormModal
         isOpen={guideModal.open}
         onClose={() => setGuideModal({ open: false, device: null })}
         device={guideModal.device}
-        onSaveSteps={(deviceId, steps) => {
-          catalog.saveDeviceSteps(deviceId, steps);
-          showToast('Langkah panduan berhasil disimpan ke Supabase.');
+        onSaveSteps={async (deviceId, steps) => {
+          try {
+            await catalog.saveDeviceSteps(deviceId, steps);
+            showToast('Langkah panduan berhasil disimpan ke Supabase.');
+          } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err);
+            showToast(`Gagal menyimpan langkah: ${msg}`);
+          }
         }}
-        onSave={(section) => {
+        onSave={async (section) => {
           if (guideModal.device) {
-            catalog.saveDeviceSection(guideModal.device.id, 'wifi', section);
-            showToast('Panduan disimpan.');
+            try {
+              await catalog.saveDeviceSection(guideModal.device.id, 'wifi', section);
+              showToast('Panduan berhasil disimpan ke Supabase.');
+            } catch (err: unknown) {
+              const msg = err instanceof Error ? err.message : String(err);
+              showToast(`Gagal menyimpan panduan: ${msg}`);
+            }
           }
         }}
       />

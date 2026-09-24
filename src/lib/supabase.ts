@@ -333,24 +333,18 @@ export async function syncDeviceFaqs(
   faqs: Array<{ question: string; answer: string; sort_order?: number }>
 ): Promise<void> {
   if (!supabase) return;
-  // Always update legacy faq field on device for resilience
-  const faqString = faqs.map((f) => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
-  await supabase.from('devices').update({ faq: faqString }).eq('id', deviceId).catch(() => {});
+  const { error: delError } = await supabase.from('faqs').delete().eq('device_id', deviceId);
+  if (delError) throw delError;
 
-  // Update faqs table if it exists
-  try {
-    await supabase.from('faqs').delete().eq('device_id', deviceId);
-    if (faqs.length > 0) {
-      const payload = faqs.map((f, idx) => ({
-        device_id: deviceId,
-        question: f.question,
-        answer: f.answer,
-        sort_order: f.sort_order ?? idx + 1,
-      }));
-      await supabase.from('faqs').insert(payload);
-    }
-  } catch {
-    // Table may not exist yet if user hasn't run schema.sql
+  if (faqs.length > 0) {
+    const payload = faqs.map((f, idx) => ({
+      device_id: deviceId,
+      question: f.question,
+      answer: f.answer,
+      sort_order: f.sort_order ?? idx + 1,
+    }));
+    const { error: insError } = await supabase.from('faqs').insert(payload);
+    if (insError) throw insError;
   }
 }
 
@@ -358,19 +352,18 @@ export async function syncGeneralFaqs(
   faqs: Array<{ question: string; answer: string; sort_order?: number }>
 ): Promise<void> {
   if (!supabase) return;
-  try {
-    await supabase.from('faqs').delete().is('device_id', null);
-    if (faqs.length > 0) {
-      const payload = faqs.map((f, idx) => ({
-        device_id: null,
-        question: f.question,
-        answer: f.answer,
-        sort_order: f.sort_order ?? idx + 1,
-      }));
-      await supabase.from('faqs').insert(payload);
-    }
-  } catch {
-    // Table may not exist yet
+  const { error: delError } = await supabase.from('faqs').delete().is('device_id', null);
+  if (delError) throw delError;
+
+  if (faqs.length > 0) {
+    const payload = faqs.map((f, idx) => ({
+      device_id: null,
+      question: f.question,
+      answer: f.answer,
+      sort_order: f.sort_order ?? idx + 1,
+    }));
+    const { error: insError } = await supabase.from('faqs').insert(payload);
+    if (insError) throw insError;
   }
 }
 

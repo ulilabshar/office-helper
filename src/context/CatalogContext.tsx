@@ -65,14 +65,14 @@ interface CatalogContextType {
   getDeviceBySlug: (slugOrId: string) => Device | undefined;
   getDevicesByCategory: (slug: string) => Device[];
   searchDevices: (query: string) => Device[];
-  saveCategory: (category: Category, isNew: boolean) => void;
-  deleteCategory: (id: string) => void;
-  saveDevice: (device: Device, isNew: boolean) => void;
-  deleteDevice: (id: string) => void;
-  saveDeviceSteps: (deviceId: string, steps: SetupStep[]) => void;
-  saveDeviceSection: (deviceId: string, sectionKey: keyof NonNullable<Device['sections']>, section: DeviceSection) => void;
-  saveDeviceFaqs: (deviceId: string, faqs: FAQItem[]) => void;
-  saveGeneralFaqs: (faqs: FAQItem[]) => void;
+  saveCategory: (category: Category, isNew: boolean) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
+  saveDevice: (device: Device, isNew: boolean) => Promise<void>;
+  deleteDevice: (id: string) => Promise<void>;
+  saveDeviceSteps: (deviceId: string, steps: SetupStep[]) => Promise<void>;
+  saveDeviceSection: (deviceId: string, sectionKey: keyof NonNullable<Device['sections']>, section: DeviceSection) => Promise<void>;
+  saveDeviceFaqs: (deviceId: string, faqs: FAQItem[]) => Promise<void>;
+  saveGeneralFaqs: (faqs: FAQItem[]) => Promise<void>;
   saveMedia: (asset: MediaAsset, isNew: boolean) => void;
   deleteMedia: (id: string) => void;
   saveSettings: (settings: SystemSetting) => void;
@@ -306,7 +306,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             device.specs.some((s) => s.toLowerCase().includes(q))
         );
       },
-      saveCategory: (category, isNew) => {
+      saveCategory: async (category, isNew) => {
         setState((prev) => {
           const exists = prev.categories.some((c) => c.id === category.id);
           const updatedCategories = exists
@@ -327,36 +327,33 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         // Simpan langsung ke Supabase
         if (isSupabaseReady && supabase) {
           if (isNew) {
-            sbCreateCategory({
-              title: category.title,
-              slug: category.slug,
-              description: category.description,
-              icon: category.icon,
+            const created = await sbCreateCategory({
+              title: category.title.trim(),
+              slug: category.slug || slugify(category.title),
+              description: category.description?.trim() || '',
+              icon: category.icon || 'Printer',
               sort_order: category.sort_order ?? 0,
-              is_active: category.available,
-            } as any)
-              .then((created) => {
-                setState((prev) => ({
-                  ...prev,
-                  categories: prev.categories.map((c) =>
-                    c.id === category.id ? { ...c, id: created.id } : c
-                  ),
-                }));
-              })
-              .catch((e) => console.warn('Supabase saveCategory error:', e));
+              is_active: category.available ?? true,
+            } as any);
+            setState((prev) => ({
+              ...prev,
+              categories: prev.categories.map((c) =>
+                c.id === category.id ? { ...c, id: created.id } : c
+              ),
+            }));
           } else {
-            sbUpdateCategory(category.id, {
-              title: category.title,
-              slug: category.slug,
-              description: category.description,
-              icon: category.icon,
+            await sbUpdateCategory(category.id, {
+              title: category.title.trim(),
+              slug: category.slug || slugify(category.title),
+              description: category.description?.trim() || '',
+              icon: category.icon || 'Printer',
               sort_order: category.sort_order ?? 0,
-              is_active: category.available,
-            } as any).catch((e) => console.warn('Supabase updateCategory error:', e));
+              is_active: category.available ?? true,
+            } as any);
           }
         }
       },
-      deleteCategory: (id) => {
+      deleteCategory: async (id) => {
         setState((prev) => {
           const cat = prev.categories.find((c) => c.id === id);
           return {
@@ -368,10 +365,10 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         });
 
         if (isSupabaseReady && supabase) {
-          sbDeleteCategory(id).catch((e) => console.warn('Supabase deleteCategory error:', e));
+          await sbDeleteCategory(id);
         }
       },
-      saveDevice: (device, isNew) => {
+      saveDevice: async (device, isNew) => {
         setState((prev) => {
           const exists = prev.devices.some((d) => d.id === device.id);
           const devices = exists
@@ -392,56 +389,55 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         });
 
         if (isSupabaseReady && supabase) {
-          const catObj = state.categories.find((c) => c.slug === device.categorySlug);
-          if (catObj) {
-            const faqString =
-              device.faqs && device.faqs.length > 0
-                ? device.faqs.map((f) => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n')
-                : null;
+          const catObj = state.categories.find(
+            (c) => c.slug === device.categorySlug || c.title.toLowerCase() === device.category.toLowerCase()
+          );
+          if (!catObj) {
+            console.error('Kategori tidak ditemukan untuk perangkat:', device.categorySlug);
+            throw new Error(`Kategori "${device.categorySlug}" tidak ditemukan di database.`);
+          }
 
-            const payload: any = {
-              category_id: catObj.id,
-              nama_perangkat: device.name,
-              slug: device.slug || slugify(device.name),
-              deskripsi_singkat: device.description,
-              status: device.status,
-              supported_os: device.supported_os || ['windows', 'mac'],
-              specs: device.specs,
-              tambah_os: device.specs,
-              image_url: device.image || null,
-              faq: faqString,
-              sort_order: device.sort_order ?? 0,
-            };
+          const payload: any = {
+            category_id: catObj.id,
+            nama_perangkat: device.name.trim(),
+            slug: device.slug || slugify(device.name),
+            deskripsi_singkat: device.description?.trim() || null,
+            status: device.status || 'Ready',
+            supported_os: device.supported_os && device.supported_os.length > 0 ? device.supported_os : ['windows', 'mac'],
+            specs: device.specs || [],
+            image_url: device.image?.trim() || null,
+            sort_order: device.sort_order ?? 0,
+          };
 
-            if (isNew) {
-              sbCreateDevice(payload)
-                .then((created) => {
-                  setState((prev) => ({
-                    ...prev,
-                    devices: prev.devices.map((d) =>
-                      d.id === device.id ? { ...d, id: created.id } : d
-                    ),
-                  }));
+          if (isNew) {
+            const created = await sbCreateDevice(payload);
+            setState((prev) => ({
+              ...prev,
+              devices: prev.devices.map((d) =>
+                d.id === device.id ? { ...d, id: created.id } : d
+              ),
+            }));
 
-                  // Sinkronkan steps awal jika ada
-                  if (device.steps && device.steps.length > 0) {
-                    syncDeviceSteps(created.id, device.steps as any).catch(() => {});
-                  }
-                  // Sinkronkan faqs awal jika ada
-                  if (device.faqs && device.faqs.length > 0) {
-                    syncDeviceFaqs(created.id, device.faqs).catch(() => {});
-                  }
-                })
-                .catch((e) => console.warn('Supabase createDevice error:', e));
-            } else {
-              sbUpdateDevice(device.id, payload).catch((e) =>
-                console.warn('Supabase updateDevice error:', e)
-              );
+            // Sinkronkan steps awal jika ada
+            if (device.steps && device.steps.length > 0) {
+              await syncDeviceSteps(created.id, device.steps as any);
+            }
+            // Sinkronkan faqs awal jika ada
+            if (device.faqs && device.faqs.length > 0) {
+              await syncDeviceFaqs(created.id, device.faqs);
+            }
+          } else {
+            await sbUpdateDevice(device.id, payload);
+            if (device.steps && device.steps.length > 0) {
+              await syncDeviceSteps(device.id, device.steps as any);
+            }
+            if (device.faqs && device.faqs.length > 0) {
+              await syncDeviceFaqs(device.id, device.faqs);
             }
           }
         }
       },
-      deleteDevice: (id) => {
+      deleteDevice: async (id) => {
         setState((prev) => {
           const device = prev.devices.find((d) => d.id === id);
           return {
@@ -457,10 +453,10 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         });
 
         if (isSupabaseReady && supabase) {
-          sbDeleteDevice(id).catch((e) => console.warn('Supabase deleteDevice error:', e));
+          await sbDeleteDevice(id);
         }
       },
-      saveDeviceSteps: (deviceId, steps) => {
+      saveDeviceSteps: async (deviceId, steps) => {
         setState((prev) => ({
           ...prev,
           devices: prev.devices.map((d) =>
@@ -482,12 +478,10 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             konten_mac: s.konten_mac || (s.details ? s.details.join('\n') : null),
             sort_order: s.sort_order ?? idx + 1,
           }));
-          syncDeviceSteps(deviceId, payload).catch((e) =>
-            console.warn('Supabase syncDeviceSteps error:', e)
-          );
+          await syncDeviceSteps(deviceId, payload);
         }
       },
-      saveDeviceSection: (deviceId, sectionKey, section) => {
+      saveDeviceSection: async (deviceId, sectionKey, section) => {
         setState((prev) => ({
           ...prev,
           devices: prev.devices.map((d) =>
@@ -533,12 +527,10 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             });
           }
 
-          syncDeviceSteps(deviceId, stepsPayload).catch((e) =>
-            console.warn('Supabase syncDeviceSteps error:', e)
-          );
+          await syncDeviceSteps(deviceId, stepsPayload);
         }
       },
-      saveDeviceFaqs: (deviceId, faqs) => {
+      saveDeviceFaqs: async (deviceId, faqs) => {
         setState((prev) => {
           const device = prev.devices.find((d) => d.id === deviceId);
           return {
@@ -549,12 +541,10 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         });
 
         if (isSupabaseReady && supabase) {
-          syncDeviceFaqs(deviceId, faqs).catch((e) =>
-            console.warn('Supabase syncDeviceFaqs error:', e)
-          );
+          await syncDeviceFaqs(deviceId, faqs);
         }
       },
-      saveGeneralFaqs: (faqs) => {
+      saveGeneralFaqs: async (faqs) => {
         setState((prev) => ({
           ...prev,
           generalFaqs: faqs,
@@ -562,9 +552,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }));
 
         if (isSupabaseReady && supabase) {
-          syncGeneralFaqs(faqs).catch((e) =>
-            console.warn('Supabase syncGeneralFaqs error:', e)
-          );
+          await syncGeneralFaqs(faqs);
         }
       },
       saveMedia: (asset, isNew) => {
