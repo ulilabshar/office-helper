@@ -7,6 +7,7 @@ export const videoConferenceLumens: Device = {
   categorySlug: 'video-conference',
   description: 'Panduan setup sistem kamera PTZ Lumens (Pan-Tilt-Zoom), speakerphone mic omnidirectional, dan integrasi penuh dengan aplikasi Zoom Meeting, Google Meet, serta Microsoft Teams.',
   status: 'Ready',
+  image: 'https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?auto=format&fit=crop&w=800&q=80',
   specs: [
     'Kamera PTZ Lumens 4K / Full HD 20x Optical Zoom',
     'Omnidirectional Microphone & Expansion Speakerphone',

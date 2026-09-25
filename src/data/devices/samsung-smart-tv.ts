@@ -7,6 +7,7 @@ export const samsungSmartTv: Device = {
   categorySlug: 'proyektor',
   description: 'Panduan pengkoneksian kabel HDMI, Wireless Screen Mirroring (Samsung Smart View / Miracast untuk Windows, AirPlay 2 untuk Mac/iPhone), dan pengaturan audio TV kantor.',
   status: 'Ready',
+  image: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&w=800&q=80',
   specs: [
     'Resolusi 4K UHD Office Display',
     'Dual HDMI Input & Audio Out',

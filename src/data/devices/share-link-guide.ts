@@ -7,6 +7,7 @@ export const shareLinkGuide: Device = {
   categorySlug: 'share-link',
   description: 'Panduan lengkap cara mengatur siapa yang punya akses (Anyone with link atau Restricted), menentukan level izin (Viewer, Commenter, atau Editor), dan menyalin link (Google Docs, Sheet, Slide, OneDrive, MS Office).',
   status: 'Ready',
+  image: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=800&q=80',
   specs: ['Berlaku Lintas Platform (Windows & Mac)', 'Google Docs / Sheets / Slides', 'OneDrive & MS Office 365', 'Fitur Copy Link & Proteksi Download'],
   sections: {
     wifi: {

@@ -64,6 +64,7 @@ export function createEmptyDevice(input: {
   category: string;
   categorySlug: string;
   description: string;
+  image?: string;
   status: Device['status'];
   specs: string[];
   slug?: string;
@@ -76,6 +77,7 @@ export function createEmptyDevice(input: {
     category: input.category,
     categorySlug: input.categorySlug,
     description: input.description,
+    image: input.image,
     status: input.status,
     supported_os: ['windows', 'mac'],
     specs: input.specs,

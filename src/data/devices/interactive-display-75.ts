@@ -7,6 +7,7 @@ export const interactiveDisplay75: Device = {
   categorySlug: 'proyektor',
   description: 'Panduan penggunaan layar sentuh interaktif 75 inci untuk rapat kantor, menggambar digital whiteboard, koneksi kabel HDMI + Touch USB, dan Wireless Screen Sharing (EShare / Bytello Share).',
   status: 'Ready',
+  image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
   specs: [
     'Layar Sentuh 75" 4K UHD Multi-Touch 20 Point',
     'Dual Connection (Kabel HDMI + Touch USB)',

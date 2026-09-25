@@ -7,6 +7,7 @@ export const epsonWfC879r: Device = {
   categorySlug: 'printer',
   description: 'Printer korporat multifungsi A3 tinggi dengan kapasitas kantong tinta Replaceable Ink Pack System (RIPS) dan layar sentuh kontrol.',
   status: 'Ready',
+  image: 'https://images.unsplash.com/photo-1589492477829-5e65395b66cc?auto=format&fit=crop&w=800&q=80',
   specs: ['Enterprise A3 Multifungsi', 'Touchscreen Control Panel', 'Gigabit Ethernet & Wi-Fi Direct', 'RIPS Ink Technology (Hingga 86.000 Halaman)'],
   sections: {
     wifi: {

@@ -7,6 +7,7 @@ export const epsonL3250: Device = {
   categorySlug: 'printer',
   description: 'Printer multifungsi (Print, Scan, Copy) dengan sistem tangki tinta hemat energi dan konektivitas Wi-Fi Direct.',
   status: 'Ready',
+  image: 'https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?auto=format&fit=crop&w=800&q=80',
   specs: ['All-in-One (Print, Scan, Copy)', 'Wi-Fi & Wi-Fi Direct', 'Epson Smart Panel', 'Kecepatan Cetak 33ppm (B/W)'],
   sections: {
     wifi: {
