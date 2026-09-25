@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CategoryCard } from '../components/CategoryCard';
 import { DeviceCard } from '../components/DeviceCard';
+import { AccordionFaq, ExtendedFaqItem } from '../components/AccordionFaq';
 import { useCatalog } from '../context/CatalogContext';
-import { Sparkles, Search, ArrowRight, BookOpen } from 'lucide-react';
+import { slugify } from '../utils/slugify';
+import { Sparkles, Search, ArrowRight, BookOpen, HelpCircle } from 'lucide-react';
 
 interface HomePageProps {
   onOpenSearch: () => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
-  const { categories, devices } = useCatalog();
+  const { categories, devices, generalFaqs } = useCatalog();
 
   const handleScrollToAllGuides = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -18,6 +20,30 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
       element.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  const handleScrollToFaq = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const element = document.getElementById('faq-section');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Kumpulkan FAQ dari seluruh perangkat terdaftar
+  const allDeviceFaqs: ExtendedFaqItem[] = useMemo(() => {
+    const list: ExtendedFaqItem[] = [];
+    devices.forEach((d) => {
+      (d.faqs || []).forEach((faq) => {
+        list.push({
+          ...faq,
+          targetName: d.name,
+          categorySlug: d.categorySlug,
+          deviceSlug: d.slug || slugify(d.name),
+        });
+      });
+    });
+    return list;
+  }, [devices]);
 
   return (
     <div className="space-y-10 lg:space-y-12">
@@ -35,16 +61,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
           </h1>
 
           <p className="text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
-            Temukan panduan langkah demi langkah disini agar tidak bingung.
+            Temukan panduan langkah demi langkah dan solusi tanya jawab (FAQ) disini agar tidak bingung.
           </p>
 
-          <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+          <div className="pt-2 flex flex-wrap items-center gap-3">
             <button
               onClick={onOpenSearch}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold rounded-xl bg-blue-600 text-white hover:bg-blue-500 active:scale-95 transition-all shadow-lg shadow-blue-600/25"
             >
               <Search className="h-4 w-4" />
-              <span>Cari Panduan Perangkat</span>
+              <span>Cari Panduan & FAQ</span>
             </button>
 
             <a
@@ -54,6 +80,15 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
             >
               <BookOpen className="h-4 w-4 text-blue-500" />
               <span>Lihat Semua Panduan</span>
+            </a>
+
+            <a
+              href="#faq-section"
+              onClick={handleScrollToFaq}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold rounded-xl border border-blue-200 bg-blue-50/80 text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60 transition-all cursor-pointer"
+            >
+              <HelpCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <span>Pertanyaan & Solusi FAQ</span>
             </a>
           </div>
         </div>
@@ -104,6 +139,17 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSearch }) => {
             <DeviceCard key={device.id} device={device} />
           ))}
         </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq-section" className="scroll-mt-20">
+        <AccordionFaq
+          items={generalFaqs || []}
+          allDeviceFaqs={allDeviceFaqs}
+          title="Pertanyaan yang Sering Diajukan (FAQ)"
+          subtitle="Cari solusi cepat kendala umum dan tanya jawab seputar pengoperasian seluruh peralatan kantor."
+          searchable
+        />
       </section>
     </div>
   );

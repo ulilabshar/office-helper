@@ -64,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <div className="flex items-center gap-2">
               <Search className="h-3.5 w-3.5 text-slate-400" />
-              <span>Cari panduan printer, Wi-Fi, Bluetooth...</span>
+              <span>Cari panduan, FAQ, kendala perangkat...</span>
             </div>
           </button>
         </div>
