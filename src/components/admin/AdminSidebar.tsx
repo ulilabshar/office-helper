@@ -16,7 +16,6 @@ import {
   UserCheck,
   ShieldCheck,
   ExternalLink,
-  Search,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -26,7 +25,6 @@ interface AdminSidebarProps {
   onClose: () => void;
   deviceCount?: number;
   categoryCount?: number;
-  onOpenSearch?: () => void;
 }
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({
@@ -36,7 +34,6 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   onClose,
   deviceCount = 6,
   categoryCount = 5,
-  onOpenSearch,
 }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -114,26 +111,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           </div>
 
           {/* Navigation Links */}
-          <div className="p-4 space-y-4">
-            {onOpenSearch && (
-              <button
-                type="button"
-                onClick={() => {
-                  onOpenSearch();
-                  if (window.innerWidth < 1024) onClose();
-                }}
-                className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-500 bg-slate-100 hover:bg-slate-200/80 hover:text-slate-900 dark:bg-slate-900 dark:hover:bg-slate-800/80 dark:text-slate-400 dark:hover:text-slate-200 rounded-xl border border-slate-200 dark:border-slate-800 transition-all text-left group"
-              >
-                <div className="flex items-center gap-2">
-                  <Search className="h-3.5 w-3.5 text-blue-500 group-hover:scale-110 transition-transform" />
-                  <span>Cari data &amp; FAQ...</span>
-                </div>
-                <kbd className="px-1.5 py-0.5 text-[9px] font-mono bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 text-slate-500">
-                  Ctrl+K
-                </kbd>
-              </button>
-            )}
-
+          <div className="p-4 space-y-6">
             <div>
               <div className="px-3 mb-2 text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
                 Menu Utama Admin
