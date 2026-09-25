@@ -8,6 +8,7 @@ import { useCatalog } from '../../context/CatalogContext';
 import { slugify, extractDeviceSteps } from '../../lib/catalog';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { AdminHeader } from '../../components/admin/AdminHeader';
+import { AdminSearchModal } from '../../components/admin/AdminSearchModal';
 import {
   CategoryFormModal,
   DeviceFormModal,
@@ -31,6 +32,9 @@ import {
   ArrowRight,
   Sparkles,
   ExternalLink,
+  Search,
+  ChevronDown,
+  X,
 } from 'lucide-react';
 
 interface AdminDashboardPageProps {
@@ -63,11 +67,26 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   }, [currentTab]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [overviewSearchTab, setOverviewSearchTab] = useState<'all' | 'devices' | 'guides' | 'faq'>('all');
+  const [expandedOverviewFaqId, setExpandedOverviewFaqId] = useState<string | null>(null);
   const [deviceFilterStatus, setDeviceFilterStatus] = useState('ALL');
   const [guideFilterDevice, setGuideFilterDevice] = useState<string>('ALL');
   const [faqFilterTarget, setFaqFilterTarget] = useState<string>('ALL');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [settingsDraft, setSettingsDraft] = useState(catalog.settings);
+
+  // Global Ctrl+K shortcut untuk membuka AdminSearchModal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchModalOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const [deviceModal, setDeviceModal] = useState<{ open: boolean; device: Device | null }>({
     open: false,
@@ -195,15 +214,30 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     [catalog.devices, catalog.categories, catalog.generalFaqs.length, allSteps.length, allFaqs.length]
   );
 
-  const filteredDevices = catalog.devices.filter((device) => {
-    const q = searchQuery.toLowerCase();
-    const matchesSearch =
-      device.name.toLowerCase().includes(q) ||
-      device.category.toLowerCase().includes(q) ||
-      device.description.toLowerCase().includes(q);
-    const matchesStatus = deviceFilterStatus === 'ALL' || device.status === deviceFilterStatus;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredCategories = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return catalog.categories;
+    return catalog.categories.filter(
+      (c) =>
+        c.title.toLowerCase().includes(q) ||
+        c.slug.toLowerCase().includes(q) ||
+        (c.description && c.description.toLowerCase().includes(q))
+    );
+  }, [catalog.categories, searchQuery]);
+
+  const filteredDevices = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    return catalog.devices.filter((device) => {
+      const matchesSearch =
+        !q ||
+        device.name.toLowerCase().includes(q) ||
+        device.category.toLowerCase().includes(q) ||
+        device.description.toLowerCase().includes(q) ||
+        (device.specs && device.specs.some((s) => s.toLowerCase().includes(q)));
+      const matchesStatus = deviceFilterStatus === 'ALL' || device.status === deviceFilterStatus;
+      return matchesSearch && matchesStatus;
+    });
+  }, [catalog.devices, searchQuery, deviceFilterStatus]);
 
   const handleExportBackup = () => {
     const backupData = {
@@ -275,6 +309,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         onClose={() => setIsSidebarOpen(false)}
         deviceCount={catalog.devices.length}
         categoryCount={catalog.categories.length}
+        onOpenSearch={() => setIsSearchModalOpen(true)}
       />
 
       <div className="flex-1 flex flex-col min-w-0 lg:pl-72">
@@ -285,6 +320,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          onOpenSearchModal={() => setIsSearchModalOpen(true)}
           onOpenAddDevice={() => {
             handleTabChange('devices');
             setDeviceModal({ open: true, device: null });
@@ -338,13 +374,336 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <button
                     key={card.label}
                     onClick={() => handleTabChange(card.tab)}
-                    className="text-left rounded-2xl border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/70 p-5 hover:border-blue-500/60"
+                    className="text-left rounded-2xl border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/70 p-5 hover:border-blue-500/60 transition-all group"
                   >
-                    <card.icon className="h-5 w-5 text-blue-600 mb-3" />
+                    <card.icon className="h-5 w-5 text-blue-600 mb-3 group-hover:scale-110 transition-transform" />
                     <div className="text-3xl font-black">{card.value}</div>
-                    <p className="text-xs font-bold mt-1">{card.label}</p>
+                    <p className="text-xs font-bold mt-1 text-slate-700 dark:text-slate-300">{card.label}</p>
                   </button>
                 ))}
+              </div>
+
+              {/* Quick Universal Search & FAQ Explorer */}
+              <div className="rounded-2xl border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/70 p-5 sm:p-7 space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Search className="h-4 w-4 text-blue-600" />
+                      Pencarian Data Perangkat &amp; Bank FAQ
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Cari pertanyaan FAQ, perangkat, dan langkah panduan langsung dari layar overview dashboard.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSearchModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-xs font-semibold shrink-0"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 text-blue-500" />
+                    <span>Modal Pencarian (Ctrl+K)</span>
+                  </button>
+                </div>
+
+                {/* Search Bar Input */}
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Ketik kata kunci: Wi-Fi, printer Epson macet, proyektor HDMI, absensi..."
+                    className="w-full pl-10 pr-9 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                      title="Hapus pencarian"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Filter Tabs in Overview */}
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold overflow-x-auto">
+                    <button
+                      type="button"
+                      onClick={() => setOverviewSearchTab('all')}
+                      className={`px-3 py-1.5 rounded-lg transition-all ${
+                        overviewSearchTab === 'all'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      Semua Hasil ({filteredDevices.length + filteredSteps.length + filteredFaqs.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOverviewSearchTab('faq')}
+                      className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
+                        overviewSearchTab === 'faq'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <HelpCircle className="h-3.5 w-3.5" />
+                      <span>FAQ ({filteredFaqs.length})</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOverviewSearchTab('devices')}
+                      className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
+                        overviewSearchTab === 'devices'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <HardDrive className="h-3.5 w-3.5" />
+                      <span>Perangkat ({filteredDevices.length})</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOverviewSearchTab('guides')}
+                      className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
+                        overviewSearchTab === 'guides'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <BookOpenCheck className="h-3.5 w-3.5" />
+                      <span>Panduan ({filteredSteps.length})</span>
+                    </button>
+                  </div>
+
+                  {!searchQuery && (
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                      <span>Rekomendasi:</span>
+                      {['Wi-Fi', 'Epson', 'Proyektor', 'Absensi'].map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => setSearchQuery(tag)}
+                          className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600"
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Results Section */}
+                <div className="space-y-4">
+                  {/* FAQ Results with Accordion */}
+                  {(overviewSearchTab === 'all' || overviewSearchTab === 'faq') && (
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <HelpCircle className="h-3.5 w-3.5 text-blue-500" />
+                          FAQ &amp; Tanya Jawab ({filteredFaqs.length})
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleTabChange('faq')}
+                          className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
+                        >
+                          <span>Kelola di Menu FAQ</span>
+                          <ArrowRight className="h-3 w-3" />
+                        </button>
+                      </div>
+
+                      {filteredFaqs.length === 0 ? (
+                        <p className="text-xs text-slate-400 italic py-2">Tidak ada FAQ yang cocok.</p>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {filteredFaqs.slice(0, 6).map((faq, idx) => {
+                            const faqKey = faq.id || `ov-faq-${idx}`;
+                            const isExpanded = Boolean(searchQuery) || expandedOverviewFaqId === faqKey;
+
+                            return (
+                              <div
+                                key={faqKey}
+                                className="border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 bg-slate-50/50 dark:bg-slate-950/40 hover:border-blue-400/60 dark:hover:border-blue-500/60 transition-all flex flex-col justify-between"
+                              >
+                                <div>
+                                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                                    <span
+                                      className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                                        faq.isGeneral
+                                          ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+                                          : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                                      }`}
+                                    >
+                                      {faq.targetName}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => setExpandedOverviewFaqId(isExpanded ? null : faqKey)}
+                                      className="p-1 text-slate-400 hover:text-blue-600"
+                                    >
+                                      <ChevronDown
+                                        className={`h-3.5 w-3.5 transition-transform duration-200 ${
+                                          isExpanded ? 'rotate-180 text-blue-500' : ''
+                                        }`}
+                                      />
+                                    </button>
+                                  </div>
+                                  <h4
+                                    onClick={() => setExpandedOverviewFaqId(isExpanded ? null : faqKey)}
+                                    className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white cursor-pointer hover:text-blue-600 leading-snug"
+                                  >
+                                    {faq.question}
+                                  </h4>
+                                  {isExpanded && (
+                                    <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 leading-relaxed pl-2.5 border-l-2 border-blue-500 whitespace-pre-line">
+                                      {faq.answer}
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center justify-between pt-2.5 mt-2.5 border-t border-slate-100 dark:border-slate-800">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      handleTabChange('faq');
+                                      setSingleFaqModal({
+                                        open: true,
+                                        faq,
+                                        preselectedDeviceId: faq.device_id || null,
+                                      });
+                                    }}
+                                    className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:underline"
+                                  >
+                                    <Edit3 className="h-3 w-3" />
+                                    <span>Ubah FAQ</span>
+                                  </button>
+                                  <span className="text-[10px] text-slate-400">
+                                    {faq.isGeneral ? 'Umum' : 'Perangkat'}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Devices Results */}
+                  {(overviewSearchTab === 'all' || overviewSearchTab === 'devices') && (
+                    <div className="space-y-2.5 pt-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <HardDrive className="h-3.5 w-3.5 text-blue-500" />
+                          Perangkat Kantor ({filteredDevices.length})
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleTabChange('devices')}
+                          className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
+                        >
+                          <span>Kelola di Menu Devices</span>
+                          <ArrowRight className="h-3 w-3" />
+                        </button>
+                      </div>
+
+                      {filteredDevices.length === 0 ? (
+                        <p className="text-xs text-slate-400 italic py-2">Tidak ada perangkat yang cocok.</p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {filteredDevices.slice(0, 6).map((d) => (
+                            <div
+                              key={d.id}
+                              className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 bg-white dark:bg-slate-950/40 flex items-center justify-between gap-3"
+                            >
+                              <div className="min-w-0">
+                                <h4 className="font-bold text-xs truncate text-slate-900 dark:text-white">
+                                  {d.name}
+                                </h4>
+                                <span className="text-[10px] text-slate-500">{d.category}</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleTabChange('devices');
+                                  setDeviceModal({ open: true, device: d });
+                                }}
+                                className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-blue-600 dark:text-blue-400 shrink-0 inline-flex items-center gap-1"
+                              >
+                                <Edit3 className="h-3 w-3" />
+                                <span>Ubah</span>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Guides Results */}
+                  {(overviewSearchTab === 'all' || overviewSearchTab === 'guides') && (
+                    <div className="space-y-2.5 pt-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <BookOpenCheck className="h-3.5 w-3.5 text-blue-500" />
+                          Langkah Panduan Setup ({filteredSteps.length})
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleTabChange('guides')}
+                          className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
+                        >
+                          <span>Kelola di Menu Guides</span>
+                          <ArrowRight className="h-3 w-3" />
+                        </button>
+                      </div>
+
+                      {filteredSteps.length === 0 ? (
+                        <p className="text-xs text-slate-400 italic py-2">Tidak ada langkah panduan yang cocok.</p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {filteredSteps.slice(0, 4).map((step, idx) => (
+                            <div
+                              key={step.id || `ov-step-${idx}`}
+                              className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 bg-white dark:bg-slate-950/40 flex items-center justify-between gap-3"
+                            >
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                    {step.deviceName}
+                                  </span>
+                                  <h4 className="font-bold text-xs truncate text-slate-900 dark:text-white">
+                                    {step.title}
+                                  </h4>
+                                </div>
+                                {step.description && (
+                                  <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                                    {step.description}
+                                  </p>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleTabChange('guides');
+                                  setSingleStepModal({ open: true, step, preselectedDeviceId: step.device_id });
+                                }}
+                                className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-blue-600 dark:text-blue-400 shrink-0 inline-flex items-center gap-1"
+                              >
+                                <Edit3 className="h-3 w-3" />
+                                <span>Ubah</span>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -437,7 +796,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold">Kategori ({catalog.categories.length})</h2>
+                  <h2 className="text-xl font-bold">Kategori ({filteredCategories.length})</h2>
                   <p className="text-xs text-slate-500">CRUD klasifikasi perangkat untuk navigasi publik.</p>
                 </div>
                 <button
@@ -449,7 +808,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {catalog.categories.map((cat) => (
+                {filteredCategories.map((cat) => (
                   <div key={cat.id} className="border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
@@ -952,6 +1311,50 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
           } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : String(err);
             showToast(`Gagal menyimpan FAQ: ${msg}`);
+          }
+        }}
+      />
+
+      {/* Global Admin Search Modal (Ctrl+K) */}
+      <AdminSearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        devices={catalog.devices}
+        categories={catalog.categories}
+        steps={allSteps}
+        faqs={allFaqs}
+        onEditDevice={(device) => {
+          handleTabChange('devices');
+          setDeviceModal({ open: true, device });
+        }}
+        onEditStep={(step) => {
+          handleTabChange('guides');
+          setSingleStepModal({ open: true, step, preselectedDeviceId: step.device_id });
+        }}
+        onEditFaq={(faq, deviceId) => {
+          handleTabChange('faq');
+          setSingleFaqModal({ open: true, faq, preselectedDeviceId: deviceId || null });
+        }}
+        onEditCategory={(category) => {
+          handleTabChange('categories');
+          setCategoryModal({ open: true, category });
+        }}
+        onNavigateTab={(targetTab) => {
+          handleTabChange(targetTab);
+        }}
+        onOpenCreate={(type) => {
+          if (type === 'device') {
+            handleTabChange('devices');
+            setDeviceModal({ open: true, device: null });
+          } else if (type === 'step') {
+            handleTabChange('guides');
+            setSingleStepModal({ open: true, step: null, preselectedDeviceId: catalog.devices[0]?.id });
+          } else if (type === 'faq') {
+            handleTabChange('faq');
+            setSingleFaqModal({ open: true, faq: null, preselectedDeviceId: null });
+          } else if (type === 'category') {
+            handleTabChange('categories');
+            setCategoryModal({ open: true, category: null });
           }
         }}
       />

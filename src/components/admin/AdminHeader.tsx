@@ -22,6 +22,7 @@ interface AdminHeaderProps {
   searchQuery: string;
   onSearchChange: (val: string) => void;
   onOpenAddDevice?: () => void;
+  onOpenSearchModal?: () => void;
 }
 
 const tabTitles: Record<AdminTab, { title: string; subtitle: string }> = {
@@ -41,6 +42,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   searchQuery,
   onSearchChange,
   onOpenAddDevice,
+  onOpenSearchModal,
 }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -81,22 +83,34 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
           </div>
         </div>
 
-        {/* Center: Search Filter in Admin */}
-        <div className="hidden md:flex flex-1 max-w-xs lg:max-w-sm mx-4">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Cari data, perangkat, log..."
-              className="w-full pl-9 pr-3.5 py-1.5 text-xs bg-slate-100 border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        {/* Center: Search Trigger in Admin */}
+        <div className="hidden md:flex flex-1 max-w-xs lg:max-w-md mx-4">
+          <button
+            type="button"
+            onClick={onOpenSearchModal}
+            className="w-full flex items-center justify-between gap-3 px-3.5 py-1.5 text-xs text-slate-500 bg-slate-100 border border-slate-200 rounded-xl hover:bg-slate-200/80 hover:text-slate-900 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-200 transition-all shadow-inner text-left"
+          >
+            <div className="flex items-center gap-2">
+              <Search className="h-3.5 w-3.5 text-slate-400" />
+              <span className="truncate">Cari perangkat, panduan, FAQ...</span>
+            </div>
+            <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono rounded bg-slate-200 dark:bg-slate-800 text-slate-500 shrink-0">
+              Ctrl+K
+            </kbd>
+          </button>
         </div>
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Mobile Search Button */}
+          <button
+            onClick={onOpenSearchModal}
+            className="p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 rounded-xl md:hidden"
+            title="Cari data, panduan & FAQ"
+          >
+            <Search className="h-5 w-5" />
+          </button>
+
           {/* Quick CTA: Tambah Perangkat */}
           <button
             onClick={onOpenAddDevice || (() => navigate('/dashboard/devices'))}
