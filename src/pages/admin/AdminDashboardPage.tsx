@@ -23,7 +23,6 @@ import {
   BookOpenCheck,
   HelpCircle,
   PlusCircle,
-  Download,
   Trash2,
   Edit3,
   Eye,
@@ -234,26 +233,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     });
   }, [catalog.devices, searchQuery, deviceFilterStatus]);
 
-  const handleExportBackup = () => {
-    const backupData = {
-      exportDate: new Date().toISOString(),
-      settings: catalog.settings,
-      stats,
-      devices: catalog.devices,
-      categories: catalog.categories,
-      mediaAssets: catalog.mediaAssets,
-      activityLogs: catalog.activityLogs,
-      generalFaqs: catalog.generalFaqs,
-    };
-    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `office-helper-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Backup JSON diunduh.');
-  };
 
   if (!isLoggedIn) {
     return (
@@ -324,7 +303,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
           {activeTab === 'dashboard' && (
             <div className="space-y-8">
-              <div className="rounded-2xl border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/70 p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="rounded-2xl border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/70 p-6 sm:p-8">
                 <div className="max-w-2xl space-y-2">
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300 text-[11px] font-semibold">
                     <Sparkles className="h-3.5 w-3.5" />
@@ -336,25 +315,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <p className="text-sm text-slate-600 dark:text-slate-400">
                     CRUD perangkat, kategori, panduan, FAQ, dan media. Situs publik hanya menampilkan data ini.
                   </p>
-                </div>
-                <div className="flex flex-wrap gap-2.5">
-                  <button
-                    onClick={() => {
-                      handleTabChange('devices');
-                      setDeviceModal({ open: true, device: null });
-                    }}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold"
-                  >
-                    <PlusCircle className="h-4 w-4" />
-                    Tambah Perangkat
-                  </button>
-                  <button
-                    onClick={handleExportBackup}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold"
-                  >
-                    <Download className="h-4 w-4" />
-                    Ekspor JSON
-                  </button>
                 </div>
               </div>
 
