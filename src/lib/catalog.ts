@@ -101,14 +101,7 @@ export function createEmptyDevice(input: {
     status: input.status,
     supported_os: input.supported_os || supported,
     specs: input.specs,
-    steps: [
-      {
-        title: 'Langkah 1: Menghubungkan Perangkat ke Jaringan',
-        description: 'Pastikan perangkat menyala dan terhubung ke jaringan kantor.',
-        konten_windows: hasWin ? '1. Nyalakan perangkat.\n2. Hubungkan ke Wi-Fi kantor "Kantor-Utama".' : '',
-        konten_mac: hasMac ? '1. Nyalakan perangkat.\n2. Hubungkan Mac ke Wi-Fi kantor "Kantor-Utama".' : '',
-      },
-    ],
+    steps: [],
     sections: {
       wifi: createEmptySection('wifi', 'Langkah Koneksi Wi-Fi', '1. Koneksi Wi-Fi', 'Wifi', 'Jaringan'),
       bluetooth: createEmptySection(

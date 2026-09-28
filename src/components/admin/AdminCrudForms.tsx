@@ -84,6 +84,7 @@ export const DeviceFormModal: React.FC<{
       });
       empty.image = imageUrl.trim() || undefined;
       empty.supported_os = osList;
+      empty.steps = [];
       empty.faqs = [];
       onSave(empty, true);
     }
@@ -395,15 +396,6 @@ export const GuideFormModal: React.FC<{
       konten_mac: hasMac ? (s.konten_mac || (s.details ? s.details.join('\n') : '')) : '',
     }));
 
-    if (rows.length === 0) {
-      rows.push({
-        title: 'Langkah 1: Hubungkan Perangkat ke Jaringan',
-        description: 'Pastikan perangkat menyala dan terhubung ke jaringan kantor.',
-        konten_windows: hasWin ? '1. Nyalakan perangkat.\n2. Hubungkan ke SSID Wi-Fi kantor "Kantor-Utama".' : '',
-        konten_mac: hasMac ? '1. Nyalakan perangkat.\n2. Hubungkan Mac ke SSID Wi-Fi kantor "Kantor-Utama".' : '',
-      });
-    }
-
     setSteps(rows);
     setIsSubmitting(false);
   }, [device, isOpen, hasWin, hasMac]);
@@ -496,16 +488,25 @@ export const GuideFormModal: React.FC<{
         )}
 
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-          {steps.map((step, idx) => (
-            <div
-              key={idx}
-              className="p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 space-y-3"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
-                  Langkah #{idx + 1}
-                </span>
-                {steps.length > 1 && (
+          {steps.length === 0 ? (
+            <div className="p-8 text-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 space-y-2">
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                Belum ada langkah panduan untuk perangkat ini.
+              </p>
+              <p className="text-[11px] text-slate-400">
+                Klik tombol "+ Tambah Langkah Baru" di bawah untuk mulai menyusun alur panduan.
+              </p>
+            </div>
+          ) : (
+            steps.map((step, idx) => (
+              <div
+                key={idx}
+                className="p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
+                    Langkah #{idx + 1}
+                  </span>
                   <button
                     type="button"
                     onClick={() => removeStep(idx)}
@@ -513,8 +514,7 @@ export const GuideFormModal: React.FC<{
                   >
                     Hapus Langkah
                   </button>
-                )}
-              </div>
+                </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -585,7 +585,7 @@ export const GuideFormModal: React.FC<{
                 )}
               </div>
             </div>
-          ))}
+          )))}
         </div>
 
         <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
