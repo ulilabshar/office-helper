@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TargetOS, SetupStep, Device } from '../types/device';
 import { OsTabSelector } from './OsTabSelector';
-import { extractDeviceSteps } from '../lib/catalog';
+import { extractDeviceSteps, getDeviceSupportedOs } from '../lib/catalog';
 import {
   AlertTriangle,
   Lightbulb,
@@ -17,15 +17,30 @@ interface StepGuideProps {
   steps?: SetupStep[];
   sections?: Device['sections'];
   showOsSelector?: boolean;
+  supportedOs?: string[];
 }
 
 export const StepGuide: React.FC<StepGuideProps> = ({
   steps,
   sections,
   showOsSelector = true,
+  supportedOs,
 }) => {
-  const [selectedOS, setSelectedOS] = useState<TargetOS>('windows');
+  const devSupported = getDeviceSupportedOs({ supported_os: supportedOs } as Device);
+  const devHasWin = devSupported.includes('windows');
+  const devHasMac = devSupported.includes('mac');
+  const isDualOs = devHasWin && devHasMac;
+
+  const [selectedOS, setSelectedOS] = useState<TargetOS>(() => (!devHasWin && devHasMac ? 'mac' : 'windows'));
   const [copiedSnippet, setCopiedSnippet] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!devHasWin && devHasMac) {
+      setSelectedOS('mac');
+    } else if (devHasWin && !devHasMac) {
+      setSelectedOS('windows');
+    }
+  }, [supportedOs, devHasWin, devHasMac]);
 
   // Normalisasikan daftar langkah dari steps atau fallback sections
   const allSteps: SetupStep[] =
@@ -76,10 +91,12 @@ export const StepGuide: React.FC<StepGuideProps> = ({
     if (step.details && step.details.length > 0) {
       return step.details;
     }
-    // Jika hanya ada konten OS lain sebagai fallback
-    const otherContent = os === 'windows' ? step.konten_mac : step.konten_windows;
-    if (otherContent && otherContent.trim()) {
-      return otherContent.split('\n').map((l) => l.trim()).filter(Boolean);
+    // Jika hanya ada konten OS lain sebagai fallback (hanya jika mendukung dual OS)
+    if (isDualOs) {
+      const otherContent = os === 'windows' ? step.konten_mac : step.konten_windows;
+      if (otherContent && otherContent.trim()) {
+        return otherContent.split('\n').map((l) => l.trim()).filter(Boolean);
+      }
     }
     return [];
   };
@@ -95,8 +112,8 @@ export const StepGuide: React.FC<StepGuideProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* OS Selector Bar & Mode Indicator */}
-      {showOsSelector && hasAnyOsSteps && (
+      {/* OS Selector Bar & Mode Indicator (hanya untuk perangkat dual OS) */}
+      {showOsSelector && isDualOs && hasAnyOsSteps && (
         <div className="space-y-3">
           <OsTabSelector selectedOS={selectedOS} onSelectOS={setSelectedOS} />
           <div className="flex items-center justify-between px-4 py-2.5 rounded-xl border border-blue-200/80 bg-blue-50/70 text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 text-xs">
@@ -118,6 +135,25 @@ export const StepGuide: React.FC<StepGuideProps> = ({
               )}
             </span>
           </div>
+        </div>
+      )}
+
+      {/* Info indicator jika perangkat hanya mendukung satu OS */}
+      {!isDualOs && (
+        <div className="flex items-center justify-between px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-300 text-xs">
+          <span className="flex items-center gap-2 font-medium">
+            {devHasWin ? (
+              <>
+                <Monitor className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <span>Perangkat ini dikhususkan untuk sistem operasi <strong>Windows</strong>.</span>
+              </>
+            ) : (
+              <>
+                <Laptop className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <span>Perangkat ini dikhususkan untuk sistem operasi <strong>macOS</strong>.</span>
+              </>
+            )}
+          </span>
         </div>
       )}
 

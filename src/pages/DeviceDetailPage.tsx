@@ -138,7 +138,7 @@ export const DeviceDetailPage: React.FC = () => {
       </div>
 
       {/* Main Interactive Stepper Guide */}
-      <StepGuide steps={device.steps} sections={device.sections} />
+      <StepGuide steps={device.steps} sections={device.sections} supportedOs={device.supported_os} />
 
       {/* Device Specific FAQ */}
       {device.faqs && device.faqs.length > 0 && (

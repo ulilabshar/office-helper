@@ -10,6 +10,7 @@ import {
   withDeviceCounts,
   DEFAULT_GENERAL_FAQS,
   extractDeviceSteps,
+  getDeviceSupportedOs,
 } from '../lib/catalog';
 import {
   supabase,
@@ -441,7 +442,15 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
             // Sinkronkan steps awal jika ada
             if (device.steps && device.steps.length > 0) {
-              await syncDeviceSteps(created.id, device.steps as any);
+              const osList = device.supported_os && device.supported_os.length > 0 ? device.supported_os : ['windows', 'mac'];
+              const hasWin = osList.includes('windows');
+              const hasMac = osList.includes('mac');
+              const sanitizedSteps = device.steps.map((st) => ({
+                ...st,
+                konten_windows: hasWin ? (st.konten_windows || null) : null,
+                konten_mac: hasMac ? (st.konten_mac || null) : null,
+              }));
+              await syncDeviceSteps(created.id, sanitizedSteps as any);
             }
             // Sinkronkan faqs awal jika ada
             if (device.faqs && device.faqs.length > 0) {
@@ -493,11 +502,16 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }));
 
         if (isSupabaseReady && supabase) {
+          const targetDev = state.devices.find((d) => d.id === deviceId || d.id === targetDeviceId);
+          const supp = getDeviceSupportedOs(targetDev);
+          const hasWin = supp.includes('windows');
+          const hasMac = supp.includes('mac');
+
           const payload = steps.map((s, idx) => ({
             title: s.title,
             description: s.description || null,
-            konten_windows: s.konten_windows || (s.details ? s.details.join('\n') : null),
-            konten_mac: s.konten_mac || (s.details ? s.details.join('\n') : null),
+            konten_windows: hasWin ? (s.konten_windows || (s.details ? s.details.join('\n') : null)) : null,
+            konten_mac: hasMac ? (s.konten_mac || (s.details ? s.details.join('\n') : null)) : null,
             sort_order: s.sort_order ?? idx + 1,
           }));
           const savedSteps = await syncDeviceSteps(targetDeviceId, payload);
@@ -528,6 +542,13 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const targetDeviceId = resolveDeviceUuid(step.device_id, state.devices);
 
         if (isSupabaseReady && supabase) {
+          const targetDev = state.devices.find((d) => d.id === step.device_id || d.id === targetDeviceId);
+          const supp = getDeviceSupportedOs(targetDev);
+          const hasWin = supp.includes('windows');
+          const hasMac = supp.includes('mac');
+          const winContent = hasWin ? (step.konten_windows?.trim() || null) : null;
+          const macContent = hasMac ? (step.konten_mac?.trim() || null) : null;
+
           const hasValidUuid = isValidUuid(step.id);
           const isCreate = isNew || !hasValidUuid;
 
@@ -536,8 +557,8 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
               device_id: targetDeviceId,
               title: step.title.trim(),
               description: step.description?.trim() || null,
-              konten_windows: step.konten_windows?.trim() || null,
-              konten_mac: step.konten_mac?.trim() || null,
+              konten_windows: winContent,
+              konten_mac: macContent,
               sort_order: step.sort_order ?? 1,
             });
 
@@ -576,8 +597,8 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 device_id: targetDeviceId,
                 title: step.title.trim(),
                 description: step.description?.trim() || null,
-                konten_windows: step.konten_windows?.trim() || null,
-                konten_mac: step.konten_mac?.trim() || null,
+                konten_windows: winContent,
+                konten_mac: macContent,
                 sort_order: step.sort_order ?? 1,
               });
 
@@ -588,7 +609,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
                     ? {
                         ...d,
                         steps: (d.steps || [])
-                          .map((s) => (s.id === step.id ? { ...s, ...step, id: updated.id, device_id: updated.device_id } : s))
+                          .map((s) => (s.id === step.id ? { ...s, ...step, id: updated.id, device_id: updated.device_id, konten_windows: updated.konten_windows || '', konten_mac: updated.konten_mac || '' } : s))
                           .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
                       }
                     : d
@@ -611,8 +632,8 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
                   device_id: targetDeviceId,
                   title: step.title.trim(),
                   description: step.description?.trim() || null,
-                  konten_windows: step.konten_windows?.trim() || null,
-                  konten_mac: step.konten_mac?.trim() || null,
+                  konten_windows: winContent,
+                  konten_mac: macContent,
                   sort_order: step.sort_order ?? 1,
                 });
 

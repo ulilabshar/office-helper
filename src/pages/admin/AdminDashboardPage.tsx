@@ -5,7 +5,7 @@ import { AdminTab } from '../../types/admin';
 import { Device, Category, FAQItem, SetupStep } from '../../types/device';
 import { calculateDashboardStats } from '../../data/adminData';
 import { useCatalog } from '../../context/CatalogContext';
-import { slugify, extractDeviceSteps } from '../../lib/catalog';
+import { slugify, extractDeviceSteps, getDeviceSupportedOs } from '../../lib/catalog';
 import { formatErrorMessage } from '../../lib/errorHandler';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { AdminHeader } from '../../components/admin/AdminHeader';
@@ -125,7 +125,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
   // ── Flattened Steps for granular CRUD ───────────────────────────────────────
   const allSteps = useMemo(() => {
-    const list: Array<SetupStep & { deviceName: string; deviceCategory: string; deviceSlug: string; categorySlug: string }> = [];
+    const list: Array<SetupStep & {
+      deviceName: string;
+      deviceCategory: string;
+      deviceSlug: string;
+      categorySlug: string;
+      supported_os?: string[];
+      specs?: string[];
+    }> = [];
     catalog.devices.forEach((d) => {
       const devSteps = d.steps && d.steps.length > 0 ? d.steps : extractDeviceSteps(d);
       devSteps.forEach((s) => {
@@ -136,6 +143,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
           deviceCategory: d.category,
           deviceSlug: d.slug || slugify(d.name),
           categorySlug: d.categorySlug,
+          supported_os: d.supported_os,
+          specs: d.specs,
         });
       });
     });
@@ -576,20 +585,43 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                             </td>
                             <td className="px-4 py-4">
                               <div className="flex flex-wrap gap-1.5">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                                  step.konten_windows
-                                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
-                                    : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
-                                }`}>
-                                  Windows {step.konten_windows ? '✓' : '-'}
-                                </span>
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                                  step.konten_mac
-                                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                                    : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
-                                }`}>
-                                  macOS {step.konten_mac ? '✓' : '-'}
-                                </span>
+                                {(() => {
+                                  const supp = getDeviceSupportedOs({ supported_os: step.supported_os, specs: step.specs } as Device);
+                                  const devHasWin = supp.includes('windows');
+                                  const devHasMac = supp.includes('mac');
+                                  return (
+                                    <>
+                                      {devHasWin && (
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                          step.konten_windows
+                                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+                                            : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
+                                        }`}>
+                                          Windows {step.konten_windows ? '✓' : '-'}
+                                        </span>
+                                      )}
+                                      {devHasMac && (
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                          step.konten_mac
+                                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                                            : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
+                                        }`}>
+                                          macOS {step.konten_mac ? '✓' : '-'}
+                                        </span>
+                                      )}
+                                      {!devHasMac && (
+                                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                                          Khusus Windows
+                                        </span>
+                                      )}
+                                      {!devHasWin && (
+                                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                          Khusus macOS
+                                        </span>
+                                      )}
+                                    </>
+                                  );
+                                })()}
                               </div>
                             </td>
                             <td className="px-4 py-4 text-right">

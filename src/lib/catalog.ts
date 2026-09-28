@@ -59,6 +59,21 @@ export function createEmptySection(
   };
 }
 
+export function getDeviceSupportedOs(device?: Partial<Device> | null): ('windows' | 'mac')[] {
+  if (!device) return ['windows', 'mac'];
+  const os = (device.supported_os && device.supported_os.length > 0)
+    ? device.supported_os.map((x) => x.toLowerCase().trim())
+    : (device.specs || []).map((x) => x.toLowerCase().trim());
+
+  const hasWin = os.some((o) => o === 'windows' || o === 'win');
+  const hasMac = os.some((o) => o === 'mac' || o === 'macos');
+
+  if (hasWin && hasMac) return ['windows', 'mac'];
+  if (hasWin) return ['windows'];
+  if (hasMac) return ['mac'];
+  return ['windows', 'mac'];
+}
+
 export function createEmptyDevice(input: {
   name: string;
   category: string;
@@ -68,8 +83,13 @@ export function createEmptyDevice(input: {
   status: Device['status'];
   specs: string[];
   slug?: string;
+  supported_os?: string[];
 }): Device {
   const base = input.slug || slugify(input.name) || 'perangkat';
+  const supported = getDeviceSupportedOs({ supported_os: input.supported_os, specs: input.specs });
+  const hasWin = supported.includes('windows');
+  const hasMac = supported.includes('mac');
+
   return {
     id: `${base}-${Date.now().toString(36)}`,
     name: input.name,
@@ -79,14 +99,14 @@ export function createEmptyDevice(input: {
     description: input.description,
     image: input.image,
     status: input.status,
-    supported_os: ['windows', 'mac'],
+    supported_os: input.supported_os || supported,
     specs: input.specs,
     steps: [
       {
         title: 'Langkah 1: Menghubungkan Perangkat ke Jaringan',
         description: 'Pastikan perangkat menyala dan terhubung ke jaringan kantor.',
-        konten_windows: '1. Nyalakan perangkat.\n2. Hubungkan ke Wi-Fi kantor "Kantor-Utama".',
-        konten_mac: '1. Nyalakan perangkat.\n2. Hubungkan Mac ke Wi-Fi kantor "Kantor-Utama".',
+        konten_windows: hasWin ? '1. Nyalakan perangkat.\n2. Hubungkan ke Wi-Fi kantor "Kantor-Utama".' : '',
+        konten_mac: hasMac ? '1. Nyalakan perangkat.\n2. Hubungkan Mac ke Wi-Fi kantor "Kantor-Utama".' : '',
       },
     ],
     sections: {

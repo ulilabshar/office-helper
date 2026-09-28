@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Category, Device, DeviceSection, FAQItem, SetupStep } from '../../types/device';
 import { MediaAsset } from '../../types/admin';
-import { createEmptyDevice, emptyStep, slugify, extractDeviceSteps } from '../../lib/catalog';
+import { createEmptyDevice, emptyStep, slugify, extractDeviceSteps, getDeviceSupportedOs } from '../../lib/catalog';
 import { CrudModal, fieldClass, labelClass } from './CrudModal';
 
 export const DeviceFormModal: React.FC<{
@@ -80,6 +80,7 @@ export const DeviceFormModal: React.FC<{
         description: description.trim(),
         status,
         specs: finalSpecs,
+        supported_os: osList,
       });
       empty.image = imageUrl.trim() || undefined;
       empty.supported_os = osList;
@@ -372,6 +373,10 @@ export const GuideFormModal: React.FC<{
   const [steps, setSteps] = useState<StepRowItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const supported = getDeviceSupportedOs(device);
+  const hasWin = supported.includes('windows');
+  const hasMac = supported.includes('mac');
+
   React.useEffect(() => {
     if (!device) {
       setSteps([]);
@@ -386,22 +391,22 @@ export const GuideFormModal: React.FC<{
     const rows: StepRowItem[] = devSteps.map((s, i) => ({
       title: s.title || `Langkah ${i + 1}`,
       description: s.description || '',
-      konten_windows: s.konten_windows || (s.details ? s.details.join('\n') : ''),
-      konten_mac: s.konten_mac || (s.details ? s.details.join('\n') : ''),
+      konten_windows: hasWin ? (s.konten_windows || (s.details ? s.details.join('\n') : '')) : '',
+      konten_mac: hasMac ? (s.konten_mac || (s.details ? s.details.join('\n') : '')) : '',
     }));
 
     if (rows.length === 0) {
       rows.push({
         title: 'Langkah 1: Hubungkan Perangkat ke Jaringan',
         description: 'Pastikan perangkat menyala dan terhubung ke jaringan kantor.',
-        konten_windows: '1. Nyalakan perangkat.\n2. Hubungkan ke SSID Wi-Fi kantor "Kantor-Utama".',
-        konten_mac: '1. Nyalakan perangkat.\n2. Hubungkan Mac ke SSID Wi-Fi kantor "Kantor-Utama".',
+        konten_windows: hasWin ? '1. Nyalakan perangkat.\n2. Hubungkan ke SSID Wi-Fi kantor "Kantor-Utama".' : '',
+        konten_mac: hasMac ? '1. Nyalakan perangkat.\n2. Hubungkan Mac ke SSID Wi-Fi kantor "Kantor-Utama".' : '',
       });
     }
 
     setSteps(rows);
     setIsSubmitting(false);
-  }, [device, isOpen]);
+  }, [device, isOpen, hasWin, hasMac]);
 
   if (!device) return null;
 
@@ -412,8 +417,8 @@ export const GuideFormModal: React.FC<{
       const finalSteps: SetupStep[] = steps.map((s, i) => ({
         title: s.title.trim(),
         description: s.description.trim(),
-        konten_windows: s.konten_windows.trim(),
-        konten_mac: s.konten_mac.trim(),
+        konten_windows: hasWin ? s.konten_windows.trim() : '',
+        konten_mac: hasMac ? s.konten_mac.trim() : '',
         sort_order: i + 1,
       }));
 
@@ -423,12 +428,12 @@ export const GuideFormModal: React.FC<{
         const winSteps: SetupStep[] = finalSteps.map((s) => ({
           title: s.title,
           description: s.description,
-          details: s.konten_windows ? s.konten_windows.split('\n').map((l) => l.trim()).filter(Boolean) : [],
+          details: hasWin && s.konten_windows ? s.konten_windows.split('\n').map((l) => l.trim()).filter(Boolean) : [],
         }));
         const macSteps: SetupStep[] = finalSteps.map((s) => ({
           title: s.title,
           description: s.description,
-          details: s.konten_mac ? s.konten_mac.split('\n').map((l) => l.trim()).filter(Boolean) : [],
+          details: hasMac && s.konten_mac ? s.konten_mac.split('\n').map((l) => l.trim()).filter(Boolean) : [],
         }));
         await onSave({
           id: sectionKey || 'wifi',
@@ -470,9 +475,26 @@ export const GuideFormModal: React.FC<{
       isOpen={isOpen}
       onClose={onClose}
       title={`Kelola Panduan Langkah: ${device.name}`}
-      subtitle={`Panduan berurutan linear yang disimpan ke tabel steps di Supabase (${steps.length} langkah).`}
+      subtitle={`Panduan berurutan linear yang disimpan ke tabel steps di Supabase (${steps.length} langkah). ${
+        hasWin && hasMac
+          ? 'Mendukung Windows & macOS.'
+          : hasWin
+          ? 'Perangkat ini dikhususkan untuk OS Windows.'
+          : 'Perangkat ini dikhususkan untuk macOS.'
+      }`}
     >
       <form onSubmit={handleSubmit} className="space-y-5">
+        {!hasMac && (
+          <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 text-blue-800 dark:text-blue-300 text-xs flex items-center gap-2">
+            <span>ℹ️ Perangkat <strong>{device.name}</strong> hanya mendukung OS <strong>Windows</strong>. Form input macOS dinonaktifkan secara otomatis.</span>
+          </div>
+        )}
+        {!hasWin && (
+          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300 text-xs flex items-center gap-2">
+            <span>ℹ️ Perangkat <strong>{device.name}</strong> hanya mendukung <strong>macOS</strong>. Form input Windows dinonaktifkan secara otomatis.</span>
+          </div>
+        )}
+
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
           {steps.map((step, idx) => (
             <div
@@ -516,33 +538,51 @@ export const GuideFormModal: React.FC<{
                 </div>
               </div>
 
-              {/* 2 Kolom: Windows & Mac */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    🪟 Konten Panduan Windows (konten_windows)
-                  </label>
-                  <textarea
-                    className={`${fieldClass} min-h-[96px] font-mono text-[11px] leading-relaxed`}
-                    value={step.konten_windows}
-                    onChange={(e) => updateStep(idx, { konten_windows: e.target.value })}
-                    placeholder={"1. Nyalakan printer.\n2. Hubungkan ke SSID Wi-Fi kantor.\n3. Tambahkan di Windows Settings."}
-                  />
-                  <span className="text-[10px] text-slate-400">Instruksi baris per baris (1, 2, 3...)</span>
-                </div>
+              {/* Kolom OS Sesuai Dukungan Perangkat */}
+              <div className={`grid gap-3 pt-2 ${hasWin && hasMac ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+                {hasWin && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        🪟 Konten Panduan Windows (konten_windows)
+                      </span>
+                      {!hasMac && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                          Khusus Windows
+                        </span>
+                      )}
+                    </label>
+                    <textarea
+                      className={`${fieldClass} min-h-[96px] font-mono text-[11px] leading-relaxed`}
+                      value={step.konten_windows}
+                      onChange={(e) => updateStep(idx, { konten_windows: e.target.value })}
+                      placeholder={"1. Nyalakan printer.\n2. Hubungkan ke SSID Wi-Fi kantor.\n3. Tambahkan di Windows Settings."}
+                    />
+                    <span className="text-[10px] text-slate-400">Instruksi baris per baris (1, 2, 3...)</span>
+                  </div>
+                )}
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    🍎 Konten Panduan macOS (konten_mac)
-                  </label>
-                  <textarea
-                    className={`${fieldClass} min-h-[96px] font-mono text-[11px] leading-relaxed`}
-                    value={step.konten_mac}
-                    onChange={(e) => updateStep(idx, { konten_mac: e.target.value })}
-                    placeholder={"1. Nyalakan printer.\n2. Pastikan Mac terhubung ke Wi-Fi yang sama.\n3. Tambahkan via Printers & Scanners."}
-                  />
-                  <span className="text-[10px] text-slate-400">Instruksi baris per baris (1, 2, 3...)</span>
-                </div>
+                {hasMac && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        🍎 Konten Panduan macOS (konten_mac)
+                      </span>
+                      {!hasWin && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                          Khusus macOS
+                        </span>
+                      )}
+                    </label>
+                    <textarea
+                      className={`${fieldClass} min-h-[96px] font-mono text-[11px] leading-relaxed`}
+                      value={step.konten_mac}
+                      onChange={(e) => updateStep(idx, { konten_mac: e.target.value })}
+                      placeholder={"1. Nyalakan printer.\n2. Pastikan Mac terhubung ke Wi-Fi yang sama.\n3. Tambahkan via Printers & Scanners."}
+                    />
+                    <span className="text-[10px] text-slate-400">Instruksi baris per baris (1, 2, 3...)</span>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -763,6 +803,11 @@ export const SingleStepModal: React.FC<{
   const [sortOrder, setSortOrder] = useState<number>(initial?.sort_order ?? 1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const currentDevice = devices.find((d) => d.id === deviceId);
+  const supported = getDeviceSupportedOs(currentDevice);
+  const hasWin = supported.includes('windows');
+  const hasMac = supported.includes('mac');
+
   React.useEffect(() => {
     setDeviceId(resolveTargetDeviceId(initial?.device_id || preselectedDeviceId || devices[0]?.id || ''));
     setTitle(initial?.title ?? '');
@@ -784,8 +829,8 @@ export const SingleStepModal: React.FC<{
           device_id: deviceId,
           title: title.trim(),
           description: description.trim(),
-          konten_windows: kontenWindows.trim(),
-          konten_mac: kontenMac.trim(),
+          konten_windows: hasWin ? kontenWindows.trim() : '',
+          konten_mac: hasMac ? kontenMac.trim() : '',
           sort_order: Number(sortOrder) || 1,
         },
         isNew
@@ -801,7 +846,13 @@ export const SingleStepModal: React.FC<{
       isOpen={isOpen}
       onClose={onClose}
       title={isNew ? 'Tambah Langkah Panduan' : 'Ubah Langkah Panduan'}
-      subtitle="Panduan alur linear langkah demi langkah untuk perangkat tertentu."
+      subtitle={`Panduan alur linear langkah demi langkah untuk perangkat tertentu. ${
+        hasWin && hasMac
+          ? 'Mendukung Windows & macOS.'
+          : hasWin
+          ? 'Perangkat ini dikhususkan untuk OS Windows.'
+          : 'Perangkat ini dikhususkan untuk macOS.'
+      }`}
       wide
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -834,6 +885,17 @@ export const SingleStepModal: React.FC<{
           </div>
         </div>
 
+        {!hasMac && (
+          <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 text-blue-800 dark:text-blue-300 text-xs flex items-center gap-2">
+            <span>ℹ️ Perangkat <strong>{currentDevice?.name}</strong> hanya mendukung OS <strong>Windows</strong>. Form input macOS dinonaktifkan secara otomatis.</span>
+          </div>
+        )}
+        {!hasWin && (
+          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300 text-xs flex items-center gap-2">
+            <span>ℹ️ Perangkat <strong>{currentDevice?.name}</strong> hanya mendukung <strong>macOS</strong>. Form input Windows dinonaktifkan secara otomatis.</span>
+          </div>
+        )}
+
         <div>
           <label className={labelClass}>Judul Langkah</label>
           <input
@@ -855,36 +917,50 @@ export const SingleStepModal: React.FC<{
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-          <div className="space-y-1.5 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-blue-600 dark:text-blue-400">
-                Panduan Windows
-              </label>
-              <span className="text-[10px] text-slate-400">Gunakan baris baru untuk sub-langkah</span>
+        <div className={`grid gap-4 pt-1 ${hasWin && hasMac ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+          {hasWin && (
+            <div className="space-y-1.5 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                  <span>Panduan Windows</span>
+                  {!hasMac && (
+                    <span className="text-[10px] font-normal px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                      Khusus Windows
+                    </span>
+                  )}
+                </label>
+                <span className="text-[10px] text-slate-400">Gunakan baris baru untuk sub-langkah</span>
+              </div>
+              <textarea
+                className={`${fieldClass} min-h-[120px] font-mono text-xs`}
+                value={kontenWindows}
+                onChange={(e) => setKontenWindows(e.target.value)}
+                placeholder="1. Buka Settings > Devices & Printers&#10;2. Klik Add Printer & Scanner&#10;3. Pilih printer dari daftar Wi-Fi"
+              />
             </div>
-            <textarea
-              className={`${fieldClass} min-h-[120px] font-mono text-xs`}
-              value={kontenWindows}
-              onChange={(e) => setKontenWindows(e.target.value)}
-              placeholder="1. Buka Settings > Devices & Printers&#10;2. Klik Add Printer & Scanner&#10;3. Pilih printer dari daftar Wi-Fi"
-            />
-          </div>
+          )}
 
-          <div className="space-y-1.5 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                Panduan macOS
-              </label>
-              <span className="text-[10px] text-slate-400">Gunakan baris baru untuk sub-langkah</span>
+          {hasMac && (
+            <div className="space-y-1.5 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                  <span>Panduan macOS</span>
+                  {!hasWin && (
+                    <span className="text-[10px] font-normal px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                      Khusus macOS
+                    </span>
+                  )}
+                </label>
+                <span className="text-[10px] text-slate-400">Gunakan baris baru untuk sub-langkah</span>
+              </div>
+              <textarea
+                className={`${fieldClass} min-h-[120px] font-mono text-xs`}
+                value={kontenMac}
+                onChange={(e) => setKontenMac(e.target.value)}
+                placeholder="1. Buka Apple Menu > System Settings > Printers & Scanners&#10;2. Klik Add Printer (+)...&#10;3. Hubungkan via AirPrint atau Bonjour"
+              />
             </div>
-            <textarea
-              className={`${fieldClass} min-h-[120px] font-mono text-xs`}
-              value={kontenMac}
-              onChange={(e) => setKontenMac(e.target.value)}
-              placeholder="1. Buka Apple Menu > System Settings > Printers & Scanners&#10;2. Klik Add Printer (+)...&#10;3. Hubungkan via AirPrint atau Bonjour"
-            />
-          </div>
+          )}
         </div>
 
         <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
