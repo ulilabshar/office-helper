@@ -25,6 +25,8 @@ interface AdminSidebarProps {
   onClose: () => void;
   deviceCount?: number;
   categoryCount?: number;
+  guideCount?: number;
+  faqCount?: number;
 }
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({
@@ -32,8 +34,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   onSelectTab,
   isOpen,
   onClose,
-  deviceCount = 6,
-  categoryCount = 5,
+  deviceCount = 0,
+  categoryCount = 0,
+  guideCount = 0,
+  faqCount = 0,
 }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -48,8 +52,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'devices', label: 'Devices', icon: HardDrive, badge: deviceCount },
     { id: 'categories', label: 'Categories', icon: FolderTree, badge: categoryCount },
-    { id: 'guides', label: 'Guides', icon: BookOpenCheck },
-    { id: 'faq', label: 'FAQ', icon: HelpCircle },
+    { id: 'guides', label: 'Guides', icon: BookOpenCheck, badge: guideCount },
+    { id: 'faq', label: 'FAQ', icon: HelpCircle, badge: faqCount },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 

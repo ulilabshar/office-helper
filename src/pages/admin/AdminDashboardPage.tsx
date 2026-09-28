@@ -293,6 +293,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         onClose={() => setIsSidebarOpen(false)}
         deviceCount={catalog.devices.length}
         categoryCount={catalog.categories.length}
+        guideCount={stats.totalGuides}
+        faqCount={stats.totalFaqs}
       />
 
       <div className="flex-1 flex flex-col min-w-0 lg:pl-72">
