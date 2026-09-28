@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Lock, User as UserIcon, Eye, EyeOff, X, ShieldCheck, KeyRound, AlertCircle, ArrowRight } from 'lucide-react';
+import { formatErrorMessage } from '../lib/errorHandler';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -61,7 +62,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
       }
     } catch (err: unknown) {
       setIsLoading(false);
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = formatErrorMessage(err);
       setError(msg || 'Terjadi kesalahan saat login.');
     }
   };

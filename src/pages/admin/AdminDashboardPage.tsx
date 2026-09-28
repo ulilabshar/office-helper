@@ -6,6 +6,7 @@ import { Device, Category, FAQItem, SetupStep } from '../../types/device';
 import { calculateDashboardStats } from '../../data/adminData';
 import { useCatalog } from '../../context/CatalogContext';
 import { slugify, extractDeviceSteps } from '../../lib/catalog';
+import { formatErrorMessage } from '../../lib/errorHandler';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { AdminHeader } from '../../components/admin/AdminHeader';
 import { AdminSearchModal } from '../../components/admin/AdminSearchModal';
@@ -403,7 +404,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                                     await catalog.deleteDevice(d.id);
                                     showToast(`"${d.name}" berhasil dihapus.`);
                                   } catch (err: unknown) {
-                                    const msg = err instanceof Error ? err.message : String(err);
+                                    const msg = formatErrorMessage(err);
                                     showToast(`Gagal menghapus: ${msg}`);
                                   }
                                 }
@@ -463,7 +464,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                                 await catalog.deleteCategory(cat.id);
                                 showToast('Kategori berhasil dihapus.');
                               } catch (err: unknown) {
-                                const msg = err instanceof Error ? err.message : String(err);
+                                const msg = formatErrorMessage(err);
                                 showToast(`Gagal menghapus: ${msg}`);
                               }
                             }
@@ -611,7 +612,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                                           showToast('Gagal: ID langkah tidak ditemukan.');
                                         }
                                       } catch (err: unknown) {
-                                        const msg = err instanceof Error ? err.message : String(err);
+                                        const msg = formatErrorMessage(err);
                                         showToast(`Gagal menghapus langkah: ${msg}`);
                                       }
                                     }
@@ -783,7 +784,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                                     showToast('Gagal: ID FAQ tidak ditemukan.');
                                   }
                                 } catch (err: unknown) {
-                                  const msg = err instanceof Error ? err.message : String(err);
+                                  const msg = formatErrorMessage(err);
                                   showToast(`Gagal menghapus FAQ: ${msg}`);
                                 }
                               }
@@ -860,7 +861,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             await catalog.saveDevice(device, isNew);
             showToast(isNew ? 'Perangkat berhasil ditambahkan ke database.' : 'Perangkat berhasil diperbarui.');
           } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
+            const msg = formatErrorMessage(err);
             showToast(`Gagal menyimpan perangkat: ${msg}`);
           }
         }}
@@ -874,7 +875,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             await catalog.saveCategory(category, isNew);
             showToast(isNew ? 'Kategori berhasil ditambahkan ke database.' : 'Kategori berhasil diperbarui.');
           } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
+            const msg = formatErrorMessage(err);
             showToast(`Gagal menyimpan kategori: ${msg}`);
           }
         }}
@@ -888,8 +889,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             await catalog.saveDeviceSteps(deviceId, steps);
             showToast('Langkah panduan berhasil disimpan ke Supabase.');
           } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
+            const msg = formatErrorMessage(err);
             showToast(`Gagal menyimpan langkah: ${msg}`);
+            throw err;
           }
         }}
         onSave={async (section) => {
@@ -898,8 +900,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               await catalog.saveDeviceSection(guideModal.device.id, 'wifi', section);
               showToast('Panduan berhasil disimpan ke Supabase.');
             } catch (err: unknown) {
-              const msg = err instanceof Error ? err.message : String(err);
+              const msg = formatErrorMessage(err);
               showToast(`Gagal menyimpan panduan: ${msg}`);
+              throw err;
             }
           }
         }}
@@ -924,8 +927,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             await catalog.saveSingleStep(step, isNew);
             showToast(isNew ? 'Langkah panduan berhasil ditambahkan ke database.' : 'Langkah panduan berhasil diperbarui.');
           } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
+            const msg = formatErrorMessage(err);
             showToast(`Gagal menyimpan langkah: ${msg}`);
+            throw err;
           }
         }}
       />
@@ -940,8 +944,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             await catalog.saveSingleFaq(faq, isNew);
             showToast(isNew ? 'FAQ berhasil ditambahkan ke database.' : 'FAQ berhasil diperbarui.');
           } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
+            const msg = formatErrorMessage(err);
             showToast(`Gagal menyimpan FAQ: ${msg}`);
+            throw err;
           }
         }}
       />

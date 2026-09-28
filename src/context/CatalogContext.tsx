@@ -32,6 +32,8 @@ import {
   syncDeviceSteps,
   syncDeviceFaqs,
   syncGeneralFaqs,
+  isValidUuid,
+  resolveDeviceUuid,
 } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
@@ -142,19 +144,29 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             }));
 
             const winSteps: SetupStep[] = devSteps.map((s) => ({
+              id: s.id,
+              device_id: s.device_id,
               title: s.title,
               description: s.description || '',
+              konten_windows: s.konten_windows || '',
+              konten_mac: s.konten_mac || '',
               details: s.konten_windows
                 ? s.konten_windows.split('\n').map((l) => l.trim()).filter(Boolean)
                 : [],
+              sort_order: s.sort_order,
             }));
 
             const macSteps: SetupStep[] = devSteps.map((s) => ({
+              id: s.id,
+              device_id: s.device_id,
               title: s.title,
               description: s.description || '',
+              konten_windows: s.konten_windows || '',
+              konten_mac: s.konten_mac || '',
               details: s.konten_mac
                 ? s.konten_mac.split('\n').map((l) => l.trim()).filter(Boolean)
                 : [],
+              sort_order: s.sort_order,
             }));
 
             const faqsList: FAQItem[] =
@@ -466,10 +478,11 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       },
       saveDeviceSteps: async (deviceId, steps) => {
+        const targetDeviceId = resolveDeviceUuid(deviceId, state.devices);
         setState((prev) => ({
           ...prev,
           devices: prev.devices.map((d) =>
-            d.id === deviceId ? { ...d, steps } : d
+            (d.id === deviceId || d.id === targetDeviceId) ? { ...d, steps } : d
           ),
           activityLogs: pushLog(
             prev,
@@ -487,16 +500,40 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             konten_mac: s.konten_mac || (s.details ? s.details.join('\n') : null),
             sort_order: s.sort_order ?? idx + 1,
           }));
-          await syncDeviceSteps(deviceId, payload);
+          const savedSteps = await syncDeviceSteps(targetDeviceId, payload);
+          if (savedSteps.length > 0) {
+            const mappedSteps: SetupStep[] = savedSteps.map((s) => ({
+              id: s.id,
+              device_id: s.device_id,
+              title: s.title,
+              description: s.description || '',
+              konten_windows: s.konten_windows || '',
+              konten_mac: s.konten_mac || '',
+              details: s.konten_windows
+                ? s.konten_windows.split('\n').map((l) => l.trim()).filter(Boolean)
+                : [],
+              sort_order: s.sort_order,
+            }));
+            setState((prev) => ({
+              ...prev,
+              devices: prev.devices.map((d) =>
+                (d.id === deviceId || d.id === targetDeviceId) ? { ...d, steps: mappedSteps } : d
+              ),
+            }));
+          }
         }
       },
       saveSingleStep: async (step, isNew) => {
         if (!step.device_id) throw new Error('Target perangkat wajib dipilih!');
+        const targetDeviceId = resolveDeviceUuid(step.device_id, state.devices);
 
         if (isSupabaseReady && supabase) {
-          if (isNew) {
+          const hasValidUuid = isValidUuid(step.id);
+          const isCreate = isNew || !hasValidUuid;
+
+          if (isCreate) {
             const created = await createStep({
-              device_id: step.device_id,
+              device_id: targetDeviceId,
               title: step.title.trim(),
               description: step.description?.trim() || null,
               konten_windows: step.konten_windows?.trim() || null,
@@ -517,10 +554,10 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             setState((prev) => ({
               ...prev,
               devices: prev.devices.map((d) =>
-                d.id === step.device_id
+                (d.id === step.device_id || d.id === targetDeviceId)
                   ? {
                       ...d,
-                      steps: [...(d.steps || []), newStepObj].sort(
+                      steps: [...(d.steps || []).filter((s) => s.id !== step.id), newStepObj].sort(
                         (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
                       ),
                     }
@@ -534,42 +571,92 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
               ),
             }));
           } else {
-            if (!step.id) throw new Error('ID Langkah tidak valid!');
-            await updateStep(step.id, {
-              title: step.title.trim(),
-              description: step.description?.trim() || null,
-              konten_windows: step.konten_windows?.trim() || null,
-              konten_mac: step.konten_mac?.trim() || null,
-              sort_order: step.sort_order ?? 1,
-            });
+            try {
+              const updated = await updateStep(step.id!, {
+                device_id: targetDeviceId,
+                title: step.title.trim(),
+                description: step.description?.trim() || null,
+                konten_windows: step.konten_windows?.trim() || null,
+                konten_mac: step.konten_mac?.trim() || null,
+                sort_order: step.sort_order ?? 1,
+              });
 
-            setState((prev) => ({
-              ...prev,
-              devices: prev.devices.map((d) =>
-                d.id === step.device_id
-                  ? {
-                      ...d,
-                      steps: (d.steps || [])
-                        .map((s) => (s.id === step.id ? { ...s, ...step } : s))
-                        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
-                    }
-                  : d
-              ),
-              activityLogs: pushLog(
-                prev,
-                'UPDATE',
-                step.title,
-                `Langkah panduan "${step.title}" diperbarui.`
-              ),
-            }));
+              setState((prev) => ({
+                ...prev,
+                devices: prev.devices.map((d) =>
+                  (d.id === step.device_id || d.id === targetDeviceId)
+                    ? {
+                        ...d,
+                        steps: (d.steps || [])
+                          .map((s) => (s.id === step.id ? { ...s, ...step, id: updated.id, device_id: updated.device_id } : s))
+                          .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+                      }
+                    : d
+                ),
+                activityLogs: pushLog(
+                  prev,
+                  'UPDATE',
+                  step.title,
+                  `Langkah panduan "${step.title}" diperbarui.`
+                ),
+              }));
+            } catch (updateErr: any) {
+              // If row not found in Supabase (e.g. PGRST116), fallback to createStep!
+              if (
+                updateErr?.code === 'PGRST116' ||
+                (typeof updateErr?.message === 'string' &&
+                  (updateErr.message.includes('tidak ditemukan') || updateErr.message.includes('0 rows')))
+              ) {
+                const created = await createStep({
+                  device_id: targetDeviceId,
+                  title: step.title.trim(),
+                  description: step.description?.trim() || null,
+                  konten_windows: step.konten_windows?.trim() || null,
+                  konten_mac: step.konten_mac?.trim() || null,
+                  sort_order: step.sort_order ?? 1,
+                });
+
+                const fallbackStep: SetupStep = {
+                  id: created.id,
+                  device_id: created.device_id,
+                  title: created.title,
+                  description: created.description || '',
+                  konten_windows: created.konten_windows || '',
+                  konten_mac: created.konten_mac || '',
+                  sort_order: created.sort_order,
+                };
+
+                setState((prev) => ({
+                  ...prev,
+                  devices: prev.devices.map((d) =>
+                    (d.id === step.device_id || d.id === targetDeviceId)
+                      ? {
+                          ...d,
+                          steps: [...(d.steps || []).filter((s) => s.id !== step.id), fallbackStep].sort(
+                            (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+                          ),
+                        }
+                      : d
+                  ),
+                  activityLogs: pushLog(
+                    prev,
+                    'UPDATE',
+                    step.title,
+                    `Langkah panduan "${step.title}" diperbarui.`
+                  ),
+                }));
+              } else {
+                throw updateErr;
+              }
+            }
           }
         } else {
           const fakeId = step.id || `step-${Date.now()}`;
-          const stepWithId = { ...step, id: fakeId };
+          const stepWithId = { ...step, id: fakeId, device_id: targetDeviceId };
           setState((prev) => ({
             ...prev,
             devices: prev.devices.map((d) => {
-              if (d.id !== step.device_id) return d;
+              if (d.id !== step.device_id && d.id !== targetDeviceId) return d;
               const exists = (d.steps || []).some((s) => s.id === step.id);
               const steps = exists
                 ? (d.steps || []).map((s) => (s.id === step.id ? stepWithId : s))
@@ -589,14 +676,15 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       },
       deleteSingleStep: async (stepId, deviceId) => {
-        if (isSupabaseReady && supabase) {
+        const targetDeviceId = resolveDeviceUuid(deviceId, state.devices);
+        if (isSupabaseReady && supabase && isValidUuid(stepId)) {
           await deleteStep(stepId);
         }
 
         setState((prev) => ({
           ...prev,
           devices: prev.devices.map((d) =>
-            d.id === deviceId
+            (d.id === deviceId || d.id === targetDeviceId)
               ? { ...d, steps: (d.steps || []).filter((s) => s.id !== stepId) }
               : d
           ),
@@ -609,10 +697,11 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }));
       },
       saveDeviceSection: async (deviceId, sectionKey, section) => {
+        const targetDeviceId = resolveDeviceUuid(deviceId, state.devices);
         setState((prev) => ({
           ...prev,
           devices: prev.devices.map((d) =>
-            d.id === deviceId
+            (d.id === deviceId || d.id === targetDeviceId)
               ? {
                   ...d,
                   sections: d.sections
@@ -654,21 +743,22 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             });
           }
 
-          await syncDeviceSteps(deviceId, stepsPayload);
+          await syncDeviceSteps(targetDeviceId, stepsPayload);
         }
       },
       saveDeviceFaqs: async (deviceId, faqs) => {
+        const targetDeviceId = resolveDeviceUuid(deviceId, state.devices);
         setState((prev) => {
-          const device = prev.devices.find((d) => d.id === deviceId);
+          const device = prev.devices.find((d) => d.id === deviceId || d.id === targetDeviceId);
           return {
             ...prev,
-            devices: prev.devices.map((d) => (d.id === deviceId ? { ...d, faqs } : d)),
+            devices: prev.devices.map((d) => (d.id === deviceId || d.id === targetDeviceId ? { ...d, faqs } : d)),
             activityLogs: pushLog(prev, 'UPDATE', device?.name || 'FAQ', `FAQ perangkat diperbarui.`),
           };
         });
 
         if (isSupabaseReady && supabase) {
-          await syncDeviceFaqs(deviceId, faqs);
+          await syncDeviceFaqs(targetDeviceId, faqs);
         }
       },
       saveGeneralFaqs: async (faqs) => {
@@ -686,11 +776,15 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (!faq.question.trim() || !faq.answer.trim()) {
           throw new Error('Pertanyaan dan jawaban FAQ wajib diisi!');
         }
+        const targetDeviceId = faq.device_id ? resolveDeviceUuid(faq.device_id, state.devices) : null;
 
         if (isSupabaseReady && supabase) {
-          if (isNew) {
+          const hasValidUuid = isValidUuid(faq.id);
+          const isCreate = isNew || !hasValidUuid;
+
+          if (isCreate) {
             const created = await createFaq({
-              device_id: faq.device_id || null,
+              device_id: targetDeviceId,
               question: faq.question.trim(),
               answer: faq.answer.trim(),
               sort_order: faq.sort_order ?? 1,
@@ -708,7 +802,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
               if (!created.device_id) {
                 return {
                   ...prev,
-                  generalFaqs: [...prev.generalFaqs, newFaqItem].sort(
+                  generalFaqs: [...prev.generalFaqs.filter((f) => f.id !== faq.id), newFaqItem].sort(
                     (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
                   ),
                   activityLogs: pushLog(
@@ -722,10 +816,10 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 return {
                   ...prev,
                   devices: prev.devices.map((d) =>
-                    d.id === created.device_id
+                    (d.id === created.device_id || d.id === targetDeviceId)
                       ? {
                           ...d,
-                          faqs: [...(d.faqs || []), newFaqItem].sort(
+                          faqs: [...(d.faqs || []).filter((f) => f.id !== faq.id), newFaqItem].sort(
                             (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
                           ),
                         }
@@ -741,56 +835,103 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
               }
             });
           } else {
-            if (!faq.id) throw new Error('ID FAQ tidak valid!');
-            await updateFaq(faq.id, {
-              device_id: faq.device_id || null,
-              question: faq.question.trim(),
-              answer: faq.answer.trim(),
-              sort_order: faq.sort_order ?? 1,
-            });
+            try {
+              const updated = await updateFaq(faq.id!, {
+                device_id: targetDeviceId,
+                question: faq.question.trim(),
+                answer: faq.answer.trim(),
+                sort_order: faq.sort_order ?? 1,
+              });
 
-            setState((prev) => {
-              if (!faq.device_id) {
-                return {
-                  ...prev,
-                  generalFaqs: prev.generalFaqs
-                    .map((f) => (f.id === faq.id ? { ...f, ...faq } : f))
-                    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
-                  activityLogs: pushLog(
-                    prev,
-                    'UPDATE',
-                    faq.question,
-                    `FAQ Umum "${faq.question}" diperbarui.`
-                  ),
+              setState((prev) => {
+                if (!targetDeviceId) {
+                  return {
+                    ...prev,
+                    generalFaqs: prev.generalFaqs
+                      .map((f) => (f.id === faq.id ? { ...f, ...faq, id: updated.id } : f))
+                      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+                    activityLogs: pushLog(
+                      prev,
+                      'UPDATE',
+                      faq.question,
+                      `FAQ Umum "${faq.question}" diperbarui.`
+                    ),
+                  };
+                } else {
+                  return {
+                    ...prev,
+                    devices: prev.devices.map((d) =>
+                      (d.id === targetDeviceId || d.id === faq.device_id)
+                        ? {
+                            ...d,
+                            faqs: (d.faqs || [])
+                              .map((f) => (f.id === faq.id ? { ...f, ...faq, id: updated.id, device_id: targetDeviceId } : f))
+                              .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+                          }
+                        : d
+                    ),
+                    activityLogs: pushLog(
+                      prev,
+                      'UPDATE',
+                      faq.question,
+                      `FAQ Perangkat "${faq.question}" diperbarui.`
+                    ),
+                  };
+                }
+              });
+            } catch (updateErr: any) {
+              if (
+                updateErr?.code === 'PGRST116' ||
+                (typeof updateErr?.message === 'string' &&
+                  (updateErr.message.includes('tidak ditemukan') || updateErr.message.includes('0 rows')))
+              ) {
+                const created = await createFaq({
+                  device_id: targetDeviceId,
+                  question: faq.question.trim(),
+                  answer: faq.answer.trim(),
+                  sort_order: faq.sort_order ?? 1,
+                });
+                const fallbackFaq: FAQItem = {
+                  id: created.id,
+                  device_id: created.device_id,
+                  question: created.question,
+                  answer: created.answer,
+                  sort_order: created.sort_order,
                 };
+                setState((prev) => {
+                  if (!targetDeviceId) {
+                    return {
+                      ...prev,
+                      generalFaqs: [...prev.generalFaqs.filter((f) => f.id !== faq.id), fallbackFaq].sort(
+                        (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+                      ),
+                    };
+                  } else {
+                    return {
+                      ...prev,
+                      devices: prev.devices.map((d) =>
+                        (d.id === targetDeviceId || d.id === faq.device_id)
+                          ? {
+                              ...d,
+                              faqs: [...(d.faqs || []).filter((f) => f.id !== faq.id), fallbackFaq].sort(
+                                (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+                              ),
+                            }
+                          : d
+                      ),
+                    };
+                  }
+                });
               } else {
-                return {
-                  ...prev,
-                  devices: prev.devices.map((d) =>
-                    d.id === faq.device_id
-                      ? {
-                          ...d,
-                          faqs: (d.faqs || [])
-                            .map((f) => (f.id === faq.id ? { ...f, ...faq } : f))
-                            .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
-                        }
-                      : d
-                  ),
-                  activityLogs: pushLog(
-                    prev,
-                    'UPDATE',
-                    faq.question,
-                    `FAQ Perangkat "${faq.question}" diperbarui.`
-                  ),
-                };
+                throw updateErr;
               }
-            });
+            }
           }
         } else {
           const fakeId = faq.id || `faq-${Date.now()}`;
-          const faqWithId = { ...faq, id: fakeId };
+          const faqWithId = { ...faq, id: fakeId, device_id: targetDeviceId };
           setState((prev) => {
-            if (!faq.device_id) {
+            if (!targetDeviceId) {
               const exists = prev.generalFaqs.some((f) => f.id === faq.id);
               const list = exists
                 ? prev.generalFaqs.map((f) => (f.id === faq.id ? faqWithId : f))
@@ -811,7 +952,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
               return {
                 ...prev,
                 devices: prev.devices.map((d) => {
-                  if (d.id !== faq.device_id) return d;
+                  if (d.id !== faq.device_id && d.id !== targetDeviceId) return d;
                   const exists = (d.faqs || []).some((f) => f.id === faq.id);
                   const list = exists
                     ? (d.faqs || []).map((f) => (f.id === faq.id ? faqWithId : f))
@@ -833,7 +974,8 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       },
       deleteSingleFaq: async (faqId, deviceId) => {
-        if (isSupabaseReady && supabase) {
+        const targetDeviceId = deviceId ? resolveDeviceUuid(deviceId, state.devices) : null;
+        if (isSupabaseReady && supabase && isValidUuid(faqId)) {
           await deleteFaq(faqId);
         }
 
@@ -848,7 +990,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             return {
               ...prev,
               devices: prev.devices.map((d) =>
-                d.id === deviceId
+                (d.id === deviceId || d.id === targetDeviceId)
                   ? { ...d, faqs: (d.faqs || []).filter((f) => f.id !== faqId) }
                   : d
               ),

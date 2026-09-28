@@ -360,15 +360,17 @@ export const GuideFormModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   device: Device | null;
-  onSave?: (section: DeviceSection) => void;
-  onSaveSteps?: (deviceId: string, steps: SetupStep[]) => void;
+  onSave?: (section: DeviceSection) => Promise<void> | void;
+  onSaveSteps?: (deviceId: string, steps: SetupStep[]) => Promise<void> | void;
   sectionKey?: keyof Device['sections'] | null;
 }> = ({ isOpen, onClose, device, onSave, onSaveSteps, sectionKey }) => {
   const [steps, setSteps] = useState<StepRowItem[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   React.useEffect(() => {
     if (!device) {
       setSteps([]);
+      setIsSubmitting(false);
       return;
     }
     const devSteps =
@@ -393,42 +395,48 @@ export const GuideFormModal: React.FC<{
     }
 
     setSteps(rows);
+    setIsSubmitting(false);
   }, [device, isOpen]);
 
   if (!device) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const finalSteps: SetupStep[] = steps.map((s, i) => ({
-      title: s.title.trim(),
-      description: s.description.trim(),
-      konten_windows: s.konten_windows.trim(),
-      konten_mac: s.konten_mac.trim(),
-      sort_order: i + 1,
-    }));
+    setIsSubmitting(true);
+    try {
+      const finalSteps: SetupStep[] = steps.map((s, i) => ({
+        title: s.title.trim(),
+        description: s.description.trim(),
+        konten_windows: s.konten_windows.trim(),
+        konten_mac: s.konten_mac.trim(),
+        sort_order: i + 1,
+      }));
 
-    if (onSaveSteps) {
-      onSaveSteps(device.id, finalSteps);
-    } else if (onSave) {
-      const winSteps: SetupStep[] = finalSteps.map((s) => ({
-        title: s.title,
-        description: s.description,
-        details: s.konten_windows ? s.konten_windows.split('\n').map((l) => l.trim()).filter(Boolean) : [],
-      }));
-      const macSteps: SetupStep[] = finalSteps.map((s) => ({
-        title: s.title,
-        description: s.description,
-        details: s.konten_mac ? s.konten_mac.split('\n').map((l) => l.trim()).filter(Boolean) : [],
-      }));
-      onSave({
-        id: sectionKey || 'wifi',
-        title: 'Panduan Alur Langkah',
-        tabLabel: 'Langkah Panduan',
-        iconName: 'CheckCircle2',
-        osSteps: { windows: winSteps, mac: macSteps },
-      });
+      if (onSaveSteps) {
+        await onSaveSteps(device.id, finalSteps);
+      } else if (onSave) {
+        const winSteps: SetupStep[] = finalSteps.map((s) => ({
+          title: s.title,
+          description: s.description,
+          details: s.konten_windows ? s.konten_windows.split('\n').map((l) => l.trim()).filter(Boolean) : [],
+        }));
+        const macSteps: SetupStep[] = finalSteps.map((s) => ({
+          title: s.title,
+          description: s.description,
+          details: s.konten_mac ? s.konten_mac.split('\n').map((l) => l.trim()).filter(Boolean) : [],
+        }));
+        await onSave({
+          id: sectionKey || 'wifi',
+          title: 'Panduan Alur Langkah',
+          tabLabel: 'Langkah Panduan',
+          iconName: 'CheckCircle2',
+          osSteps: { windows: winSteps, mac: macSteps },
+        });
+      }
+      onClose();
+    } finally {
+      setIsSubmitting(false);
     }
-    onClose();
   };
 
   const addStep = () => {
@@ -553,9 +561,10 @@ export const GuideFormModal: React.FC<{
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500"
+              disabled={isSubmitting}
+              className="px-5 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
             >
-              Simpan Semua Langkah
+              {isSubmitting ? 'Menyimpan...' : 'Simpan Semua Langkah'}
             </button>
           </div>
         </div>
@@ -727,7 +736,17 @@ export const SingleStepModal: React.FC<{
   onSave: (step: SetupStep, isNew: boolean) => Promise<void> | void;
 }> = ({ isOpen, onClose, devices, initial, preselectedDeviceId, onSave }) => {
   const isNew = !initial;
-  const [deviceId, setDeviceId] = useState(initial?.device_id || preselectedDeviceId || devices[0]?.id || '');
+
+  const resolveTargetDeviceId = (idOrSlug?: string | null): string => {
+    if (!idOrSlug) return devices[0]?.id || '';
+    const match = devices.find((d) => d.id === idOrSlug || d.slug === idOrSlug);
+    if (match) return match.id;
+    return idOrSlug;
+  };
+
+  const [deviceId, setDeviceId] = useState(() =>
+    resolveTargetDeviceId(initial?.device_id || preselectedDeviceId || devices[0]?.id || '')
+  );
   const [title, setTitle] = useState(initial?.title ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [kontenWindows, setKontenWindows] = useState(
@@ -740,7 +759,7 @@ export const SingleStepModal: React.FC<{
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   React.useEffect(() => {
-    setDeviceId(initial?.device_id || preselectedDeviceId || devices[0]?.id || '');
+    setDeviceId(resolveTargetDeviceId(initial?.device_id || preselectedDeviceId || devices[0]?.id || ''));
     setTitle(initial?.title ?? '');
     setDescription(initial?.description ?? '');
     setKontenWindows(initial?.konten_windows || (initial?.details ? initial.details.join('\n') : ''));
@@ -893,8 +912,16 @@ export const SingleFaqModal: React.FC<{
   onSave: (faq: FAQItem, isNew: boolean) => Promise<void> | void;
 }> = ({ isOpen, onClose, devices, initial, preselectedDeviceId, onSave }) => {
   const isNew = !initial;
-  const [deviceId, setDeviceId] = useState<string>(
-    initial ? (initial.device_id || '') : (preselectedDeviceId || '')
+
+  const resolveTargetDeviceId = (idOrSlug?: string | null): string => {
+    if (!idOrSlug) return '';
+    const match = devices.find((d) => d.id === idOrSlug || d.slug === idOrSlug);
+    if (match) return match.id;
+    return idOrSlug;
+  };
+
+  const [deviceId, setDeviceId] = useState<string>(() =>
+    resolveTargetDeviceId(initial ? (initial.device_id || '') : (preselectedDeviceId || ''))
   );
   const [question, setQuestion] = useState(initial?.question ?? '');
   const [answer, setAnswer] = useState(initial?.answer ?? '');
@@ -902,12 +929,12 @@ export const SingleFaqModal: React.FC<{
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   React.useEffect(() => {
-    setDeviceId(initial ? (initial.device_id || '') : (preselectedDeviceId || ''));
+    setDeviceId(resolveTargetDeviceId(initial ? (initial.device_id || '') : (preselectedDeviceId || '')));
     setQuestion(initial?.question ?? '');
     setAnswer(initial?.answer ?? '');
     setSortOrder(initial?.sort_order ?? 1);
     setIsSubmitting(false);
-  }, [initial, preselectedDeviceId, isOpen]);
+  }, [initial, preselectedDeviceId, devices, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
