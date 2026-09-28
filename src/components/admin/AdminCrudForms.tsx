@@ -215,7 +215,7 @@ export const CategoryFormModal: React.FC<{
   const [title, setTitle] = useState(initial?.title ?? '');
   const [slug, setSlug] = useState(initial?.slug ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
-  const [icon, setIcon] = useState(initial?.icon ?? 'Monitor');
+  const [icon, setIcon] = useState(initial?.icon ?? '');
   const [sortOrder, setSortOrder] = useState<number>(initial?.sort_order ?? 1);
   const [available, setAvailable] = useState(initial?.available ?? true);
 
@@ -223,7 +223,7 @@ export const CategoryFormModal: React.FC<{
     setTitle(initial?.title ?? '');
     setSlug(initial?.slug ?? '');
     setDescription(initial?.description ?? '');
-    setIcon(initial?.icon ?? 'Monitor');
+    setIcon(initial?.icon ?? '');
     setSortOrder(initial?.sort_order ?? 1);
     setAvailable(initial?.available ?? true);
   }, [initial, isOpen]);
@@ -237,7 +237,7 @@ export const CategoryFormModal: React.FC<{
         slug: nextSlug,
         title: title.trim(),
         description: description.trim(),
-        icon,
+        icon: icon.trim() || 'Monitor',
         available,
         sort_order: Number(sortOrder) || 1,
         deviceCount: initial?.deviceCount ?? 0,
@@ -281,7 +281,12 @@ export const CategoryFormModal: React.FC<{
         </div>
         <div>
           <label className={labelClass}>Ikon (Printer, Share2, Projector, Tv, Fingerprint, Monitor)</label>
-          <input className={fieldClass} value={icon} onChange={(e) => setIcon(e.target.value)} />
+          <input
+            className={fieldClass}
+            value={icon}
+            onChange={(e) => setIcon(e.target.value)}
+            placeholder="Contoh: Printer, Share2, Projector, Tv, Fingerprint, Monitor"
+          />
         </div>
         <div>
           <label className={labelClass}>Deskripsi Kategori</label>
