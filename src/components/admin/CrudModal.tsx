@@ -32,24 +32,19 @@ export const CrudModal: React.FC<CrudModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overscroll-contain">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3.5 sm:p-4 overscroll-contain">
       {/* Backdrop with touch dismiss */}
       <div
         className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs transition-opacity duration-200"
         onClick={onClose}
       />
 
-      {/* Modal Dialog Sheet */}
+      {/* Modal Dialog Card (Floating, with side margins, not full width on mobile) */}
       <div
         className={`relative w-full ${
           wide ? 'max-w-3xl' : 'max-w-xl'
-        } max-h-[92dvh] sm:max-h-[88vh] flex flex-col bg-white dark:bg-slate-900 rounded-t-2xl sm:rounded-2xl border-t sm:border border-slate-200 dark:border-slate-800 shadow-2xl z-10 transition-all duration-200 animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95`}
+        } max-h-[88dvh] sm:max-h-[88vh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl z-10 overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95`}
       >
-        {/* Mobile Drag Indicator Handle */}
-        <div className="pt-2.5 pb-1 sm:hidden flex justify-center shrink-0">
-          <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
-        </div>
-
         {/* Modal Header */}
         <div className="sticky top-0 z-10 flex items-start justify-between gap-3 px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xs shrink-0">
           <div className="min-w-0 pr-2">

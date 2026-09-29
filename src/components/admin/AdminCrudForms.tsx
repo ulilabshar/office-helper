@@ -289,13 +289,21 @@ export const CategoryFormModal: React.FC<{
           </div>
         </div>
         <div>
-          <label className={labelClass}>Ikon (Printer, Share2, Projector, Tv, Fingerprint, Monitor)</label>
-          <input
+          <label className={labelClass}>Ikon Kategori</label>
+          <select
             className={fieldClass}
             value={icon}
             onChange={(e) => setIcon(e.target.value)}
-            placeholder="Contoh: Printer, Share2, Projector, Tv, Fingerprint, Monitor"
-          />
+          >
+            <option value="">Pilih Ikon Kategori...</option>
+            <option value="Printer">Printer</option>
+            <option value="Share2">Share2 (Sharing Dokumen / Folder)</option>
+            <option value="Projector">Projector (Proyektor)</option>
+            <option value="Tv">Smart TV (Televisi)</option>
+            <option value="Fingerprint">Fingerprint (Mesin Absensi)</option>
+            <option value="Monitor">Monitor (Layar / Display)</option>
+            <option value="FileText">FileText (Dokumen Umum)</option>
+          </select>
         </div>
         <div>
           <label className={labelClass}>Deskripsi Kategori</label>
