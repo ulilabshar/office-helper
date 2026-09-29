@@ -18,6 +18,7 @@ import {
   SingleStepModal,
   SingleFaqModal,
 } from '../../components/admin/AdminCrudForms';
+import { CustomSelect } from '../../components/CustomSelect';
 import {
   HardDrive,
   FolderTree,
@@ -577,18 +578,21 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  <select
-                    value={guideFilterDevice}
-                    onChange={(e) => setGuideFilterDevice(e.target.value)}
-                    className="w-full sm:w-auto px-3.5 py-2 sm:py-1.5 text-base sm:text-xs font-semibold rounded-xl border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.25)] hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:-translate-y-0.5 transition-all duration-200 min-h-[40px] sm:min-h-0"
-                  >
-                    <option value="ALL">Semua Perangkat ({catalog.devices.length})</option>
-                    {catalog.devices.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="w-full sm:w-64">
+                    <CustomSelect
+                      value={guideFilterDevice}
+                      onChange={setGuideFilterDevice}
+                      options={[
+                        { value: 'ALL', label: `Semua Perangkat (${catalog.devices.length})` },
+                        ...catalog.devices.map((d) => ({
+                          value: d.id,
+                          label: d.name,
+                          sublabel: d.category,
+                        })),
+                      ]}
+                      searchable
+                    />
+                  </div>
                   <button
                     onClick={() => {
                       setSingleStepModal({
@@ -881,19 +885,22 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  <select
-                    value={faqFilterTarget}
-                    onChange={(e) => setFaqFilterTarget(e.target.value)}
-                    className="w-full sm:w-auto px-3.5 py-2 sm:py-1.5 text-base sm:text-xs font-semibold rounded-xl border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.25)] hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:-translate-y-0.5 transition-all duration-200 min-h-[40px] sm:min-h-0"
-                  >
-                    <option value="ALL">Semua Target FAQ ({allFaqs.length})</option>
-                    <option value="GENERAL">FAQ Umum (Beranda) ({catalog.generalFaqs.length})</option>
-                    {catalog.devices.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        FAQ: {d.name} ({d.faqs?.length || 0})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="w-full sm:w-72">
+                    <CustomSelect
+                      value={faqFilterTarget}
+                      onChange={setFaqFilterTarget}
+                      options={[
+                        { value: 'ALL', label: `Semua Target FAQ (${allFaqs.length})` },
+                        { value: 'GENERAL', label: 'FAQ Umum (Beranda)', sublabel: `${catalog.generalFaqs.length} Pertanyaan` },
+                        ...catalog.devices.map((d) => ({
+                          value: d.id,
+                          label: d.name,
+                          sublabel: `FAQ Perangkat (${d.faqs?.length || 0}) • ${d.category}`,
+                        })),
+                      ]}
+                      searchable
+                    />
+                  </div>
                   <button
                     onClick={() => {
                       setSingleFaqModal({

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { categoriesData } from '../data/categories';
+import { CustomSelect } from '../components/CustomSelect';
 import {
   PlusCircle,
   ArrowLeft,
@@ -246,32 +247,30 @@ export const AddDevicePage: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                     Kategori Alat Kantor <span className="text-rose-500">*</span>
                   </label>
-                  <select
+                  <CustomSelect
                     value={categorySlug}
-                    onChange={(e) => setCategorySlug(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {categoriesData.map((cat) => (
-                      <option key={cat.id} value={cat.slug}>
-                        {cat.title}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setCategorySlug}
+                    options={categoriesData.map((cat) => ({
+                      value: cat.slug,
+                      label: cat.title,
+                    }))}
+                    placeholder="Pilih Kategori..."
+                  />
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                     Status Kesiapan <span className="text-rose-500">*</span>
                   </label>
-                  <select
+                  <CustomSelect
                     value={status}
-                    onChange={(e) => setStatus(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="Ready">Ready (Siap Digunakan)</option>
-                    <option value="New">New (Baru Tiba)</option>
-                    <option value="Maintenance">Maintenance (Dalam Perawatan)</option>
-                  </select>
+                    onChange={(val) => setStatus(val as any)}
+                    options={[
+                      { value: 'Ready', label: 'Ready (Siap Digunakan)' },
+                      { value: 'New', label: 'New (Baru Tiba)' },
+                      { value: 'Maintenance', label: 'Maintenance (Dalam Perawatan)' },
+                    ]}
+                  />
                 </div>
               </div>
 

@@ -3,6 +3,7 @@ import { Category, Device, DeviceSection, FAQItem, SetupStep } from '../../types
 import { MediaAsset } from '../../types/admin';
 import { createEmptyDevice, emptyStep, slugify, extractDeviceSteps, getDeviceSupportedOs } from '../../lib/catalog';
 import { CrudModal, fieldClass, labelClass } from './CrudModal';
+import { CustomSelect } from '../CustomSelect';
 
 export const DeviceFormModal: React.FC<{
   isOpen: boolean;
@@ -129,37 +130,39 @@ export const DeviceFormModal: React.FC<{
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className={labelClass}>Kategori</label>
-            <select className={fieldClass} value={categorySlug} onChange={(e) => setCategorySlug(e.target.value)}>
-              {categories.map((c) => (
-                <option key={c.id} value={c.slug}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
+            <CustomSelect
+              value={categorySlug}
+              onChange={setCategorySlug}
+              options={categories.map((c) => ({
+                value: c.slug,
+                label: c.title,
+              }))}
+              placeholder="Pilih Kategori..."
+            />
           </div>
           <div>
             <label className={labelClass}>Status Perangkat</label>
-            <select
-              className={fieldClass}
+            <CustomSelect
               value={status}
-              onChange={(e) => setStatus(e.target.value as Device['status'])}
-            >
-              <option value="Ready">Ready (Siap Digunakan)</option>
-              <option value="Maintenance">Maintenance (Dalam Perawatan)</option>
-              <option value="New">New (Perangkat Baru)</option>
-            </select>
+              onChange={(val) => setStatus(val as Device['status'])}
+              options={[
+                { value: 'Ready', label: 'Ready (Siap Digunakan)' },
+                { value: 'Maintenance', label: 'Maintenance (Dalam Perawatan)' },
+                { value: 'New', label: 'New (Perangkat Baru)' },
+              ]}
+            />
           </div>
           <div>
             <label className={labelClass}>Dukungan OS</label>
-            <select
-              className={fieldClass}
+            <CustomSelect
               value={osChoice}
-              onChange={(e) => setOsChoice(e.target.value as 'both' | 'windows' | 'mac')}
-            >
-              <option value="both">Bisa Dua-duanya (Windows & Mac)</option>
-              <option value="windows">Hanya Windows</option>
-              <option value="mac">Hanya macOS</option>
-            </select>
+              onChange={(val) => setOsChoice(val as 'both' | 'windows' | 'mac')}
+              options={[
+                { value: 'both', label: 'Bisa Dua-duanya (Windows & Mac)' },
+                { value: 'windows', label: 'Hanya Windows' },
+                { value: 'mac', label: 'Hanya macOS' },
+              ]}
+            />
           </div>
         </div>
 
@@ -290,20 +293,20 @@ export const CategoryFormModal: React.FC<{
         </div>
         <div>
           <label className={labelClass}>Ikon Kategori</label>
-          <select
-            className={fieldClass}
+          <CustomSelect
             value={icon}
-            onChange={(e) => setIcon(e.target.value)}
-          >
-            <option value="">Pilih Ikon Kategori...</option>
-            <option value="Printer">Printer</option>
-            <option value="Share2">Share2 (Sharing Dokumen / Folder)</option>
-            <option value="Projector">Projector (Proyektor)</option>
-            <option value="Tv">Smart TV (Televisi)</option>
-            <option value="Fingerprint">Fingerprint (Mesin Absensi)</option>
-            <option value="Monitor">Monitor (Layar / Display)</option>
-            <option value="FileText">FileText (Dokumen Umum)</option>
-          </select>
+            onChange={setIcon}
+            options={[
+              { value: 'Printer', label: 'Printer' },
+              { value: 'Share2', label: 'Share2 (Sharing Dokumen / Folder)' },
+              { value: 'Projector', label: 'Projector (Proyektor)' },
+              { value: 'Tv', label: 'Smart TV (Televisi)' },
+              { value: 'Fingerprint', label: 'Fingerprint (Mesin Absensi)' },
+              { value: 'Monitor', label: 'Monitor (Layar / Display)' },
+              { value: 'FileText', label: 'FileText (Dokumen Umum)' },
+            ]}
+            placeholder="Pilih Ikon Kategori..."
+          />
         </div>
         <div>
           <label className={labelClass}>Deskripsi Kategori</label>
@@ -757,20 +760,28 @@ export const MediaFormModal: React.FC<{
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={labelClass}>Tipe</label>
-            <select className={fieldClass} value={type} onChange={(e) => setType(e.target.value as MediaAsset['type'])}>
-              <option value="driver">driver</option>
-              <option value="document">document</option>
-              <option value="image">image</option>
-              <option value="guide">guide</option>
-            </select>
+            <CustomSelect
+              value={type}
+              onChange={(val) => setType(val as MediaAsset['type'])}
+              options={[
+                { value: 'driver', label: 'driver' },
+                { value: 'document', label: 'document' },
+                { value: 'image', label: 'image' },
+                { value: 'guide', label: 'guide' },
+              ]}
+            />
           </div>
           <div>
             <label className={labelClass}>OS</label>
-            <select className={fieldClass} value={targetOs} onChange={(e) => setTargetOs(e.target.value as MediaAsset['targetOs'])}>
-              <option value="all">all</option>
-              <option value="windows">windows</option>
-              <option value="mac">mac</option>
-            </select>
+            <CustomSelect
+              value={targetOs}
+              onChange={(val) => setTargetOs(val as MediaAsset['targetOs'])}
+              options={[
+                { value: 'all', label: 'all (semua)' },
+                { value: 'windows', label: 'windows' },
+                { value: 'mac', label: 'mac' },
+              ]}
+            />
           </div>
         </div>
         <div>
@@ -892,18 +903,17 @@ export const SingleStepModal: React.FC<{
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="sm:col-span-2">
             <label className={labelClass}>Target Perangkat</label>
-            <select
-              className={fieldClass}
+            <CustomSelect
               value={deviceId}
-              onChange={(e) => setDeviceId(e.target.value)}
-              required
-            >
-              {devices.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name} ({d.category})
-                </option>
-              ))}
-            </select>
+              onChange={setDeviceId}
+              options={devices.map((d) => ({
+                value: d.id,
+                label: d.name,
+                sublabel: d.category,
+              }))}
+              placeholder="Pilih Perangkat Target..."
+              searchable
+            />
           </div>
           <div>
             <label className={labelClass}>Urutan Langkah (1, 2, ...)</label>
@@ -1083,18 +1093,20 @@ export const SingleFaqModal: React.FC<{
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="sm:col-span-2">
             <label className={labelClass}>Target FAQ</label>
-            <select
-              className={fieldClass}
+            <CustomSelect
               value={deviceId}
-              onChange={(e) => setDeviceId(e.target.value)}
-            >
-              <option value="">FAQ Umum (Tampil di Beranda)</option>
-              {devices.map((d) => (
-                <option key={d.id} value={d.id}>
-                  Perangkat: {d.name} ({d.category})
-                </option>
-              ))}
-            </select>
+              onChange={setDeviceId}
+              options={[
+                { value: '', label: 'FAQ Umum (Beranda)', sublabel: 'Tampil di Halaman Beranda Utama' },
+                ...devices.map((d) => ({
+                  value: d.id,
+                  label: d.name,
+                  sublabel: `Perangkat • ${d.category}`,
+                })),
+              ]}
+              placeholder="Pilih Target FAQ..."
+              searchable
+            />
           </div>
           <div>
             <label className={labelClass}>Urutan Tampil (sort_order)</label>
