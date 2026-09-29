@@ -312,7 +312,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
           }}
         />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
+        <main className="flex-1 px-3 py-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
           {activeTab === 'dashboard' && (
             <div className="space-y-8">
               <div className="rounded-2xl border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/70 p-6 sm:p-8">
@@ -580,7 +580,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <select
                     value={guideFilterDevice}
                     onChange={(e) => setGuideFilterDevice(e.target.value)}
-                    className="w-full sm:w-auto px-3 py-2 sm:py-1.5 text-base sm:text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 min-h-[40px] sm:min-h-0"
+                    className="w-full sm:w-auto px-3.5 py-2 sm:py-1.5 text-base sm:text-xs font-semibold rounded-xl border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.25)] hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:-translate-y-0.5 transition-all duration-200 min-h-[40px] sm:min-h-0"
                   >
                     <option value="ALL">Semua Perangkat ({catalog.devices.length})</option>
                     {catalog.devices.map((d) => (
@@ -884,7 +884,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <select
                     value={faqFilterTarget}
                     onChange={(e) => setFaqFilterTarget(e.target.value)}
-                    className="w-full sm:w-auto px-3 py-2 sm:py-1.5 text-base sm:text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 min-h-[40px] sm:min-h-0"
+                    className="w-full sm:w-auto px-3.5 py-2 sm:py-1.5 text-base sm:text-xs font-semibold rounded-xl border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.25)] hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:-translate-y-0.5 transition-all duration-200 min-h-[40px] sm:min-h-0"
                   >
                     <option value="ALL">Semua Target FAQ ({allFaqs.length})</option>
                     <option value="GENERAL">FAQ Umum (Beranda) ({catalog.generalFaqs.length})</option>
@@ -1018,28 +1018,28 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               }}
             >
               <h2 className="text-xl font-bold">Pengaturan Sistem</h2>
-              <div className="border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/70 rounded-2xl p-6 space-y-4">
+              <div className="border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/70 rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
                 <div>
-                  <label className="block text-xs font-bold mb-1.5">Nama portal</label>
+                  <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">Nama portal</label>
                   <input
-                    className="w-full px-3.5 py-3 sm:py-2.5 text-base sm:text-sm rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950"
+                    className="w-full px-3.5 py-3 sm:py-2.5 text-base sm:text-sm rounded-xl border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.25)] hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:shadow-[0_6px_20px_rgba(37,99,235,0.12)] focus:-translate-y-0.5 transition-all duration-200"
                     value={settingsDraft.officeName}
                     onChange={(e) => setSettingsDraft({ ...settingsDraft, officeName: e.target.value })}
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold mb-1.5">WhatsApp IT</label>
+                    <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">WhatsApp IT</label>
                     <input
-                      className="w-full px-3.5 py-3 sm:py-2.5 text-base sm:text-sm rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950"
+                      className="w-full px-3.5 py-3 sm:py-2.5 text-base sm:text-sm rounded-xl border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.25)] hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:shadow-[0_6px_20px_rgba(37,99,235,0.12)] focus:-translate-y-0.5 transition-all duration-200"
                       value={settingsDraft.itSupportPhone}
                       onChange={(e) => setSettingsDraft({ ...settingsDraft, itSupportPhone: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold mb-1.5">Email IT</label>
+                    <label className="block text-xs font-bold mb-1.5 text-slate-700 dark:text-slate-300">Email IT</label>
                     <input
-                      className="w-full px-3.5 py-3 sm:py-2.5 text-base sm:text-sm rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950"
+                      className="w-full px-3.5 py-3 sm:py-2.5 text-base sm:text-sm rounded-xl border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.25)] hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:shadow-[0_6px_20px_rgba(37,99,235,0.12)] focus:-translate-y-0.5 transition-all duration-200"
                       value={settingsDraft.supportEmail}
                       onChange={(e) => setSettingsDraft({ ...settingsDraft, supportEmail: e.target.value })}
                     />

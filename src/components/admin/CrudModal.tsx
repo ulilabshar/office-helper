@@ -83,6 +83,6 @@ export const CrudModal: React.FC<CrudModalProps> = ({
 };
 
 export const fieldClass =
-  'w-full px-3.5 py-3 sm:py-2.5 text-base sm:text-sm bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-xs';
+  'w-full px-3.5 py-3 sm:py-2.5 text-base sm:text-sm bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.3)] hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:shadow-[0_6px_20px_rgba(37,99,235,0.12)] focus:-translate-y-0.5 transition-all duration-200';
 
-export const labelClass = 'block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5';
+export const labelClass = 'block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 ml-0.5';

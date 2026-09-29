@@ -56,28 +56,28 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-30 w-full border-b border-slate-200 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95 transition-colors">
-      <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="flex h-16 items-center justify-between px-3 sm:px-6 lg:px-8">
         {/* Left: Mobile Sidebar Trigger + Breadcrumb */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             onClick={onToggleSidebar}
-            className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 lg:hidden"
+            className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 lg:hidden shrink-0"
             title="Buka Menu Sidebar"
           >
             <Menu className="h-5 w-5" />
           </button>
 
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
-              <Link to="/dashboard" className="hover:text-slate-900 dark:hover:text-white">
+              <Link to="/dashboard" className="hover:text-slate-900 dark:hover:text-white shrink-0">
                 Admin
               </Link>
-              <ChevronRight className="h-3 w-3" />
-              <span className="text-slate-900 dark:text-white font-bold capitalize">
+              <ChevronRight className="h-3 w-3 shrink-0" />
+              <span className="text-slate-900 dark:text-white font-bold capitalize truncate max-w-[130px] sm:max-w-none">
                 {activeTab}
               </span>
             </div>
-            <h1 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight hidden sm:block">
+            <h1 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight hidden sm:block truncate">
               {currentTabInfo.title}
             </h1>
           </div>
@@ -101,7 +101,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           {/* Mobile Search Button */}
           <button
             onClick={onOpenSearchModal}
@@ -111,14 +111,13 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             <Search className="h-5 w-5" />
           </button>
 
-          {/* Quick CTA: Tambah Perangkat */}
+          {/* Quick CTA: Tambah Perangkat (Desktop) */}
           <button
             onClick={onOpenAddDevice || (() => navigate('/dashboard/devices'))}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-500 active:scale-95 transition-all shadow-sm shadow-blue-600/25"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-500 active:scale-95 transition-all shadow-sm shadow-blue-600/25"
           >
             <PlusCircle className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Tambah Perangkat</span>
-            <span className="sm:hidden">Tambah</span>
+            <span>Tambah Perangkat</span>
           </button>
 
           {/* Theme Switcher */}
@@ -143,11 +142,11 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
           {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 transition-colors"
+            className="inline-flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 transition-colors"
             title="Keluar dari Akun Admin"
           >
-            <LogOut className="h-3.5 w-3.5" />
-            <span>Logout</span>
+            <LogOut className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </div>

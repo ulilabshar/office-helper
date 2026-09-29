@@ -121,7 +121,7 @@ export const AccordionFaq: React.FC<AccordionFaqProps> = ({
               setOpenIndex(0);
             }}
             placeholder="Cari pertanyaan, kendala Wi-Fi, printer macet, scan..."
-            className="w-full pl-10 pr-9 py-2.5 text-base sm:text-sm bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            className="w-full pl-10 pr-9 py-2.5 text-base sm:text-sm bg-white dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.25)] hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:shadow-[0_6px_20px_rgba(37,99,235,0.12)] focus:-translate-y-0.5 transition-all duration-200"
           />
           {searchQuery && (
             <button

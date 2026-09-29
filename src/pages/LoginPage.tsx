@@ -208,7 +208,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, setDarkMode }) =
                 )}
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold">Username</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 ml-0.5">Username</label>
                   <div className="relative">
                     <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <input
@@ -216,7 +216,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, setDarkMode }) =
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder="admin@gmail.com"
-                      className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl"
+                      className="w-full pl-10 pr-4 py-3 sm:py-2.5 text-base sm:text-sm bg-white dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.25)] hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:shadow-[0_6px_20px_rgba(37,99,235,0.12)] focus:-translate-y-0.5 transition-all duration-200"
                       autoFocus
                       required
                     />
@@ -224,7 +224,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, setDarkMode }) =
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold">Password</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 ml-0.5">Password</label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <input
@@ -232,13 +232,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, setDarkMode }) =
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Masukkan password"
-                      className="w-full pl-10 pr-10 py-2.5 text-sm bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl"
+                      className="w-full pl-10 pr-10 py-3 sm:py-2.5 text-base sm:text-sm bg-white dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.25)] hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:shadow-[0_6px_20px_rgba(37,99,235,0.12)] focus:-translate-y-0.5 transition-all duration-200"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
