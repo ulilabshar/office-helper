@@ -36,29 +36,47 @@ export const DeviceDetailPage: React.FC = () => {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 sm:space-y-8">
       {/* Breadcrumb & Navigation */}
-      <div className="flex items-center justify-between">
-        <nav className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-          <Link to="/" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+      {/* Mobile Breadcrumb & Back Navigation (sm:hidden) */}
+      <div className="flex sm:hidden items-center justify-between gap-2 py-0.5">
+        <Link
+          to={`/category/${device.categorySlug}`}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4 text-blue-500 shrink-0" />
+          <span className="truncate max-w-[220px]">Kembali ke {device.category}</span>
+        </Link>
+        <Link
+          to="/"
+          className="text-[11px] font-medium text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 shrink-0"
+        >
+          Beranda
+        </Link>
+      </div>
+
+      {/* Desktop Breadcrumb & Navigation (hidden sm:flex) */}
+      <div className="hidden sm:flex items-center justify-between gap-4">
+        <nav className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 min-w-0">
+          <Link to="/" className="hover:text-slate-900 dark:hover:text-white transition-colors shrink-0">
             Beranda
           </Link>
-          <ChevronRight className="h-3 w-3" />
+          <ChevronRight className="h-3 w-3 shrink-0" />
           <Link
             to={`/category/${device.categorySlug}`}
-            className="hover:text-slate-900 dark:hover:text-white transition-colors"
+            className="hover:text-slate-900 dark:hover:text-white transition-colors shrink-0"
           >
             {device.category}
           </Link>
-          <ChevronRight className="h-3 w-3" />
-          <span className="text-slate-900 font-semibold dark:text-slate-100 truncate max-w-[150px] sm:max-w-none">
+          <ChevronRight className="h-3 w-3 shrink-0" />
+          <span className="text-slate-900 font-semibold dark:text-slate-100 truncate">
             {device.name}
           </span>
         </nav>
 
         <Link
           to={`/category/${device.categorySlug}`}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors shrink-0"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           <span>Kembali</span>
@@ -66,17 +84,17 @@ export const DeviceDetailPage: React.FC = () => {
       </div>
 
       {/* Header Summary Banner */}
-      <div className="border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/70 rounded-2xl p-6 sm:p-7 backdrop-blur-md shadow-sm transition-colors">
-        <div className="flex flex-col md:flex-row items-start justify-between gap-6">
+      <div className="border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/70 rounded-2xl p-4 sm:p-7 backdrop-blur-md shadow-sm transition-colors">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-5 sm:gap-6">
           {/* Left Column: Device Info & Poin Penting Panduan */}
           <div className="flex-1 min-w-0 space-y-4">
-            <div className="flex items-start gap-3.5">
-              <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/20 shrink-0 mt-0.5">
+            <div className="flex items-start gap-3 sm:gap-3.5">
+              <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/20 shrink-0 mt-0.5">
                 {isShareLinkCategory ? <Share2 className="h-5 w-5 sm:h-6 sm:w-6" /> : <Printer className="h-5 w-5 sm:h-6 sm:w-6" />}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-snug">
                     {device.name}
                   </h1>
                   <span className="px-2.5 py-0.5 text-xs font-semibold rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">

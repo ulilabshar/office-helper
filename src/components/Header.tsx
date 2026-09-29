@@ -27,11 +27,11 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/90 transition-colors duration-200">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             onClick={onToggleSidebar}
-            className="flex items-center justify-center p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors"
+            className="flex items-center justify-center p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors shrink-0"
             title={isSidebarOpen ? 'Sembunyikan Sidebar' : 'Tampilkan Sidebar'}
             aria-label="Toggle sidebar"
           >
@@ -42,22 +42,22 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </button>
 
-          <Link to="/" onClick={handleLogoClick} className="flex items-center gap-2.5 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white shadow-lg shadow-blue-500/20 group-hover:bg-blue-500 transition-colors">
+          <Link to="/" onClick={handleLogoClick} className="flex items-center gap-2 sm:gap-2.5 group min-w-0">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white shadow-lg shadow-blue-500/20 group-hover:bg-blue-500 transition-colors shrink-0">
               <BookOpen className="h-5 w-5" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            <div className="flex flex-col min-w-0">
+              <span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors whitespace-nowrap truncate max-w-[140px] xs:max-w-[200px] sm:max-w-none">
                 Dokumentasi Kantor
               </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase">
+              <span className="hidden sm:block text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase truncate">
                 Panduan Penggunaan Perangkat
               </span>
             </div>
           </Link>
         </div>
 
-        <div className="hidden md:flex flex-1 max-w-md mx-8">
+        <div className="hidden md:flex flex-1 max-w-md mx-6">
           <button
             onClick={onOpenSearch}
             className="w-full flex items-center justify-between gap-3 px-3.5 py-1.5 text-xs text-slate-500 bg-slate-100 border border-slate-200 rounded-lg hover:bg-slate-200/80 hover:text-slate-900 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-200 transition-all shadow-inner"
@@ -69,7 +69,7 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           <button
             onClick={onOpenSearch}
             className="p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 rounded-lg md:hidden"
@@ -93,10 +93,10 @@ export const Header: React.FC<HeaderProps> = ({
           <Link
             to="/login"
             state={{ returnTo: location.pathname }}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
+            className="inline-flex items-center justify-center gap-1.5 p-2 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
             title="Masuk ke dashboard admin"
           >
-            <KeyRound className="h-3.5 w-3.5" />
+            <KeyRound className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
             <span className="hidden sm:inline">Admin</span>
           </Link>
         </div>

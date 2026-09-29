@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCatalog } from '../context/CatalogContext';
 import { DeviceCard } from '../components/DeviceCard';
-import { Printer, ChevronRight, Home, Layers, Share2, Tv, Fingerprint, FileText } from 'lucide-react';
+import { Printer, ChevronRight, Home, Layers, Share2, Tv, Fingerprint, FileText, ArrowLeft } from 'lucide-react';
 
 const getCategoryHeaderIcon = (iconName: string) => {
   switch (iconName) {
@@ -50,20 +50,30 @@ export const CategoryPage: React.FC = () => {
   const IconComponent = getCategoryHeaderIcon(category.icon);
 
   return (
-    <div className="space-y-8">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-        <Link to="/" className="hover:text-slate-900 dark:hover:text-white transition-colors">
-          Beranda
+    <div className="space-y-6 sm:space-y-8">
+      {/* Breadcrumb & Navigation */}
+      <div className="flex items-center justify-between gap-2 py-0.5">
+        <nav className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 min-w-0">
+          <Link to="/" className="hover:text-slate-900 dark:hover:text-white transition-colors shrink-0">
+            Beranda
+          </Link>
+          <ChevronRight className="h-3 w-3 shrink-0" />
+          <span className="text-slate-900 font-semibold dark:text-slate-100 truncate">
+            {category.title}
+          </span>
+        </nav>
+
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors shrink-0"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>Kembali</span>
         </Link>
-        <ChevronRight className="h-3 w-3" />
-        <span className="text-slate-900 font-semibold dark:text-slate-100">
-          {category.title}
-        </span>
-      </nav>
+      </div>
 
       {/* Category Banner */}
-      <div className="border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/60 rounded-xl p-6 sm:p-8 backdrop-blur-md shadow-sm transition-colors">
+      <div className="border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/60 rounded-2xl p-4 sm:p-8 backdrop-blur-md shadow-sm transition-colors">
         <div className="flex items-center gap-3 mb-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-600/10 dark:text-blue-400 dark:border-blue-500/20">
             <IconComponent className="h-5 w-5" />
