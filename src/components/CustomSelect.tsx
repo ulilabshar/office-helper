@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Check, Search } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 
 export interface CustomSelectOption {
   value: string;
@@ -15,7 +15,6 @@ export interface CustomSelectProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
-  searchable?: boolean;
   required?: boolean;
 }
 
@@ -26,26 +25,12 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   placeholder = 'Pilih salah satu...',
   className = '',
   disabled = false,
-  searchable,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [openUpward, setOpenUpward] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const selectedOption = options.find((opt) => opt.value === value);
-
-  // Auto-enable search if more than 5 options, unless explicitly set
-  const showSearch = searchable ?? options.length > 5;
-
-  const filteredOptions = showSearch && searchQuery.trim()
-    ? options.filter(
-        (opt) =>
-          opt.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (opt.sublabel && opt.sublabel.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
-    : options;
 
   // Toggle open and calculate best popup position
   const handleToggle = () => {
@@ -60,7 +45,6 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       } else {
         setOpenUpward(false);
       }
-      setSearchQuery('');
     }
     setIsOpen((prev) => !prev);
   };
@@ -97,16 +81,6 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen]);
-
-  // Focus search input when open
-  useEffect(() => {
-    if (isOpen && showSearch) {
-      const timer = setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, showSearch]);
 
   const handleSelect = (val: string) => {
     onChange(val);
@@ -176,30 +150,14 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           }`}
           style={{ maxHeight: '192px' }}
         >
-          {/* Optional Search Bar */}
-          {showSearch && (
-            <div className="p-1.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 shrink-0 flex items-center gap-1.5">
-              <Search className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1.5" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari..."
-                className="w-full bg-transparent text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none py-1"
-                onClick={(e) => e.stopPropagation()}
-              />
-            </div>
-          )}
-
           {/* Scrollable Options List */}
           <div className="overflow-y-auto overscroll-contain flex-1 py-0.5 divide-y divide-slate-100/50 dark:divide-slate-800/50">
-            {filteredOptions.length === 0 ? (
+            {options.length === 0 ? (
               <div className="px-3 py-3 text-center text-xs text-slate-400 dark:text-slate-500">
-                Tidak ada pilihan yang cocok
+                Tidak ada pilihan tersedia
               </div>
             ) : (
-              filteredOptions.map((opt) => {
+              options.map((opt) => {
                 const isSelected = opt.value === value;
                 return (
                   <button

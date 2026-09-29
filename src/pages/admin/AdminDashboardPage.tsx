@@ -590,7 +590,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                           sublabel: d.category,
                         })),
                       ]}
-                      searchable
                     />
                   </div>
                   <button
@@ -898,7 +897,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                           sublabel: `FAQ Perangkat (${d.faqs?.length || 0}) • ${d.category}`,
                         })),
                       ]}
-                      searchable
                     />
                   </div>
                   <button

@@ -912,7 +912,6 @@ export const SingleStepModal: React.FC<{
                 sublabel: d.category,
               }))}
               placeholder="Pilih Perangkat Target..."
-              searchable
             />
           </div>
           <div>
@@ -1105,7 +1104,6 @@ export const SingleFaqModal: React.FC<{
                 })),
               ]}
               placeholder="Pilih Target FAQ..."
-              searchable
             />
           </div>
           <div>
