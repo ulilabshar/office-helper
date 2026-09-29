@@ -541,6 +541,48 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (!step.device_id) throw new Error('Target perangkat wajib dipilih!');
         const targetDeviceId = resolveDeviceUuid(step.device_id, state.devices);
 
+        const updateStateWithStep = (finalStepObj: SetupStep, isCreateAction: boolean) => {
+          setState((prev) => {
+            const oldId = step.id;
+            const newId = finalStepObj.id;
+            const matchStep = (s: SetupStep) => (Boolean(oldId) && s.id === oldId) || (Boolean(newId) && s.id === newId);
+
+            // 1. Bersihkan langkah dari SEMUA perangkat
+            const cleanedDevices = prev.devices.map((d) => ({
+              ...d,
+              steps: (d.steps || []).filter((s) => !matchStep(s)),
+            }));
+
+            // 2. Masukkan ke perangkat tujuan
+            const nextDevices = cleanedDevices.map((d) => {
+              const isTarget =
+                d.id === targetDeviceId ||
+                d.slug === targetDeviceId ||
+                resolveDeviceUuid(d.id, prev.devices) === targetDeviceId;
+              if (isTarget) {
+                return {
+                  ...d,
+                  steps: [...(d.steps || []), { ...finalStepObj, device_id: d.id }].sort(
+                    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+                  ),
+                };
+              }
+              return d;
+            });
+
+            return {
+              ...prev,
+              devices: nextDevices,
+              activityLogs: pushLog(
+                prev,
+                isCreateAction ? 'CREATE' : 'UPDATE',
+                step.title,
+                `Langkah panduan "${step.title}" ${isCreateAction ? 'ditambahkan' : 'diperbarui'}.`
+              ),
+            };
+          });
+        };
+
         if (isSupabaseReady && supabase) {
           const targetDev = state.devices.find((d) => d.id === step.device_id || d.id === targetDeviceId);
           const supp = getDeviceSupportedOs(targetDev);
@@ -572,25 +614,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
               sort_order: created.sort_order,
             };
 
-            setState((prev) => ({
-              ...prev,
-              devices: prev.devices.map((d) =>
-                (d.id === step.device_id || d.id === targetDeviceId)
-                  ? {
-                      ...d,
-                      steps: [...(d.steps || []).filter((s) => s.id !== step.id), newStepObj].sort(
-                        (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
-                      ),
-                    }
-                  : d
-              ),
-              activityLogs: pushLog(
-                prev,
-                'CREATE',
-                step.title,
-                `Langkah panduan "${step.title}" ditambahkan.`
-              ),
-            }));
+            updateStateWithStep(newStepObj, true);
           } else {
             try {
               const updated = await updateStep(step.id!, {
@@ -602,27 +626,18 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 sort_order: step.sort_order ?? 1,
               });
 
-              setState((prev) => ({
-                ...prev,
-                devices: prev.devices.map((d) =>
-                  (d.id === step.device_id || d.id === targetDeviceId)
-                    ? {
-                        ...d,
-                        steps: (d.steps || [])
-                          .map((s) => (s.id === step.id ? { ...s, ...step, id: updated.id, device_id: updated.device_id, konten_windows: updated.konten_windows || '', konten_mac: updated.konten_mac || '' } : s))
-                          .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
-                      }
-                    : d
-                ),
-                activityLogs: pushLog(
-                  prev,
-                  'UPDATE',
-                  step.title,
-                  `Langkah panduan "${step.title}" diperbarui.`
-                ),
-              }));
+              const updatedStep: SetupStep = {
+                id: updated.id,
+                device_id: updated.device_id,
+                title: updated.title,
+                description: updated.description || '',
+                konten_windows: updated.konten_windows || '',
+                konten_mac: updated.konten_mac || '',
+                sort_order: updated.sort_order,
+              };
+
+              updateStateWithStep(updatedStep, false);
             } catch (updateErr: any) {
-              // If row not found in Supabase (e.g. PGRST116), fallback to createStep!
               if (
                 updateErr?.code === 'PGRST116' ||
                 (typeof updateErr?.message === 'string' &&
@@ -647,25 +662,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
                   sort_order: created.sort_order,
                 };
 
-                setState((prev) => ({
-                  ...prev,
-                  devices: prev.devices.map((d) =>
-                    (d.id === step.device_id || d.id === targetDeviceId)
-                      ? {
-                          ...d,
-                          steps: [...(d.steps || []).filter((s) => s.id !== step.id), fallbackStep].sort(
-                            (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
-                          ),
-                        }
-                      : d
-                  ),
-                  activityLogs: pushLog(
-                    prev,
-                    'UPDATE',
-                    step.title,
-                    `Langkah panduan "${step.title}" diperbarui.`
-                  ),
-                }));
+                updateStateWithStep(fallbackStep, false);
               } else {
                 throw updateErr;
               }
@@ -673,42 +670,27 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           }
         } else {
           const fakeId = step.id || `step-${Date.now()}`;
-          const stepWithId = { ...step, id: fakeId, device_id: targetDeviceId };
-          setState((prev) => ({
-            ...prev,
-            devices: prev.devices.map((d) => {
-              if (d.id !== step.device_id && d.id !== targetDeviceId) return d;
-              const exists = (d.steps || []).some((s) => s.id === step.id);
-              const steps = exists
-                ? (d.steps || []).map((s) => (s.id === step.id ? stepWithId : s))
-                : [...(d.steps || []), stepWithId];
-              return {
-                ...d,
-                steps: steps.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
-              };
-            }),
-            activityLogs: pushLog(
-              prev,
-              isNew ? 'CREATE' : 'UPDATE',
-              step.title,
-              `Langkah panduan "${step.title}" disimpan.`
-            ),
-          }));
+          const stepWithId: SetupStep = {
+            ...step,
+            id: fakeId,
+            device_id: targetDeviceId,
+            konten_windows: (step.konten_windows || ''),
+            konten_mac: (step.konten_mac || ''),
+          };
+          updateStateWithStep(stepWithId, isNew);
         }
       },
-      deleteSingleStep: async (stepId, deviceId) => {
-        const targetDeviceId = resolveDeviceUuid(deviceId, state.devices);
+      deleteSingleStep: async (stepId, _deviceId) => {
         if (isSupabaseReady && supabase && isValidUuid(stepId)) {
           await deleteStep(stepId);
         }
 
         setState((prev) => ({
           ...prev,
-          devices: prev.devices.map((d) =>
-            (d.id === deviceId || d.id === targetDeviceId)
-              ? { ...d, steps: (d.steps || []).filter((s) => s.id !== stepId) }
-              : d
-          ),
+          devices: prev.devices.map((d) => ({
+            ...d,
+            steps: (d.steps || []).filter((s) => s.id !== stepId),
+          })),
           activityLogs: pushLog(
             prev,
             'DELETE',
@@ -799,6 +781,77 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
         const targetDeviceId = faq.device_id ? resolveDeviceUuid(faq.device_id, state.devices) : null;
 
+        const updateStateWithFaq = (finalFaqItem: FAQItem, isCreateAction: boolean) => {
+          setState((prev) => {
+            const oldId = faq.id;
+            const newId = finalFaqItem.id;
+            const matchFaq = (f: FAQItem) => (Boolean(oldId) && f.id === oldId) || (Boolean(newId) && f.id === newId);
+
+            // 1. Bersihkan dari FAQ Umum
+            const cleanedGeneralFaqs = prev.generalFaqs.filter((f) => !matchFaq(f));
+
+            // 2. Bersihkan dari SEMUA perangkat
+            const cleanedDevices = prev.devices.map((d) => ({
+              ...d,
+              faqs: (d.faqs || []).filter((f) => !matchFaq(f)),
+            }));
+
+            // 3. Masukkan ke tujuan yang dipilih (FAQ Umum atau Perangkat Tertentu)
+            if (!targetDeviceId) {
+              const nextGeneralFaqs = [...cleanedGeneralFaqs, { ...finalFaqItem, device_id: null }].sort(
+                (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+              );
+              return {
+                ...prev,
+                generalFaqs: nextGeneralFaqs,
+                devices: cleanedDevices,
+                activityLogs: pushLog(
+                  prev,
+                  isCreateAction ? 'CREATE' : 'UPDATE',
+                  faq.question,
+                  `FAQ Umum "${faq.question}" ${isCreateAction ? 'ditambahkan' : 'diperbarui'}.`
+                ),
+              };
+            } else {
+              const nextDevices = cleanedDevices.map((d) => {
+                const isTarget =
+                  d.id === targetDeviceId ||
+                  d.slug === targetDeviceId ||
+                  resolveDeviceUuid(d.id, prev.devices) === targetDeviceId;
+                if (isTarget) {
+                  return {
+                    ...d,
+                    faqs: [...(d.faqs || []), { ...finalFaqItem, device_id: d.id }].sort(
+                      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+                    ),
+                  };
+                }
+                return d;
+              });
+
+              const targetDevName =
+                prev.devices.find(
+                  (d) =>
+                    d.id === targetDeviceId ||
+                    d.slug === targetDeviceId ||
+                    resolveDeviceUuid(d.id, prev.devices) === targetDeviceId
+                )?.name || 'Perangkat';
+
+              return {
+                ...prev,
+                generalFaqs: cleanedGeneralFaqs,
+                devices: nextDevices,
+                activityLogs: pushLog(
+                  prev,
+                  isCreateAction ? 'CREATE' : 'UPDATE',
+                  faq.question,
+                  `FAQ [${targetDevName}] "${faq.question}" ${isCreateAction ? 'ditambahkan' : 'diperbarui'}.`
+                ),
+              };
+            }
+          });
+        };
+
         if (isSupabaseReady && supabase) {
           const hasValidUuid = isValidUuid(faq.id);
           const isCreate = isNew || !hasValidUuid;
@@ -819,42 +872,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
               sort_order: created.sort_order,
             };
 
-            setState((prev) => {
-              if (!created.device_id) {
-                return {
-                  ...prev,
-                  generalFaqs: [...prev.generalFaqs.filter((f) => f.id !== faq.id), newFaqItem].sort(
-                    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
-                  ),
-                  activityLogs: pushLog(
-                    prev,
-                    'CREATE',
-                    faq.question,
-                    `FAQ Umum "${faq.question}" ditambahkan.`
-                  ),
-                };
-              } else {
-                return {
-                  ...prev,
-                  devices: prev.devices.map((d) =>
-                    (d.id === created.device_id || d.id === targetDeviceId)
-                      ? {
-                          ...d,
-                          faqs: [...(d.faqs || []).filter((f) => f.id !== faq.id), newFaqItem].sort(
-                            (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
-                          ),
-                        }
-                      : d
-                  ),
-                  activityLogs: pushLog(
-                    prev,
-                    'CREATE',
-                    faq.question,
-                    `FAQ Perangkat "${faq.question}" ditambahkan.`
-                  ),
-                };
-              }
-            });
+            updateStateWithFaq(newFaqItem, true);
           } else {
             try {
               const updated = await updateFaq(faq.id!, {
@@ -864,42 +882,15 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 sort_order: faq.sort_order ?? 1,
               });
 
-              setState((prev) => {
-                if (!targetDeviceId) {
-                  return {
-                    ...prev,
-                    generalFaqs: prev.generalFaqs
-                      .map((f) => (f.id === faq.id ? { ...f, ...faq, id: updated.id } : f))
-                      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
-                    activityLogs: pushLog(
-                      prev,
-                      'UPDATE',
-                      faq.question,
-                      `FAQ Umum "${faq.question}" diperbarui.`
-                    ),
-                  };
-                } else {
-                  return {
-                    ...prev,
-                    devices: prev.devices.map((d) =>
-                      (d.id === targetDeviceId || d.id === faq.device_id)
-                        ? {
-                            ...d,
-                            faqs: (d.faqs || [])
-                              .map((f) => (f.id === faq.id ? { ...f, ...faq, id: updated.id, device_id: targetDeviceId } : f))
-                              .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
-                          }
-                        : d
-                    ),
-                    activityLogs: pushLog(
-                      prev,
-                      'UPDATE',
-                      faq.question,
-                      `FAQ Perangkat "${faq.question}" diperbarui.`
-                    ),
-                  };
-                }
-              });
+              const updatedFaqItem: FAQItem = {
+                id: updated.id,
+                device_id: updated.device_id,
+                question: updated.question,
+                answer: updated.answer,
+                sort_order: updated.sort_order,
+              };
+
+              updateStateWithFaq(updatedFaqItem, false);
             } catch (updateErr: any) {
               if (
                 updateErr?.code === 'PGRST116' ||
@@ -919,30 +910,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
                   answer: created.answer,
                   sort_order: created.sort_order,
                 };
-                setState((prev) => {
-                  if (!targetDeviceId) {
-                    return {
-                      ...prev,
-                      generalFaqs: [...prev.generalFaqs.filter((f) => f.id !== faq.id), fallbackFaq].sort(
-                        (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
-                      ),
-                    };
-                  } else {
-                    return {
-                      ...prev,
-                      devices: prev.devices.map((d) =>
-                        (d.id === targetDeviceId || d.id === faq.device_id)
-                          ? {
-                              ...d,
-                              faqs: [...(d.faqs || []).filter((f) => f.id !== faq.id), fallbackFaq].sort(
-                                (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
-                              ),
-                            }
-                          : d
-                      ),
-                    };
-                  }
-                });
+                updateStateWithFaq(fallbackFaq, false);
               } else {
                 throw updateErr;
               }
@@ -950,75 +918,31 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           }
         } else {
           const fakeId = faq.id || `faq-${Date.now()}`;
-          const faqWithId = { ...faq, id: fakeId, device_id: targetDeviceId };
-          setState((prev) => {
-            if (!targetDeviceId) {
-              const exists = prev.generalFaqs.some((f) => f.id === faq.id);
-              const list = exists
-                ? prev.generalFaqs.map((f) => (f.id === faq.id ? faqWithId : f))
-                : [...prev.generalFaqs, faqWithId];
-              return {
-                ...prev,
-                generalFaqs: list.sort(
-                  (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
-                ),
-                activityLogs: pushLog(
-                  prev,
-                  isNew ? 'CREATE' : 'UPDATE',
-                  faq.question,
-                  `FAQ disimpan.`
-                ),
-              };
-            } else {
-              return {
-                ...prev,
-                devices: prev.devices.map((d) => {
-                  if (d.id !== faq.device_id && d.id !== targetDeviceId) return d;
-                  const exists = (d.faqs || []).some((f) => f.id === faq.id);
-                  const list = exists
-                    ? (d.faqs || []).map((f) => (f.id === faq.id ? faqWithId : f))
-                    : [...(d.faqs || []), faqWithId];
-                  return {
-                    ...d,
-                    faqs: list.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
-                  };
-                }),
-                activityLogs: pushLog(
-                  prev,
-                  isNew ? 'CREATE' : 'UPDATE',
-                  faq.question,
-                  `FAQ disimpan.`
-                ),
-              };
-            }
-          });
+          const faqWithId: FAQItem = {
+            ...faq,
+            id: fakeId,
+            device_id: targetDeviceId,
+            question: faq.question.trim(),
+            answer: faq.answer.trim(),
+            sort_order: faq.sort_order ?? 1,
+          };
+          updateStateWithFaq(faqWithId, isNew);
         }
       },
-      deleteSingleFaq: async (faqId, deviceId) => {
-        const targetDeviceId = deviceId ? resolveDeviceUuid(deviceId, state.devices) : null;
+      deleteSingleFaq: async (faqId, _deviceId) => {
         if (isSupabaseReady && supabase && isValidUuid(faqId)) {
           await deleteFaq(faqId);
         }
 
-        setState((prev) => {
-          if (!deviceId) {
-            return {
-              ...prev,
-              generalFaqs: prev.generalFaqs.filter((f) => f.id !== faqId),
-              activityLogs: pushLog(prev, 'DELETE', 'FAQ', 'FAQ Umum dihapus.'),
-            };
-          } else {
-            return {
-              ...prev,
-              devices: prev.devices.map((d) =>
-                (d.id === deviceId || d.id === targetDeviceId)
-                  ? { ...d, faqs: (d.faqs || []).filter((f) => f.id !== faqId) }
-                  : d
-              ),
-              activityLogs: pushLog(prev, 'DELETE', 'FAQ', 'FAQ Perangkat dihapus.'),
-            };
-          }
-        });
+        setState((prev) => ({
+          ...prev,
+          generalFaqs: prev.generalFaqs.filter((f) => f.id !== faqId),
+          devices: prev.devices.map((d) => ({
+            ...d,
+            faqs: (d.faqs || []).filter((f) => f.id !== faqId),
+          })),
+          activityLogs: pushLog(prev, 'DELETE', 'FAQ', 'FAQ berhasil dihapus.'),
+        }));
       },
       saveMedia: (asset, isNew) => {
         setState((prev) => {
