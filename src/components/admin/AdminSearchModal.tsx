@@ -151,11 +151,11 @@ export const AdminSearchModal: React.FC<AdminSearchModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-12 sm:pt-16 px-4 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-8 sm:pt-16 px-3 sm:px-4 bg-slate-900/60 backdrop-blur-xs transition-opacity"
       onClick={handleClose}
     >
       <div
-        className="w-full max-w-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in-50 zoom-in-95 duration-150"
+        className="w-full max-w-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[88dvh] sm:max-h-[85vh] animate-in fade-in-50 zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Search Input */}
@@ -169,7 +169,7 @@ export const AdminSearchModal: React.FC<AdminSearchModalProps> = ({
               setExpandedFaqId(null);
             }}
             placeholder="Cari perangkat, panduan langkah, FAQ kantor, atau kategori..."
-            className="w-full bg-transparent py-1 text-sm sm:text-base text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
+            className="w-full bg-transparent py-1 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
             autoFocus
           />
           {query && (
@@ -194,7 +194,7 @@ export const AdminSearchModal: React.FC<AdminSearchModalProps> = ({
         </div>
 
         {/* Filter Tabs Bar */}
-        <div className="flex items-center justify-between px-3 sm:px-4 py-2 bg-slate-50 dark:bg-slate-950/70 border-b border-slate-200/80 dark:border-slate-800/80 text-xs shrink-0 overflow-x-auto">
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2 bg-slate-50 dark:bg-slate-950/70 border-b border-slate-200/80 dark:border-slate-800/80 text-xs shrink-0 overflow-x-auto no-scrollbar">
           <div className="flex items-center gap-1 sm:gap-1.5">
             <button
               type="button"

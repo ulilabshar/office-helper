@@ -75,14 +75,14 @@ export const AccordionFaq: React.FC<AccordionFaqProps> = ({
 
         {/* Tab Switcher if has device FAQs */}
         {hasDeviceFaqs && (
-          <div className="flex items-center bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl shrink-0 self-start md:self-auto text-xs font-semibold">
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl shrink-0 self-start md:self-auto text-xs font-semibold overflow-x-auto no-scrollbar max-w-full">
             <button
               type="button"
               onClick={() => {
                 setActiveTab('general');
                 setOpenIndex(0);
               }}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
+              className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap ${
                 activeTab === 'general'
                   ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
@@ -96,7 +96,7 @@ export const AccordionFaq: React.FC<AccordionFaqProps> = ({
                 setActiveTab('all');
                 setOpenIndex(0);
               }}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
+              className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap ${
                 activeTab === 'all'
                   ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
@@ -121,7 +121,7 @@ export const AccordionFaq: React.FC<AccordionFaqProps> = ({
               setOpenIndex(0);
             }}
             placeholder="Cari pertanyaan, kendala Wi-Fi, printer macet, scan..."
-            className="w-full pl-10 pr-9 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            className="w-full pl-10 pr-9 py-2.5 text-base sm:text-sm bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
           />
           {searchQuery && (
             <button

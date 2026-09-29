@@ -159,11 +159,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-14 sm:pt-20 px-4 bg-slate-900/60 transition-opacity"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-8 sm:pt-20 px-3 sm:px-4 bg-slate-900/60 backdrop-blur-xs transition-opacity"
       onClick={handleCloseModal}
     >
       <div
-        className="w-full max-w-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden transition-all duration-150 animate-in fade-in-50 zoom-in-95 flex flex-col max-h-[85vh]"
+        className="w-full max-w-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden transition-all duration-150 animate-in fade-in-50 zoom-in-95 flex flex-col max-h-[88dvh] sm:max-h-[85vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Bar */}
@@ -177,7 +177,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
               setExpandedFaqId(null);
             }}
             placeholder="Cari panduan perangkat, FAQ, kendala Wi-Fi, printer..."
-            className="w-full bg-transparent py-1 text-sm sm:text-base text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
+            className="w-full bg-transparent py-1 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
             autoFocus
           />
           {query && (
@@ -202,12 +202,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
         </div>
 
         {/* Filter Tabs Bar */}
-        <div className="flex items-center justify-between px-4 py-2 bg-slate-50 dark:bg-slate-950/70 border-b border-slate-200/80 dark:border-slate-800/80 text-xs shrink-0">
-          <div className="flex items-center gap-1.5">
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2 bg-slate-50 dark:bg-slate-950/70 border-b border-slate-200/80 dark:border-slate-800/80 text-xs shrink-0 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1.5 shrink-0 py-0.5">
             <button
               type="button"
               onClick={() => setActiveFilter('all')}
-              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+              className={`px-3 py-1 rounded-lg font-semibold transition-all whitespace-nowrap ${
                 activeFilter === 'all'
                   ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800'

@@ -330,7 +330,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {[
                   { tab: 'devices' as AdminTab, icon: HardDrive, label: 'Total Perangkat', value: stats.totalDevices },
                   { tab: 'categories' as AdminTab, icon: FolderTree, label: 'Total Kategori', value: stats.totalCategories },
@@ -340,11 +340,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <button
                     key={card.label}
                     onClick={() => handleTabChange(card.tab)}
-                    className="text-left rounded-2xl border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/70 p-5 hover:border-blue-500/60 transition-all group"
+                    className="text-left rounded-2xl border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/70 p-4 sm:p-5 hover:border-blue-500/60 active:scale-[0.98] transition-all group"
                   >
-                    <card.icon className="h-5 w-5 text-blue-600 mb-3 group-hover:scale-110 transition-transform" />
-                    <div className="text-3xl font-black">{card.value}</div>
-                    <p className="text-xs font-bold mt-1 text-slate-700 dark:text-slate-300">{card.label}</p>
+                    <card.icon className="h-5 w-5 text-blue-600 mb-2 sm:mb-3 group-hover:scale-110 transition-transform" />
+                    <div className="text-2xl sm:text-3xl font-black">{card.value}</div>
+                    <p className="text-[11px] sm:text-xs font-bold mt-1 text-slate-700 dark:text-slate-300 leading-tight">{card.label}</p>
                   </button>
                 ))}
               </div>
@@ -353,34 +353,104 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
           {activeTab === 'devices' && (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                 <div>
                   <h2 className="text-xl font-bold">Manajemen Perangkat ({filteredDevices.length})</h2>
                   <p className="text-xs text-slate-500">Create, ubah, dan hapus perangkat. Hasilnya langsung tampil di situs publik.</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {['ALL', 'Ready', 'Maintenance', 'New'].map((st) => (
-                    <button
-                      key={st}
-                      onClick={() => setDeviceFilterStatus(st)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-xl border ${
-                        deviceFilterStatus === st ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-200 dark:border-slate-800'
-                      }`}
-                    >
-                      {st === 'ALL' ? 'Semua' : st}
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between sm:justify-end gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {['ALL', 'Ready', 'Maintenance', 'New'].map((st) => (
+                      <button
+                        key={st}
+                        onClick={() => setDeviceFilterStatus(st)}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-xl border whitespace-nowrap transition-colors ${
+                          deviceFilterStatus === st ? 'bg-blue-600 text-white border-blue-600 shadow-xs' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'
+                        }`}
+                      >
+                        {st === 'ALL' ? 'Semua' : st}
+                      </button>
+                    ))}
+                  </div>
                   <button
                     onClick={() => setDeviceModal({ open: true, device: null })}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold"
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold shrink-0 min-h-[38px] sm:min-h-0 shadow-sm"
                   >
                     <PlusCircle className="h-3.5 w-3.5" />
-                    Tambah
+                    <span>Tambah</span>
                   </button>
                 </div>
               </div>
 
-              <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden">
+              {/* Tampilan Mobile: Card List (sm:hidden) */}
+              <div className="sm:hidden space-y-3">
+                {filteredDevices.map((d) => (
+                  <div
+                    key={d.id}
+                    className="border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-900/60 space-y-3 shadow-xs"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-bold text-sm text-slate-900 dark:text-white leading-tight">{d.name}</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{d.description}</p>
+                      </div>
+                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full shrink-0 ${
+                        d.status === 'Ready'
+                          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                          : d.status === 'Maintenance'
+                          ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                          : 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+                      }`}>
+                        {d.status}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <span className="font-medium px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800">
+                        {d.category}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <Link
+                          to={`/docs/${d.categorySlug}/${d.slug || slugify(d.name)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                          title="Lihat Halaman Publik"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Link>
+                        <button
+                          onClick={() => setDeviceModal({ open: true, device: d })}
+                          className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400"
+                          title="Ubah Perangkat"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (confirm(`Hapus perangkat "${d.name}"?`)) {
+                              try {
+                                await catalog.deleteDevice(d.id);
+                                showToast(`"${d.name}" berhasil dihapus.`);
+                              } catch (err: unknown) {
+                                const msg = formatErrorMessage(err);
+                                showToast(`Gagal menghapus: ${msg}`);
+                              }
+                            }
+                          }}
+                          className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400"
+                          title="Hapus Perangkat"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Tampilan Desktop: Table View (hidden sm:block) */}
+              <div className="hidden sm:block rounded-2xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800">
                     <tr>
@@ -392,7 +462,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                     {filteredDevices.map((d) => (
-                      <tr key={d.id}>
+                      <tr key={d.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/40">
                         <td className="px-5 py-4">
                           <div className="font-bold">{d.name}</div>
                           <div className="text-[11px] text-slate-500 truncate max-w-xs">{d.description}</div>
@@ -403,7 +473,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                           <div className="flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => setDeviceModal({ open: true, device: d })}
-                              className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600"
+                              className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 dark:hover:bg-blue-950/50 dark:text-blue-400"
                               title="Ubah"
                             >
                               <Edit3 className="h-4 w-4" />
@@ -420,7 +490,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                                   }
                                 }
                               }}
-                              className="p-1.5 rounded-lg hover:bg-rose-50 text-rose-600"
+                              className="p-1.5 rounded-lg hover:bg-rose-50 text-rose-600 dark:hover:bg-rose-950/50 dark:text-rose-400"
                               title="Hapus"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -444,28 +514,32 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 </div>
                 <button
                   onClick={() => setCategoryModal({ open: true, category: null })}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold min-h-[38px] sm:min-h-0 shadow-xs"
                 >
                   <PlusCircle className="h-3.5 w-3.5" />
                   Tambah kategori
                 </button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                 {filteredCategories.map((cat) => (
-                  <div key={cat.id} className="border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
+                  <div key={cat.id} className="border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3 bg-white dark:bg-slate-900/60 shadow-xs">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h3 className="font-bold">{cat.title}</h3>
+                        <h3 className="font-bold text-sm sm:text-base">{cat.title}</h3>
                         <p className="text-xs text-slate-500 mt-1">{cat.description}</p>
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0">
                         {cat.deviceCount} alat
                       </span>
                     </div>
                     <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
                       <span className="font-mono text-[10px] text-slate-400">{cat.slug}</span>
-                      <div className="flex gap-1">
-                        <button onClick={() => setCategoryModal({ open: true, category: cat })} className="p-1.5 text-blue-600">
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setCategoryModal({ open: true, category: cat })}
+                          className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50"
+                          title="Ubah Kategori"
+                        >
                           <Edit3 className="h-4 w-4" />
                         </button>
                         <button
@@ -480,7 +554,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                               }
                             }
                           }}
-                          className="p-1.5 text-rose-600"
+                          className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50"
+                          title="Hapus Kategori"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -494,18 +569,18 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
           {activeTab === 'guides' && (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                 <div>
                   <h2 className="text-xl font-bold">Panduan Langkah Setup ({filteredSteps.length} Langkah)</h2>
                   <p className="text-xs text-slate-500">
                     Tambah, ubah, dan hapus langkah panduan per perangkat. Langsung tersimpan ke database Supabase.
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <select
                     value={guideFilterDevice}
                     onChange={(e) => setGuideFilterDevice(e.target.value)}
-                    className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+                    className="w-full sm:w-auto px-3 py-2 sm:py-1.5 text-base sm:text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 min-h-[40px] sm:min-h-0"
                   >
                     <option value="ALL">Semua Perangkat ({catalog.devices.length})</option>
                     {catalog.devices.map((d) => (
@@ -522,7 +597,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                         preselectedDeviceId: guideFilterDevice !== 'ALL' ? guideFilterDevice : catalog.devices[0]?.id,
                       });
                     }}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 shadow-sm"
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 shadow-sm min-h-[40px] sm:min-h-0"
                   >
                     <PlusCircle className="h-3.5 w-3.5" />
                     Tambah Langkah
@@ -544,126 +619,222 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                         preselectedDeviceId: guideFilterDevice !== 'ALL' ? guideFilterDevice : catalog.devices[0]?.id,
                       });
                     }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold"
+                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold min-h-[40px]"
                   >
                     <PlusCircle className="h-3.5 w-3.5" />
                     Tambah Langkah Pertama
                   </button>
                 </div>
               ) : (
-                <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800">
-                        <tr>
-                          <th className="px-4 py-3.5 w-16 text-center">Urutan</th>
-                          <th className="px-4 py-3.5">Perangkat</th>
-                          <th className="px-4 py-3.5">Judul & Panduan</th>
-                          <th className="px-4 py-3.5">Platform OS</th>
-                          <th className="px-4 py-3.5 text-right w-24">Aksi</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-                        {filteredSteps.map((step, idx) => (
-                          <tr key={step.id || `${step.device_id}-${idx}`} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/30">
-                            <td className="px-4 py-4 text-center">
-                              <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-[11px] text-slate-700 dark:text-slate-300">
+                <>
+                  {/* Tampilan Mobile: Step Cards (md:hidden) */}
+                  <div className="md:hidden space-y-3.5">
+                    {filteredSteps.map((step, idx) => {
+                      const supp = getDeviceSupportedOs({ supported_os: step.supported_os, specs: step.specs } as Device);
+                      const devHasWin = supp.includes('windows');
+                      const devHasMac = supp.includes('mac');
+
+                      return (
+                        <div
+                          key={step.id || `${step.device_id}-${idx}`}
+                          className="border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-900/60 space-y-3 shadow-xs"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-bold text-xs">
                                 #{step.sort_order ?? idx + 1}
                               </span>
-                            </td>
-                            <td className="px-4 py-4">
-                              <div className="font-bold text-slate-900 dark:text-white">{step.deviceName}</div>
-                              <span className="inline-block mt-0.5 text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
-                                {step.deviceCategory}
+                              <span className="text-xs font-bold text-slate-900 dark:text-white">
+                                {step.deviceName}
                               </span>
-                            </td>
-                            <td className="px-4 py-4 max-w-md">
-                              <div className="font-bold text-slate-900 dark:text-slate-100">{step.title}</div>
-                              {step.description && (
-                                <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">
-                                  {step.description}
-                                </p>
+                            </div>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
+                              {step.deviceCategory}
+                            </span>
+                          </div>
+
+                          <div>
+                            <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 leading-snug">{step.title}</h4>
+                            {step.description && (
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+                                {step.description}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+                            <div className="flex flex-wrap gap-1.5">
+                              {devHasWin && (
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                  step.konten_windows
+                                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+                                    : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
+                                }`}>
+                                  Win {step.konten_windows ? '✓' : '-'}
+                                </span>
                               )}
-                            </td>
-                            <td className="px-4 py-4">
-                              <div className="flex flex-wrap gap-1.5">
-                                {(() => {
-                                  const supp = getDeviceSupportedOs({ supported_os: step.supported_os, specs: step.specs } as Device);
-                                  const devHasWin = supp.includes('windows');
-                                  const devHasMac = supp.includes('mac');
-                                  return (
-                                    <>
-                                      {devHasWin && (
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                                          step.konten_windows
-                                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
-                                            : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
-                                        }`}>
-                                          Windows {step.konten_windows ? '✓' : '-'}
-                                        </span>
-                                      )}
-                                      {devHasMac && (
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                                          step.konten_mac
-                                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                                            : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
-                                        }`}>
-                                          macOS {step.konten_mac ? '✓' : '-'}
-                                        </span>
-                                      )}
-                                      {!devHasMac && (
-                                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                                          Khusus Windows
-                                        </span>
-                                      )}
-                                      {!devHasWin && (
-                                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                                          Khusus macOS
-                                        </span>
-                                      )}
-                                    </>
-                                  );
-                                })()}
-                              </div>
-                            </td>
-                            <td className="px-4 py-4 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
-                                <button
-                                  onClick={() => setSingleStepModal({ open: true, step, preselectedDeviceId: step.device_id })}
-                                  className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 dark:hover:bg-blue-950/50 dark:text-blue-400"
-                                  title="Ubah Langkah"
-                                >
-                                  <Edit3 className="h-4 w-4" />
-                                </button>
-                                <button
-                                  onClick={async () => {
-                                    if (confirm(`Hapus langkah "${step.title}"?`)) {
-                                      try {
-                                        if (step.id && step.device_id) {
-                                          await catalog.deleteSingleStep(step.id, step.device_id);
-                                          showToast(`Langkah "${step.title}" berhasil dihapus.`);
-                                        } else {
-                                          showToast('Gagal: ID langkah tidak ditemukan.');
-                                        }
-                                      } catch (err: unknown) {
-                                        const msg = formatErrorMessage(err);
-                                        showToast(`Gagal menghapus langkah: ${msg}`);
+                              {devHasMac && (
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                  step.konten_mac
+                                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                                    : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
+                                }`}>
+                                  Mac {step.konten_mac ? '✓' : '-'}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => setSingleStepModal({ open: true, step, preselectedDeviceId: step.device_id })}
+                                className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400"
+                                title="Ubah Langkah"
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  if (confirm(`Hapus langkah "${step.title}"?`)) {
+                                    try {
+                                      if (step.id && step.device_id) {
+                                        await catalog.deleteSingleStep(step.id, step.device_id);
+                                        showToast(`Langkah "${step.title}" berhasil dihapus.`);
+                                      } else {
+                                        showToast('Gagal: ID langkah tidak ditemukan.');
                                       }
+                                    } catch (err: unknown) {
+                                      const msg = formatErrorMessage(err);
+                                      showToast(`Gagal menghapus langkah: ${msg}`);
                                     }
-                                  }}
-                                  className="p-1.5 rounded-lg hover:bg-rose-50 text-rose-600 dark:hover:bg-rose-950/50 dark:text-rose-400"
-                                  title="Hapus Langkah"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                                  }
+                                }}
+                                className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400"
+                                title="Hapus Langkah"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                </div>
+
+                  {/* Tampilan Desktop: Table View (hidden md:block) */}
+                  <div className="hidden md:block rounded-2xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800">
+                          <tr>
+                            <th className="px-4 py-3.5 w-16 text-center">Urutan</th>
+                            <th className="px-4 py-3.5">Perangkat</th>
+                            <th className="px-4 py-3.5">Judul & Panduan</th>
+                            <th className="px-4 py-3.5">Platform OS</th>
+                            <th className="px-4 py-3.5 text-right w-24">Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                          {filteredSteps.map((step, idx) => (
+                            <tr key={step.id || `${step.device_id}-${idx}`} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/30">
+                              <td className="px-4 py-4 text-center">
+                                <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-[11px] text-slate-700 dark:text-slate-300">
+                                  #{step.sort_order ?? idx + 1}
+                                </span>
+                              </td>
+                              <td className="px-4 py-4">
+                                <div className="font-bold text-slate-900 dark:text-white">{step.deviceName}</div>
+                                <span className="inline-block mt-0.5 text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
+                                  {step.deviceCategory}
+                                </span>
+                              </td>
+                              <td className="px-4 py-4 max-w-md">
+                                <div className="font-bold text-slate-900 dark:text-slate-100">{step.title}</div>
+                                {step.description && (
+                                  <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">
+                                    {step.description}
+                                  </p>
+                                )}
+                              </td>
+                              <td className="px-4 py-4">
+                                <div className="flex flex-wrap gap-1.5">
+                                  {(() => {
+                                    const supp = getDeviceSupportedOs({ supported_os: step.supported_os, specs: step.specs } as Device);
+                                    const devHasWin = supp.includes('windows');
+                                    const devHasMac = supp.includes('mac');
+                                    return (
+                                      <>
+                                        {devHasWin && (
+                                          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                            step.konten_windows
+                                              ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+                                              : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
+                                          }`}>
+                                            Windows {step.konten_windows ? '✓' : '-'}
+                                          </span>
+                                        )}
+                                        {devHasMac && (
+                                          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                            step.konten_mac
+                                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                                              : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
+                                          }`}>
+                                            macOS {step.konten_mac ? '✓' : '-'}
+                                          </span>
+                                        )}
+                                        {!devHasMac && (
+                                          <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                                            Khusus Windows
+                                          </span>
+                                        )}
+                                        {!devHasWin && (
+                                          <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                            Khusus macOS
+                                          </span>
+                                        )}
+                                      </>
+                                    );
+                                  })()}
+                                </div>
+                              </td>
+                              <td className="px-4 py-4 text-right">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    onClick={() => setSingleStepModal({ open: true, step, preselectedDeviceId: step.device_id })}
+                                    className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 dark:hover:bg-blue-950/50 dark:text-blue-400"
+                                    title="Ubah Langkah"
+                                  >
+                                    <Edit3 className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    onClick={async () => {
+                                      if (confirm(`Hapus langkah "${step.title}"?`)) {
+                                        try {
+                                          if (step.id && step.device_id) {
+                                            await catalog.deleteSingleStep(step.id, step.device_id);
+                                            showToast(`Langkah "${step.title}" berhasil dihapus.`);
+                                          } else {
+                                            showToast('Gagal: ID langkah tidak ditemukan.');
+                                          }
+                                        } catch (err: unknown) {
+                                          const msg = formatErrorMessage(err);
+                                          showToast(`Gagal menghapus langkah: ${msg}`);
+                                        }
+                                      }
+                                    }}
+                                    className="p-1.5 rounded-lg hover:bg-rose-50 text-rose-600 dark:hover:bg-rose-950/50 dark:text-rose-400"
+                                    title="Hapus Langkah"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
               )}
 
               {/* Card Ringkasan & Batch Editor per Perangkat */}
@@ -679,7 +850,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     return (
                       <div
                         key={device.id}
-                        className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 flex items-center justify-between gap-3"
+                        className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 flex items-center justify-between gap-3 shadow-xs"
                       >
                         <div className="min-w-0">
                           <h4 className="font-bold text-xs truncate">{device.name}</h4>
@@ -687,7 +858,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                         </div>
                         <button
                           onClick={() => setGuideModal({ open: true, device })}
-                          className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 inline-flex items-center gap-1"
+                          className="px-3 py-2 sm:py-1 text-xs font-semibold rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 inline-flex items-center gap-1.5 min-h-[36px] sm:min-h-0"
                         >
                           <Edit3 className="h-3 w-3" />
                           <span>Kelola Alur</span>
@@ -702,18 +873,18 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
           {activeTab === 'faq' && (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                 <div>
                   <h2 className="text-xl font-bold">Manajemen FAQ ({filteredFaqs.length} Pertanyaan)</h2>
                   <p className="text-xs text-slate-500">
                     Tambah, ubah, dan hapus pertanyaan & jawaban FAQ Umum dan FAQ spesifik perangkat.
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <select
                     value={faqFilterTarget}
                     onChange={(e) => setFaqFilterTarget(e.target.value)}
-                    className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+                    className="w-full sm:w-auto px-3 py-2 sm:py-1.5 text-base sm:text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 min-h-[40px] sm:min-h-0"
                   >
                     <option value="ALL">Semua Target FAQ ({allFaqs.length})</option>
                     <option value="GENERAL">FAQ Umum (Beranda) ({catalog.generalFaqs.length})</option>
@@ -731,7 +902,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                         preselectedDeviceId: faqFilterTarget !== 'ALL' && faqFilterTarget !== 'GENERAL' ? faqFilterTarget : null,
                       });
                     }}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 shadow-sm"
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 shadow-sm min-h-[40px] sm:min-h-0"
                   >
                     <PlusCircle className="h-3.5 w-3.5" />
                     Tambah FAQ
@@ -753,7 +924,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                         preselectedDeviceId: faqFilterTarget !== 'ALL' && faqFilterTarget !== 'GENERAL' ? faqFilterTarget : null,
                       });
                     }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold"
+                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold min-h-[40px]"
                   >
                     <PlusCircle className="h-3.5 w-3.5" />
                     Tambah FAQ Baru
@@ -764,7 +935,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   {filteredFaqs.map((faq, idx) => (
                     <div
                       key={faq.id || `${faq.device_id}-${idx}`}
-                      className="border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3 bg-white dark:bg-slate-900/60 flex flex-col justify-between"
+                      className="border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3 bg-white dark:bg-slate-900/60 flex flex-col justify-between shadow-xs"
                     >
                       <div className="space-y-2.5">
                         <div className="flex items-center justify-between gap-2">
@@ -793,7 +964,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                         <span className="text-[10px] text-slate-400">
                           {faq.isGeneral ? 'Muncul di Beranda Publik' : 'Muncul di Halaman Perangkat'}
                         </span>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5">
                           <button
                             onClick={() =>
                               setSingleFaqModal({
@@ -802,7 +973,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                                 preselectedDeviceId: faq.device_id || null,
                               })
                             }
-                            className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                            className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
                             title="Ubah FAQ"
                           >
                             <Edit3 className="h-4 w-4" />
@@ -823,7 +994,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                                 }
                               }
                             }}
-                            className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                            className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
                             title="Hapus FAQ"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -851,7 +1022,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <div>
                   <label className="block text-xs font-bold mb-1.5">Nama portal</label>
                   <input
-                    className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950"
+                    className="w-full px-3.5 py-3 sm:py-2.5 text-base sm:text-sm rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950"
                     value={settingsDraft.officeName}
                     onChange={(e) => setSettingsDraft({ ...settingsDraft, officeName: e.target.value })}
                   />
@@ -860,7 +1031,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <div>
                     <label className="block text-xs font-bold mb-1.5">WhatsApp IT</label>
                     <input
-                      className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950"
+                      className="w-full px-3.5 py-3 sm:py-2.5 text-base sm:text-sm rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950"
                       value={settingsDraft.itSupportPhone}
                       onChange={(e) => setSettingsDraft({ ...settingsDraft, itSupportPhone: e.target.value })}
                     />
@@ -868,14 +1039,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <div>
                     <label className="block text-xs font-bold mb-1.5">Email IT</label>
                     <input
-                      className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950"
+                      className="w-full px-3.5 py-3 sm:py-2.5 text-base sm:text-sm rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950"
                       value={settingsDraft.supportEmail}
                       onChange={(e) => setSettingsDraft({ ...settingsDraft, supportEmail: e.target.value })}
                     />
                   </div>
                 </div>
-                <div className="flex justify-end">
-                  <button type="submit" className="px-6 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold">
+                <div className="flex justify-end pt-2">
+                  <button type="submit" className="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl bg-blue-600 text-white text-sm sm:text-xs font-bold min-h-[44px]">
                     Simpan pengaturan
                   </button>
                 </div>

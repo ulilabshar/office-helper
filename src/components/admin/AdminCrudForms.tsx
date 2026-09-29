@@ -194,11 +194,18 @@ export const DeviceFormModal: React.FC<{
           />
         </div>
 
-        <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 sm:gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2.5 sm:py-2 text-sm sm:text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
             Batal
           </button>
-          <button type="submit" className="px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500">
+          <button
+            type="submit"
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-5 py-2.5 sm:py-2 text-sm sm:text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500 shadow-md shadow-blue-600/25 active:scale-[0.98] transition-all"
+          >
             Simpan Perangkat
           </button>
         </div>
@@ -298,11 +305,18 @@ export const CategoryFormModal: React.FC<{
           <input type="checkbox" checked={available} onChange={(e) => setAvailable(e.target.checked)} />
           Tampilkan di situs publik
         </label>
-        <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 sm:gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2.5 sm:py-2 text-sm sm:text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
             Batal
           </button>
-          <button type="submit" className="px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white">
+          <button
+            type="submit"
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-5 py-2.5 sm:py-2 text-sm sm:text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500 shadow-md shadow-blue-600/25 active:scale-[0.98] transition-all"
+          >
             Simpan Kategori
           </button>
         </div>
@@ -588,26 +602,26 @@ export const GuideFormModal: React.FC<{
           )))}
         </div>
 
-        <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
           <button
             type="button"
             onClick={addStep}
-            className="px-3.5 py-2 text-xs font-bold rounded-xl border-2 border-dashed border-blue-400 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2.5 sm:py-2 text-xs font-bold rounded-xl border-2 border-dashed border-blue-400 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-center"
           >
             + Tambah Langkah Baru
           </button>
-          <div className="flex gap-2">
+          <div className="flex flex-col-reverse sm:flex-row gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700"
+              className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2.5 sm:py-2 text-sm sm:text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
+              className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-5 py-2.5 sm:py-2 text-sm sm:text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 shadow-md shadow-blue-600/25 active:scale-[0.98] transition-all"
             >
               {isSubmitting ? 'Menyimpan...' : 'Simpan Semua Langkah'}
             </button>
@@ -660,8 +674,12 @@ export const FaqFormModal: React.FC<{
         >
           + Tambah FAQ
         </button>
-        <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 sm:gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2.5 sm:py-2 text-sm sm:text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
             Batal
           </button>
           <button
@@ -670,7 +688,7 @@ export const FaqFormModal: React.FC<{
               onSave(list.filter((f) => f.question.trim() && f.answer.trim()));
               onClose();
             }}
-            className="px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white"
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-5 py-2.5 sm:py-2 text-sm sm:text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500 shadow-md shadow-blue-600/25 active:scale-[0.98] transition-all"
           >
             Simpan FAQ
           </button>
@@ -728,7 +746,7 @@ export const MediaFormModal: React.FC<{
           <label className={labelClass}>Nama file</label>
           <input className={fieldClass} value={name} onChange={(e) => setName(e.target.value)} required />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={labelClass}>Tipe</label>
             <select className={fieldClass} value={type} onChange={(e) => setType(e.target.value as MediaAsset['type'])}>
@@ -759,12 +777,19 @@ export const MediaFormModal: React.FC<{
           <label className={labelClass}>URL</label>
           <input className={fieldClass} value={url} onChange={(e) => setUrl(e.target.value)} required />
         </div>
-        <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 sm:gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2.5 sm:py-2 text-sm sm:text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
             Batal
           </button>
-          <button type="submit" className="px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white">
-            Simpan
+          <button
+            type="submit"
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-5 py-2.5 sm:py-2 text-sm sm:text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500 shadow-md shadow-blue-600/25 active:scale-[0.98] transition-all"
+          >
+            Simpan Media
           </button>
         </div>
       </form>
@@ -932,7 +957,7 @@ export const SingleStepModal: React.FC<{
                 <span className="text-[10px] text-slate-400">Gunakan baris baru untuk sub-langkah</span>
               </div>
               <textarea
-                className={`${fieldClass} min-h-[120px] font-mono text-xs`}
+                className={`${fieldClass} min-h-[120px] font-mono text-sm sm:text-xs leading-relaxed`}
                 value={kontenWindows}
                 onChange={(e) => setKontenWindows(e.target.value)}
                 placeholder="1. Buka Settings > Devices & Printers&#10;2. Klik Add Printer & Scanner&#10;3. Pilih printer dari daftar Wi-Fi"
@@ -954,7 +979,7 @@ export const SingleStepModal: React.FC<{
                 <span className="text-[10px] text-slate-400">Gunakan baris baru untuk sub-langkah</span>
               </div>
               <textarea
-                className={`${fieldClass} min-h-[120px] font-mono text-xs`}
+                className={`${fieldClass} min-h-[120px] font-mono text-sm sm:text-xs leading-relaxed`}
                 value={kontenMac}
                 onChange={(e) => setKontenMac(e.target.value)}
                 placeholder="1. Buka Apple Menu > System Settings > Printers & Scanners&#10;2. Klik Add Printer (+)...&#10;3. Hubungkan via AirPrint atau Bonjour"
@@ -963,18 +988,18 @@ export const SingleStepModal: React.FC<{
           )}
         </div>
 
-        <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 sm:gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700"
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2.5 sm:py-2 text-sm sm:text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             Batal
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-5 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-5 py-2.5 sm:py-2 text-sm sm:text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 shadow-md shadow-blue-600/25 active:scale-[0.98] transition-all"
           >
             {isSubmitting ? 'Menyimpan...' : isNew ? 'Tambah Langkah' : 'Simpan Perubahan'}
           </button>
@@ -1098,18 +1123,18 @@ export const SingleFaqModal: React.FC<{
           />
         </div>
 
-        <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 sm:gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700"
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2.5 sm:py-2 text-sm sm:text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             Batal
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-5 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-5 py-2.5 sm:py-2 text-sm sm:text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 shadow-md shadow-blue-600/25 active:scale-[0.98] transition-all"
           >
             {isSubmitting ? 'Menyimpan...' : isNew ? 'Tambah FAQ' : 'Simpan Perubahan'}
           </button>
