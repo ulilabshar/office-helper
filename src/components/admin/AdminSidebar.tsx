@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { AdminTab } from '../../types/admin';
@@ -69,23 +69,35 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     navigate('/', { replace: true });
   };
 
+  // Prevent background scrolling on mobile when sidebar is open
+  useEffect(() => {
+    if (isOpen && typeof window !== 'undefined' && window.innerWidth < 1024) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
   return (
     <>
       {/* Mobile Backdrop Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm lg:hidden transition-opacity"
+          className="fixed inset-0 z-40 bg-slate-950/65 backdrop-blur-xs lg:hidden transition-opacity duration-300 animate-in fade-in"
           onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
       {/* Admin Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-72 border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between transition-transform duration-300 shadow-xl lg:shadow-none ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-[86vw] max-w-[328px] sm:w-80 lg:w-72 rounded-r-3xl lg:rounded-none border-r border-slate-200/90 bg-white dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none overflow-hidden ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="flex flex-col flex-1 overflow-y-auto">
+        <div className="flex flex-col flex-1 overflow-y-auto overscroll-contain no-scrollbar">
           {/* Header Brand */}
           <div className="h-16 flex items-center justify-between px-5 border-b border-slate-200 dark:border-slate-800">
             <Link to="/dashboard" className="flex items-center gap-2.5 group">
