@@ -158,17 +158,17 @@ export const StepGuide: React.FC<StepGuideProps> = ({
       )}
 
       {/* Main Linear Stepper Container */}
-      <div className="border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/40 rounded-2xl p-5 sm:p-7 backdrop-blur-sm shadow-sm transition-colors">
-        <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200 dark:border-slate-800">
-          <div>
-            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+      <div className="border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/40 rounded-2xl p-4 sm:p-7 backdrop-blur-sm shadow-sm transition-colors">
+        <div className="flex items-start sm:items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-200 dark:border-slate-800">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <span>Alur Langkah Panduan</span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Ikuti setiap tahapan di bawah ini secara berurutan ({allSteps.length} langkah).
             </p>
           </div>
-          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+          <span className="shrink-0 whitespace-nowrap text-xs font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shadow-xs">
             {allSteps.length} Langkah
           </span>
         </div>

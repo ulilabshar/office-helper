@@ -24,38 +24,38 @@ export const OsTabSelector: React.FC<OsTabSelectorProps> = ({
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
         {/* Windows Tab */}
         <button
           type="button"
           onClick={() => onSelectOS('windows')}
-          className={`relative flex items-center gap-3.5 p-3.5 sm:p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+          className={`relative flex items-center gap-2 sm:gap-3.5 p-2.5 sm:p-4 rounded-xl border-2 transition-all duration-200 text-left ${
             selectedOS === 'windows'
               ? 'border-blue-600 bg-blue-50 dark:border-blue-500 dark:bg-blue-600/15 shadow-md shadow-blue-500/10'
               : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/40 dark:hover:border-slate-700'
           }`}
         >
           <div
-            className={`flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-lg font-bold transition-colors shrink-0 ${
+            className={`flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-lg font-bold transition-colors shrink-0 ${
               selectedOS === 'windows'
                 ? 'bg-blue-600 text-white shadow-md'
                 : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
             }`}
           >
-            <Monitor className="h-5 w-5 sm:h-6 sm:w-6" />
+            <Monitor className="h-4.5 w-4.5 sm:h-6 sm:w-6" />
           </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-1">
-              <span className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">
+              <span className="font-extrabold text-xs sm:text-base text-slate-900 dark:text-white truncate">
                 Windows
               </span>
               {selectedOS === 'windows' && (
-                <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 dark:text-blue-400 shrink-0" />
               )}
             </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate">
-              Windows 11, 10, 8.1 (.exe)
+            <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 block truncate">
+              Windows 11, 10, 8.1
             </span>
           </div>
         </button>
@@ -64,33 +64,33 @@ export const OsTabSelector: React.FC<OsTabSelectorProps> = ({
         <button
           type="button"
           onClick={() => onSelectOS('mac')}
-          className={`relative flex items-center gap-3.5 p-3.5 sm:p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+          className={`relative flex items-center gap-2 sm:gap-3.5 p-2.5 sm:p-4 rounded-xl border-2 transition-all duration-200 text-left ${
             selectedOS === 'mac'
               ? 'border-indigo-600 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-600/15 shadow-md shadow-indigo-500/10'
               : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/40 dark:hover:border-slate-700'
           }`}
         >
           <div
-            className={`flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-lg font-bold transition-colors shrink-0 ${
+            className={`flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-lg font-bold transition-colors shrink-0 ${
               selectedOS === 'mac'
                 ? 'bg-indigo-600 text-white shadow-md'
                 : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
             }`}
           >
-            <Laptop className="h-5 w-5 sm:h-6 sm:w-6" />
+            <Laptop className="h-4.5 w-4.5 sm:h-6 sm:w-6" />
           </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-1">
-              <span className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">
-                macOS (Mac)
+              <span className="font-extrabold text-xs sm:text-base text-slate-900 dark:text-white truncate">
+                macOS
               </span>
               {selectedOS === 'mac' && (
-                <CheckCircle2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
               )}
             </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate">
-              macOS Sequoia, Sonoma, AirPrint (.dmg)
+            <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 block truncate">
+              macOS Sequoia, Sonoma
             </span>
           </div>
         </button>
