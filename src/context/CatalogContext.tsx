@@ -393,9 +393,12 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
       saveDevice: async (device, isNew) => {
         setState((prev) => {
           const exists = prev.devices.some((d) => d.id === device.id);
-          const devices = exists
+          const rawDevices = exists
             ? prev.devices.map((d) => (d.id === device.id ? device : d))
             : [...prev.devices, device];
+          const devices = [...rawDevices].sort(
+            (a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999)
+          );
           return {
             ...prev,
             devices,
@@ -428,7 +431,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             supported_os: device.supported_os && device.supported_os.length > 0 ? device.supported_os : ['windows', 'mac'],
             specs: device.specs || [],
             image_url: device.image?.trim() || null,
-            sort_order: device.sort_order ?? 0,
+            sort_order: device.sort_order ?? 1,
           };
 
           if (isNew) {

@@ -17,6 +17,7 @@ export const DeviceFormModal: React.FC<{
   const [slug, setSlug] = useState(initial?.slug ?? '');
   const [categorySlug, setCategorySlug] = useState(initial?.categorySlug ?? categories[0]?.slug ?? '');
   const [status, setStatus] = useState<Device['status']>(initial?.status ?? 'Ready');
+  const [sortOrder, setSortOrder] = useState<number>(initial?.sort_order ?? 1);
   const [description, setDescription] = useState(initial?.description ?? '');
   const [specsText, setSpecsText] = useState((initial?.specs || []).join(', '));
   const [osChoice, setOsChoice] = useState<'both' | 'windows' | 'mac'>(() => {
@@ -33,6 +34,7 @@ export const DeviceFormModal: React.FC<{
     setSlug(initial?.slug ?? (initial?.name ? slugify(initial.name) : ''));
     setCategorySlug(initial?.categorySlug ?? categories[0]?.slug ?? '');
     setStatus(initial?.status ?? 'Ready');
+    setSortOrder(initial?.sort_order ?? 1);
     setDescription(initial?.description ?? '');
     setImageUrl(initial?.image ?? '');
     setSpecsText((initial?.specs || []).join(', '));
@@ -64,6 +66,7 @@ export const DeviceFormModal: React.FC<{
           category: cat?.title ?? initial.category,
           categorySlug,
           status,
+          sort_order: Number(sortOrder) || 1,
           description: description.trim(),
           image: imageUrl.trim() || undefined,
           supported_os: osList,
@@ -80,11 +83,13 @@ export const DeviceFormModal: React.FC<{
         categorySlug,
         description: description.trim(),
         status,
+        sort_order: Number(sortOrder) || 1,
         specs: finalSpecs,
         supported_os: osList,
       });
       empty.image = imageUrl.trim() || undefined;
       empty.supported_os = osList;
+      empty.sort_order = Number(sortOrder) || 1;
       empty.steps = [];
       empty.faqs = [];
       onSave(empty, true);
@@ -127,7 +132,7 @@ export const DeviceFormModal: React.FC<{
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <div>
             <label className={labelClass}>Kategori</label>
             <CustomSelect
@@ -162,6 +167,17 @@ export const DeviceFormModal: React.FC<{
                 { value: 'windows', label: 'Hanya Windows' },
                 { value: 'mac', label: 'Hanya macOS' },
               ]}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Urutan (sort_order)</label>
+            <input
+              type="number"
+              className={fieldClass}
+              value={sortOrder}
+              onChange={(e) => setSortOrder(Number(e.target.value))}
+              min={1}
+              required
             />
           </div>
         </div>

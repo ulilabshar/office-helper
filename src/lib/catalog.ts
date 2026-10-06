@@ -84,6 +84,7 @@ export function createEmptyDevice(input: {
   specs: string[];
   slug?: string;
   supported_os?: string[];
+  sort_order?: number;
 }): Device {
   const base = input.slug || slugify(input.name) || 'perangkat';
   const supported = getDeviceSupportedOs({ supported_os: input.supported_os, specs: input.specs });
@@ -101,6 +102,7 @@ export function createEmptyDevice(input: {
     status: input.status,
     supported_os: input.supported_os || supported,
     specs: input.specs,
+    sort_order: input.sort_order ?? 1,
     steps: [],
     sections: {
       wifi: createEmptySection('wifi', 'Langkah Koneksi Wi-Fi', '1. Koneksi Wi-Fi', 'Wifi', 'Jaringan'),

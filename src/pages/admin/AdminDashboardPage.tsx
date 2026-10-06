@@ -232,16 +232,18 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
   const filteredDevices = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    return catalog.devices.filter((device) => {
-      const matchesSearch =
-        !q ||
-        device.name.toLowerCase().includes(q) ||
-        device.category.toLowerCase().includes(q) ||
-        device.description.toLowerCase().includes(q) ||
-        (device.specs && device.specs.some((s) => s.toLowerCase().includes(q)));
-      const matchesStatus = deviceFilterStatus === 'ALL' || device.status === deviceFilterStatus;
-      return matchesSearch && matchesStatus;
-    });
+    return catalog.devices
+      .filter((device) => {
+        const matchesSearch =
+          !q ||
+          device.name.toLowerCase().includes(q) ||
+          device.category.toLowerCase().includes(q) ||
+          device.description.toLowerCase().includes(q) ||
+          (device.specs && device.specs.some((s) => s.toLowerCase().includes(q)));
+        const matchesStatus = deviceFilterStatus === 'ALL' || device.status === deviceFilterStatus;
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
   }, [catalog.devices, searchQuery, deviceFilterStatus]);
 
 
@@ -407,9 +409,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     </div>
 
                     <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800">
-                      <span className="font-medium px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800">
-                        {d.category}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-[10px] px-1.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300">
+                          #{d.sort_order ?? 1}
+                        </span>
+                        <span className="font-medium px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800">
+                          {d.category}
+                        </span>
+                      </div>
                       <div className="flex items-center gap-1.5">
                         <Link
                           to={`/docs/${d.categorySlug}/${d.slug || slugify(d.name)}`}
@@ -455,6 +462,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800">
                     <tr>
+                      <th className="px-5 py-3.5 w-16 text-center">Urutan</th>
                       <th className="px-5 py-3.5">Perangkat</th>
                       <th className="px-5 py-3.5">Kategori</th>
                       <th className="px-5 py-3.5">Status</th>
@@ -464,6 +472,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                     {filteredDevices.map((d) => (
                       <tr key={d.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/40">
+                        <td className="px-5 py-4 text-center">
+                          <span className="font-bold text-xs px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300">
+                            #{d.sort_order ?? 1}
+                          </span>
+                        </td>
                         <td className="px-5 py-4">
                           <div className="font-bold">{d.name}</div>
                           <div className="text-[11px] text-slate-500 truncate max-w-xs">{d.description}</div>
