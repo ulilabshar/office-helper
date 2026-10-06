@@ -5,7 +5,7 @@ export const categoriesData: Category[] = [
     id: 'printer',
     slug: 'printer',
     title: 'Printer Kantor',
-    description: 'Panduan setup Wi-Fi, Bluetooth Direct, dan percetakan dokumen pada printer kantor.',
+    description: 'Panduan Penggunaan Printer Epson dan Mencetak Dokumen melalui Wi-Fi.',
     icon: 'Printer',
     deviceCount: 2,
     available: true,

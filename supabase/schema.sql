@@ -148,7 +148,7 @@ create policy "faqs_all" on public.faqs for all using (true) with check (true);
 
 -- 1. Kategori
 insert into public.categories (id, title, slug, description, icon, sort_order, is_active) values
-  ('11111111-1111-1111-1111-111111111101', 'Printer Kantor', 'printer', 'Panduan setup Wi-Fi, driver percetakan, dan cetak nirkabel.', 'Printer', 1, true),
+  ('11111111-1111-1111-1111-111111111101', 'Printer Kantor', 'printer', 'Panduan Penggunaan Printer Epson dan Mencetak Dokumen melalui Wi-Fi.', 'Printer', 1, true),
   ('11111111-1111-1111-1111-111111111102', 'Pembagian Link Dokumen', 'share-link', 'Panduan hak akses (Viewer, Commenter, Editor) Google Docs, Sheets, OneDrive.', 'Share2', 2, true),
   ('11111111-1111-1111-1111-111111111103', 'Smart TV, Proyektor & Display', 'proyektor', 'Panduan koneksi HDMI, Smart View, Miracast, dan Apple AirPlay.', 'Projector', 3, true),
   ('11111111-1111-1111-1111-111111111104', 'Video Conference & Meeting', 'video-conference', 'Setup kamera PTZ Lumens, mic speakerphone, Zoom, Google Meet & Teams.', 'Tv', 4, true),
