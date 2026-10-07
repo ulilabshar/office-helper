@@ -2,22 +2,8 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCatalog } from '../context/CatalogContext';
 import { DeviceCard } from '../components/DeviceCard';
-import { Printer, ChevronRight, Home, Layers, Share2, Tv, Fingerprint, FileText, ArrowLeft } from 'lucide-react';
-
-const getCategoryHeaderIcon = (iconName: string) => {
-  switch (iconName) {
-    case 'Printer':
-      return Printer;
-    case 'Share2':
-      return Share2;
-    case 'Projector':
-      return Tv;
-    case 'Fingerprint':
-      return Fingerprint;
-    default:
-      return FileText;
-  }
-};
+import { ChevronRight, Home, ArrowLeft } from 'lucide-react';
+import { getCategoryIcon } from '../utils/categoryIcons';
 
 export const CategoryPage: React.FC = () => {
   const { categorySlug, catSlug } = useParams<{ categorySlug?: string; catSlug?: string }>();
@@ -47,7 +33,7 @@ export const CategoryPage: React.FC = () => {
     );
   }
 
-  const IconComponent = getCategoryHeaderIcon(category.icon);
+  const IconComponent = getCategoryIcon(category.icon);
 
   return (
     <div className="space-y-6 sm:space-y-8">

@@ -19,6 +19,7 @@ import {
   SingleFaqModal,
 } from '../../components/admin/AdminCrudForms';
 import { CustomSelect } from '../../components/CustomSelect';
+import { getCategoryIcon } from '../../utils/categoryIcons';
 import {
   HardDrive,
   FolderTree,
@@ -535,19 +536,30 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                {filteredCategories.map((cat) => (
-                  <div key={cat.id} className="border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3 bg-white dark:bg-slate-900/60 shadow-xs">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h3 className="font-bold text-sm sm:text-base">{cat.title}</h3>
-                        <p className="text-xs text-slate-500 mt-1">{cat.description}</p>
+                {filteredCategories.map((cat) => {
+                  const CatIcon = getCategoryIcon(cat.icon);
+                  return (
+                    <div key={cat.id} className="border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3 bg-white dark:bg-slate-900/60 shadow-xs">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start gap-3 min-w-0">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50 shrink-0 mt-0.5">
+                            <CatIcon className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">{cat.title}</h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{cat.description}</p>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
+                          {cat.deviceCount} alat
+                        </span>
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0">
-                        {cat.deviceCount} alat
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
-                      <span className="font-mono text-[10px] text-slate-400">{cat.slug}</span>
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-1.5 font-mono text-[10px] text-slate-400">
+                          <span>{cat.slug}</span>
+                          <span>•</span>
+                          <span className="text-slate-500 dark:text-slate-400 font-sans font-medium">{cat.icon || 'Printer'}</span>
+                        </div>
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => setCategoryModal({ open: true, category: cat })}
@@ -576,7 +588,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                       </div>
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
             </div>
           )}

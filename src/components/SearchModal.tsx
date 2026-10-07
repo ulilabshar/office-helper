@@ -19,6 +19,7 @@ import {
   BookOpen,
   ArrowRight,
 } from 'lucide-react';
+import { getCategoryIcon } from '../utils/categoryIcons';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -31,23 +32,6 @@ interface SearchableFaqItem extends FAQItem {
   deviceSlug?: string;
   isGeneral: boolean;
 }
-
-const getDeviceIcon = (categorySlug: string) => {
-  switch (categorySlug) {
-    case 'printer':
-      return Printer;
-    case 'share-link':
-      return Share2;
-    case 'proyektor':
-      return Monitor;
-    case 'video-conference':
-      return Video;
-    case 'mesin-absensi':
-      return Fingerprint;
-    default:
-      return FileText;
-  }
-};
 
 export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
@@ -276,7 +260,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
               )}
               <div className="divide-y divide-slate-100 dark:divide-slate-800/60 border border-slate-200/60 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50/50 dark:bg-slate-950/30">
                 {filteredDevices.map((device) => {
-                  const IconComponent = getDeviceIcon(device.categorySlug);
+                  const catObj = categories.find((c) => c.slug === device.categorySlug || c.title.toLowerCase() === device.category.toLowerCase());
+                  const IconComponent = getCategoryIcon(catObj?.icon || device.categorySlug);
                   return (
                     <button
                       key={device.id}

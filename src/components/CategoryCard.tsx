@@ -1,26 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Category } from '../types/device';
-import { Printer, Tv, Fingerprint, ChevronRight, Layers, Share2 } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
+import { getCategoryIcon } from '../utils/categoryIcons';
 
 interface CategoryCardProps {
   category: Category;
 }
-
-const getCategoryIcon = (iconName: string) => {
-  switch (iconName) {
-    case 'Printer':
-      return Printer;
-    case 'Share2':
-      return Share2;
-    case 'Projector':
-      return Tv;
-    case 'Fingerprint':
-      return Fingerprint;
-    default:
-      return Layers;
-  }
-};
 
 export const CategoryCard: React.FC<CategoryCardProps> = ({ category }) => {
   const IconComponent = getCategoryIcon(category.icon);

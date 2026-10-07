@@ -13,31 +13,13 @@ import {
   X,
   Share2,
   MessageCircle,
-  Video,
-  Monitor,
 } from 'lucide-react';
+import { getCategoryIcon } from '../utils/categoryIcons';
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const getCategoryIcon = (iconName: string) => {
-  switch (iconName) {
-    case 'Printer':
-      return Printer;
-    case 'Share2':
-      return Share2;
-    case 'Projector':
-      return Monitor;
-    case 'Tv':
-      return Video;
-    case 'Fingerprint':
-      return Fingerprint;
-    default:
-      return BookOpen;
-  }
-};
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const location = useLocation();

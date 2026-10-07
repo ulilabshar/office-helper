@@ -2,31 +2,20 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Device } from '../types/device';
 import { slugify } from '../utils/slugify';
-import { Printer, ChevronRight, Wifi, Bluetooth, Settings, Share2, Lock, Eye, Copy, Tv, Fingerprint, FileText, Video, Monitor } from 'lucide-react';
+import { useCatalog } from '../context/CatalogContext';
+import { ChevronRight, Wifi, Bluetooth, Settings, Lock, Eye, Copy } from 'lucide-react';
+import { getCategoryIcon } from '../utils/categoryIcons';
 
 interface DeviceCardProps {
   device: Device;
 }
 
-const getDeviceIcon = (categorySlug: string) => {
-  switch (categorySlug) {
-    case 'printer':
-      return Printer;
-    case 'share-link':
-      return Share2;
-    case 'proyektor':
-      return Monitor;
-    case 'video-conference':
-      return Video;
-    case 'mesin-absensi':
-      return Fingerprint;
-    default:
-      return FileText;
-  }
-};
-
 export const DeviceCard: React.FC<DeviceCardProps> = ({ device }) => {
-  const IconComponent = getDeviceIcon(device.categorySlug);
+  const { categories } = useCatalog();
+  const matchedCategory = categories.find(
+    (c) => c.slug === device.categorySlug || c.title.toLowerCase() === device.category.toLowerCase()
+  );
+  const IconComponent = getCategoryIcon(matchedCategory?.icon || device.categorySlug);
 
   return (
     <div className="group border-2 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/60 rounded-xl p-5 backdrop-blur-sm hover:border-blue-500/60 dark:hover:border-blue-500/50 dark:hover:bg-slate-900/90 transition-all duration-200 shadow-sm flex flex-col justify-between">

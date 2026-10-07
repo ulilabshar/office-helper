@@ -4,6 +4,7 @@ import { MediaAsset } from '../../types/admin';
 import { createEmptyDevice, emptyStep, slugify, extractDeviceSteps, getDeviceSupportedOs } from '../../lib/catalog';
 import { CrudModal, fieldClass, labelClass } from './CrudModal';
 import { CustomSelect } from '../CustomSelect';
+import { getCategorySelectOptions } from '../../utils/categoryIcons';
 
 export const DeviceFormModal: React.FC<{
   isOpen: boolean;
@@ -240,10 +241,11 @@ export const CategoryFormModal: React.FC<{
   onSave: (category: Category, isNew: boolean) => void;
 }> = ({ isOpen, onClose, initial, onSave }) => {
   const isNew = !initial;
+  const iconOptions = React.useMemo(() => getCategorySelectOptions(), []);
   const [title, setTitle] = useState(initial?.title ?? '');
   const [slug, setSlug] = useState(initial?.slug ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
-  const [icon, setIcon] = useState(initial?.icon ?? '');
+  const [icon, setIcon] = useState(initial?.icon ?? 'Printer');
   const [sortOrder, setSortOrder] = useState<number>(initial?.sort_order ?? 1);
   const [available, setAvailable] = useState(initial?.available ?? true);
 
@@ -251,7 +253,7 @@ export const CategoryFormModal: React.FC<{
     setTitle(initial?.title ?? '');
     setSlug(initial?.slug ?? '');
     setDescription(initial?.description ?? '');
-    setIcon(initial?.icon ?? '');
+    setIcon(initial?.icon ?? 'Printer');
     setSortOrder(initial?.sort_order ?? 1);
     setAvailable(initial?.available ?? true);
   }, [initial, isOpen]);
@@ -265,7 +267,7 @@ export const CategoryFormModal: React.FC<{
         slug: nextSlug,
         title: title.trim(),
         description: description.trim(),
-        icon: icon.trim() || 'Monitor',
+        icon: icon.trim() || 'Printer',
         available,
         sort_order: Number(sortOrder) || 1,
         deviceCount: initial?.deviceCount ?? 0,
@@ -312,15 +314,7 @@ export const CategoryFormModal: React.FC<{
           <CustomSelect
             value={icon}
             onChange={setIcon}
-            options={[
-              { value: 'Printer', label: 'Printer' },
-              { value: 'Share2', label: 'Share2 (Sharing Dokumen / Folder)' },
-              { value: 'Projector', label: 'Projector (Proyektor)' },
-              { value: 'Tv', label: 'Smart TV (Televisi)' },
-              { value: 'Fingerprint', label: 'Fingerprint (Mesin Absensi)' },
-              { value: 'Monitor', label: 'Monitor (Layar / Display)' },
-              { value: 'FileText', label: 'FileText (Dokumen Umum)' },
-            ]}
+            options={iconOptions}
             placeholder="Pilih Ikon Kategori..."
           />
         </div>
