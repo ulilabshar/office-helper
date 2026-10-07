@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCatalog } from '../context/CatalogContext';
 import { DeviceCard } from '../components/DeviceCard';
-import { ChevronRight, Home, ArrowLeft } from 'lucide-react';
+import { ChevronRight, Home, ArrowLeft, Layers } from 'lucide-react';
 import { getCategoryIcon } from '../utils/categoryIcons';
 
 export const CategoryPage: React.FC = () => {

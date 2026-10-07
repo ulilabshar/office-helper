@@ -24,6 +24,7 @@ import {
   deleteCategory as sbDeleteCategory,
   createDevice as sbCreateDevice,
   updateDevice as sbUpdateDevice,
+  deleteDevice as sbDeleteDevice,
   createStep,
   updateStep,
   deleteStep,

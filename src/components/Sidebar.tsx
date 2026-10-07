@@ -206,7 +206,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                             <span className="truncate pr-1">{device.name}</span>
                             <ChevronRight
                               className={`h-3 w-3 shrink-0 opacity-60 ${
-                                location.pathname.includes(device.slug) ? 'text-white' : ''
+                                location.pathname.includes(device.slug || '') ? 'text-white' : ''
                               }`}
                             />
                           </NavLink>

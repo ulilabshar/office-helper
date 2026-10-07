@@ -38,7 +38,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
   const [activeFilter, setActiveFilter] = useState<'all' | 'devices' | 'faq'>('all');
   const [expandedFaqId, setExpandedFaqId] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { devices, generalFaqs } = useCatalog();
+  const { devices, generalFaqs, categories } = useCatalog();
 
   // Reset state saat modal ditutup
   useEffect(() => {

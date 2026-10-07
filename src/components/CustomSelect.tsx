@@ -8,6 +8,8 @@ export interface CustomSelectOption {
   icon?: React.ReactNode;
 }
 
+export type SelectOption = CustomSelectOption;
+
 export interface CustomSelectProps {
   value: string;
   onChange: (value: string) => void;
