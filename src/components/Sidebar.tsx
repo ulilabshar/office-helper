@@ -244,23 +244,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Quick Help Footer Card with WhatsApp Link */}
-          <div className="pt-2">
-            <div className="p-3.5 rounded-2xl border border-emerald-200/90 dark:border-emerald-500/30 bg-emerald-50/70 dark:bg-emerald-500/10 space-y-2.5 shadow-xs">
-              <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-300">
+          <div className="pt-1">
+            <div className="p-2.5 rounded-xl border border-emerald-200/90 dark:border-emerald-500/30 bg-emerald-50/70 dark:bg-emerald-500/10 space-y-2 shadow-xs">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
                 <Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />
                 <span>Butuh Bantuan IT Support?</span>
               </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                Hubungi Tim IT Support kantor secara langsung via WhatsApp:
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">
+                Hubungi via WhatsApp: <span className="font-semibold text-emerald-700 dark:text-emerald-400">+62 851-5781-6339</span>
               </p>
               <a
                 href="https://wa.me/6285157816339"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 w-full px-3 py-2 text-xs font-bold rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 active:scale-95 transition-all shadow-sm"
+                className="inline-flex items-center justify-center gap-1.5 w-full px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 active:scale-95 transition-all shadow-xs whitespace-nowrap"
               >
-                <MessageCircle className="h-4 w-4 shrink-0" />
-                <span>Chat IT Support (+6285157816339)</span>
+                <MessageCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>Chat IT Support</span>
               </a>
             </div>
           </div>
