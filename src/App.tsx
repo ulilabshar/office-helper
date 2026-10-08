@@ -9,7 +9,10 @@ import { HomePage } from './pages/HomePage';
 import { CategoryPage } from './pages/CategoryPage';
 import { DeviceDetailPage } from './pages/DeviceDetailPage';
 import { LoginPage } from './pages/LoginPage';
-import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
+
+const AdminDashboardPage = React.lazy(() =>
+  import('./pages/admin/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage }))
+);
 
 const ScrollToTop: React.FC = () => {
   const { pathname } = useLocation();
@@ -64,17 +67,28 @@ const AppContent: React.FC = () => {
     return (
       <>
         <ScrollToTop />
-        <Routes>
-          <Route
-            path="/dashboard"
-            element={<AdminDashboardPage darkMode={darkMode} setDarkMode={setDarkMode} />}
-          />
-          <Route
-            path="/dashboard/:tab"
-            element={<AdminDashboardPage darkMode={darkMode} setDarkMode={setDarkMode} />}
-          />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+        <React.Suspense
+          fallback={
+            <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-950">
+              <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-sm font-semibold">
+                <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                <span>Memuat Dashboard Admin...</span>
+              </div>
+            </div>
+          }
+        >
+          <Routes>
+            <Route
+              path="/dashboard"
+              element={<AdminDashboardPage darkMode={darkMode} setDarkMode={setDarkMode} />}
+            />
+            <Route
+              path="/dashboard/:tab"
+              element={<AdminDashboardPage darkMode={darkMode} setDarkMode={setDarkMode} />}
+            />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </React.Suspense>
       </>
     );
   }

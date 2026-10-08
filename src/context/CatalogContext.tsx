@@ -145,18 +145,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
               sort_order: s.sort_order,
             }));
 
-            const winSteps: SetupStep[] = devSteps.map((s) => ({
-              id: s.id,
-              device_id: s.device_id,
-              title: s.title,
-              description: s.description || '',
-              konten_windows: s.konten_windows || '',
-              konten_mac: s.konten_mac || '',
-              details: s.konten_windows
-                ? s.konten_windows.split('\n').map((l) => l.trim()).filter(Boolean)
-                : [],
-              sort_order: s.sort_order,
-            }));
+            const winSteps = stepsList;
 
             const macSteps: SetupStep[] = devSteps.map((s) => ({
               id: s.id,
@@ -416,7 +405,11 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         if (isSupabaseReady && supabase) {
           const catObj = state.categories.find(
-            (c) => c.slug === device.categorySlug || c.title.toLowerCase() === device.category.toLowerCase()
+            (c) =>
+              c.slug === device.categorySlug ||
+              c.slug?.toLowerCase() === device.categorySlug?.toLowerCase() ||
+              c.id === device.categorySlug ||
+              c.title.toLowerCase() === device.category.toLowerCase()
           );
           if (!catObj) {
             console.error('Kategori tidak ditemukan untuk perangkat:', device.categorySlug);

@@ -3,11 +3,13 @@ import { useParams, Link } from 'react-router-dom';
 import { useCatalog } from '../context/CatalogContext';
 import { StepGuide } from '../components/StepGuide';
 import { AccordionFaq } from '../components/AccordionFaq';
-import { Printer, ChevronRight, Home, Tag, ArrowLeft, Share2, Maximize2, X } from 'lucide-react';
+import { ShareLinkSimulator } from '../components/ShareLinkSimulator';
+import { ChevronRight, Home, Tag, ArrowLeft, Maximize2, X } from 'lucide-react';
+import { getCategoryIcon } from '../utils/categoryIcons';
 
 export const DeviceDetailPage: React.FC = () => {
   const { deviceSlug, deviceId } = useParams<{ deviceSlug?: string; deviceId?: string }>();
-  const { getDeviceBySlug, getDeviceById } = useCatalog();
+  const { getDeviceBySlug, getDeviceById, categories } = useCatalog();
 
   const slugOrId = deviceSlug || deviceId || '';
   const device = getDeviceBySlug ? getDeviceBySlug(slugOrId) : getDeviceById(slugOrId);
@@ -34,6 +36,11 @@ export const DeviceDetailPage: React.FC = () => {
 
   const isShareLinkCategory = device.categorySlug === 'share-link';
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+
+  const matchedCategory = categories.find(
+    (c) => c.slug === device.categorySlug || c.title.toLowerCase() === device.category.toLowerCase()
+  );
+  const DeviceIcon = getCategoryIcon(matchedCategory?.icon || device.categorySlug);
 
   return (
     <div className="space-y-5 sm:space-y-8">
@@ -90,7 +97,7 @@ export const DeviceDetailPage: React.FC = () => {
           <div className="flex-1 min-w-0 space-y-4">
             <div className="flex items-start gap-3 sm:gap-3.5">
               <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/20 shrink-0 mt-0.5">
-                {isShareLinkCategory ? <Share2 className="h-5 w-5 sm:h-6 sm:w-6" /> : <Printer className="h-5 w-5 sm:h-6 sm:w-6" />}
+                <DeviceIcon className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -154,6 +161,9 @@ export const DeviceDetailPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Interactive Share Link Simulator (jika kategori pembagian link dokumen) */}
+      {isShareLinkCategory && <ShareLinkSimulator />}
 
       {/* Main Interactive Stepper Guide */}
       <StepGuide steps={device.steps} sections={device.sections} supportedOs={device.supported_os} />
