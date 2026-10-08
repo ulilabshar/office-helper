@@ -6,26 +6,6 @@ export type AdminTab =
   | 'faq'
   | 'settings';
 
-export interface ActivityLog {
-  id: string;
-  user: string;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'AUTH' | 'SYSTEM';
-  target: string;
-  description: string;
-  timestamp: string;
-  ipAddress?: string;
-}
-
-export interface MediaAsset {
-  id: string;
-  name: string;
-  type: 'driver' | 'document' | 'image' | 'guide';
-  fileSize: string;
-  targetDevice: string;
-  targetOs: 'windows' | 'mac' | 'all';
-  url: string;
-  updatedAt: string;
-}
 
 export interface SystemSetting {
   officeName: string;

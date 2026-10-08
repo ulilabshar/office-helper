@@ -33,7 +33,7 @@ export const interactiveDisplay75: Device = {
             tip: 'Jika hanya menancapkan kabel HDMI tanpa kabel Touch USB, layar 75" hanya berfungsi sebagai monitor biasa tanpa respon sentuhan.'
           },
           {
-            title: 'Langkah 2: Verifikasi Driver Touchscreen Windows (Plug & Play)',
+            title: 'Langkah 2: Verifikasi Respon Touchscreen Windows (Plug & Play)',
             description: 'Windows 10 / 11 akan otomatis mendeteksi Interactive Display sebagai [HID-compliant touch screen].',
             details: [
               'Sentuh layar 75" menggunakan jari atau stylus pen bawaan.',

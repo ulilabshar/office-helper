@@ -1,8 +1,8 @@
 import { Category, Device, DeviceSection, FAQItem, SetupStep } from '../types/device';
-import { ActivityLog, MediaAsset, SystemSetting } from '../types/admin';
+import { SystemSetting } from '../types/admin';
 import { categoriesData } from '../data/categories';
 import { devicesData } from '../data/devices';
-import { defaultSystemSettings, initialActivityLogs, initialMediaAssets } from '../data/adminData';
+import { defaultSystemSettings } from '../data/adminData';
 
 export const CATALOG_STORAGE_KEY = 'office_docs_catalog_v1';
 
@@ -10,8 +10,6 @@ export interface CatalogState {
   categories: Category[];
   devices: Device[];
   generalFaqs: FAQItem[];
-  mediaAssets: MediaAsset[];
-  activityLogs: ActivityLog[];
   settings: SystemSetting;
 }
 
@@ -22,9 +20,9 @@ export const DEFAULT_GENERAL_FAQS: FAQItem[] = [
       'Pastikan komputer atau laptop kamu terhubung ke SSID Wi-Fi kantor yang sama (frekuensi 2.4 GHz). Coba matikan dan nyalakan kembali (power cycle) printer dan router Wi-Fi.',
   },
   {
-    question: 'Di mana saya bisa mengunduh installer driver printer yang resmi?',
+    question: 'Bagaimana cara menambahkan printer nirkabel di laptop tanpa kabel USB?',
     answer:
-      'Setiap halaman panduan spesifik printer pada website ini telah menyediakan link installer resmi dan langkah setup driver yang sesuai untuk Windows & macOS.',
+      'Pastikan printer dan laptop terhubung ke jaringan Wi-Fi yang sama, lalu tambahkan printer melalui menu Printers & Scanners di Windows atau macOS menggunakan fitur penemuan otomatis jaringan.',
   },
   {
     question: 'Bagaimana cara membagikan link dokumen agar tidak bisa diubah orang lain?',
@@ -179,8 +177,6 @@ export function seedCatalog(): CatalogState {
     })),
     devices: devicesData,
     generalFaqs: DEFAULT_GENERAL_FAQS,
-    mediaAssets: initialMediaAssets,
-    activityLogs: initialActivityLogs,
     settings: defaultSystemSettings,
   };
 }
@@ -202,8 +198,6 @@ export function loadCatalog(): CatalogState {
       categories: parsed.categories?.length ? parsed.categories : seed.categories,
       devices: parsed.devices?.length ? parsed.devices : seed.devices,
       generalFaqs: parsed.generalFaqs ?? seed.generalFaqs,
-      mediaAssets: parsed.mediaAssets ?? seed.mediaAssets,
-      activityLogs: parsed.activityLogs ?? seed.activityLogs,
       settings: parsed.settings ?? seed.settings,
     };
   } catch {

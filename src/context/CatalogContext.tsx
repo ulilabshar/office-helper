@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Category, Device, DeviceSection, FAQItem, SetupStep } from '../types/device';
-import { ActivityLog, MediaAsset, SystemSetting } from '../types/admin';
+import { SystemSetting } from '../types/admin';
 import {
   CatalogState,
   createEmptyDevice,
@@ -37,7 +37,6 @@ import {
   isValidUuid,
   resolveDeviceUuid,
 } from '../lib/supabase';
-import { useAuth } from './AuthContext';
 
 function parseFaqText(raw?: string | null): FAQItem[] {
   if (!raw) return [];
@@ -66,8 +65,6 @@ interface CatalogContextType {
   categories: Category[];
   devices: Device[];
   generalFaqs: FAQItem[];
-  mediaAssets: MediaAsset[];
-  activityLogs: ActivityLog[];
   settings: SystemSetting;
   isLoadingSupabase: boolean;
   getDeviceById: (id: string) => Device | undefined;
@@ -86,15 +83,12 @@ interface CatalogContextType {
   saveGeneralFaqs: (faqs: FAQItem[]) => Promise<void>;
   saveSingleFaq: (faq: FAQItem, isNew: boolean) => Promise<void>;
   deleteSingleFaq: (faqId: string, deviceId?: string | null) => Promise<void>;
-  saveMedia: (asset: MediaAsset, isNew: boolean) => void;
-  deleteMedia: (id: string) => void;
   saveSettings: (settings: SystemSetting) => void;
 }
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
 
 export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
   const [state, setState] = useState<CatalogState>(() => loadCatalog());
   const [isLoadingSupabase, setIsLoadingSupabase] = useState(false);
 
@@ -265,23 +259,6 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   }, [state]);
 
-  const pushLog = (
-    prev: CatalogState,
-    action: ActivityLog['action'],
-    target: string,
-    description: string
-  ): ActivityLog[] => {
-    const log: ActivityLog = {
-      id: `log-${Date.now()}`,
-      user: user?.name || 'Administrator IT',
-      action,
-      target,
-      description,
-      timestamp: 'Baru saja',
-    };
-    return [log, ...prev.activityLogs].slice(0, 80);
-  };
-
   const value = useMemo<CatalogContextType>(() => {
     const categories = withDeviceCounts(state.categories, state.devices);
 
@@ -289,8 +266,6 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
       categories,
       devices: state.devices,
       generalFaqs: state.generalFaqs,
-      mediaAssets: state.mediaAssets,
-      activityLogs: state.activityLogs,
       settings: state.settings,
       isLoadingSupabase,
       getDeviceById: (id) =>
@@ -327,12 +302,6 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           return {
             ...prev,
             categories: updatedCategories,
-            activityLogs: pushLog(
-              prev,
-              isNew ? 'CREATE' : 'UPDATE',
-              category.title,
-              isNew ? `Kategori "${category.title}" ditambahkan.` : `Kategori "${category.title}" diperbarui.`
-            ),
           };
         });
 
@@ -372,7 +341,6 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             ...prev,
             categories: prev.categories.filter((c) => c.id !== id),
             devices: prev.devices.filter((d) => d.categorySlug !== cat?.slug),
-            activityLogs: pushLog(prev, 'DELETE', cat?.title || 'Kategori', `Kategori "${cat?.title}" dihapus.`),
           };
         });
 
@@ -392,14 +360,6 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           return {
             ...prev,
             devices,
-            activityLogs: pushLog(
-              prev,
-              isNew || !exists ? 'CREATE' : 'UPDATE',
-              device.name,
-              isNew || !exists
-                ? `Perangkat "${device.name}" ditambahkan.`
-                : `Perangkat "${device.name}" diperbarui.`
-            ),
           };
         });
 
@@ -470,12 +430,6 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           return {
             ...prev,
             devices: prev.devices.filter((d) => d.id !== id),
-            activityLogs: pushLog(
-              prev,
-              'DELETE',
-              device?.name || 'Perangkat',
-              `Perangkat "${device?.name}" dihapus.`
-            ),
           };
         });
 
@@ -489,12 +443,6 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           ...prev,
           devices: prev.devices.map((d) =>
             (d.id === deviceId || d.id === targetDeviceId) ? { ...d, steps } : d
-          ),
-          activityLogs: pushLog(
-            prev,
-            'UPDATE',
-            'Panduan Langkah',
-            `Langkah panduan perangkat diperbarui.`
           ),
         }));
 
@@ -570,12 +518,6 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             return {
               ...prev,
               devices: nextDevices,
-              activityLogs: pushLog(
-                prev,
-                isCreateAction ? 'CREATE' : 'UPDATE',
-                step.title,
-                `Langkah panduan "${step.title}" ${isCreateAction ? 'ditambahkan' : 'diperbarui'}.`
-              ),
             };
           });
         };
@@ -688,12 +630,6 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             ...d,
             steps: (d.steps || []).filter((s) => s.id !== stepId),
           })),
-          activityLogs: pushLog(
-            prev,
-            'DELETE',
-            'Langkah Panduan',
-            'Langkah panduan berhasil dihapus.'
-          ),
         }));
       },
       saveDeviceSection: async (deviceId, sectionKey, section) => {
@@ -709,12 +645,6 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
                     : { [sectionKey]: section } as any,
                 }
               : d
-          ),
-          activityLogs: pushLog(
-            prev,
-            'UPDATE',
-            section.title,
-            `Panduan "${section.title}" diperbarui.`
           ),
         }));
 
@@ -753,7 +683,6 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           return {
             ...prev,
             devices: prev.devices.map((d) => (d.id === deviceId || d.id === targetDeviceId ? { ...d, faqs } : d)),
-            activityLogs: pushLog(prev, 'UPDATE', device?.name || 'FAQ', `FAQ perangkat diperbarui.`),
           };
         });
 
@@ -765,7 +694,6 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setState((prev) => ({
           ...prev,
           generalFaqs: faqs,
-          activityLogs: pushLog(prev, 'UPDATE', 'FAQ Umum', 'Bank FAQ umum diperbarui.'),
         }));
 
         if (isSupabaseReady && supabase) {
@@ -802,12 +730,6 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 ...prev,
                 generalFaqs: nextGeneralFaqs,
                 devices: cleanedDevices,
-                activityLogs: pushLog(
-                  prev,
-                  isCreateAction ? 'CREATE' : 'UPDATE',
-                  faq.question,
-                  `FAQ Umum "${faq.question}" ${isCreateAction ? 'ditambahkan' : 'diperbarui'}.`
-                ),
               };
             } else {
               const nextDevices = cleanedDevices.map((d) => {
@@ -826,24 +748,10 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 return d;
               });
 
-              const targetDevName =
-                prev.devices.find(
-                  (d) =>
-                    d.id === targetDeviceId ||
-                    d.slug === targetDeviceId ||
-                    resolveDeviceUuid(d.id, prev.devices) === targetDeviceId
-                )?.name || 'Perangkat';
-
               return {
                 ...prev,
                 generalFaqs: cleanedGeneralFaqs,
                 devices: nextDevices,
-                activityLogs: pushLog(
-                  prev,
-                  isCreateAction ? 'CREATE' : 'UPDATE',
-                  faq.question,
-                  `FAQ [${targetDevName}] "${faq.question}" ${isCreateAction ? 'ditambahkan' : 'diperbarui'}.`
-                ),
               };
             }
           });
@@ -938,46 +846,16 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             ...d,
             faqs: (d.faqs || []).filter((f) => f.id !== faqId),
           })),
-          activityLogs: pushLog(prev, 'DELETE', 'FAQ', 'FAQ berhasil dihapus.'),
         }));
-      },
-      saveMedia: (asset, isNew) => {
-        setState((prev) => {
-          const exists = prev.mediaAssets.some((m) => m.id === asset.id);
-          const mediaAssets = exists
-            ? prev.mediaAssets.map((m) => (m.id === asset.id ? asset : m))
-            : [...prev.mediaAssets, asset];
-          return {
-            ...prev,
-            mediaAssets,
-            activityLogs: pushLog(
-              prev,
-              isNew || !exists ? 'CREATE' : 'UPDATE',
-              asset.name,
-              isNew || !exists ? `Media "${asset.name}" ditambahkan.` : `Media "${asset.name}" diperbarui.`
-            ),
-          };
-        });
-      },
-      deleteMedia: (id) => {
-        setState((prev) => {
-          const asset = prev.mediaAssets.find((m) => m.id === id);
-          return {
-            ...prev,
-            mediaAssets: prev.mediaAssets.filter((m) => m.id !== id),
-            activityLogs: pushLog(prev, 'DELETE', asset?.name || 'Media', `Media "${asset?.name}" dihapus.`),
-          };
-        });
       },
       saveSettings: (settings) => {
         setState((prev) => ({
           ...prev,
           settings,
-          activityLogs: pushLog(prev, 'UPDATE', 'Pengaturan Sistem', 'Pengaturan sistem disimpan.'),
         }));
       },
     };
-  }, [state, user?.name, isLoadingSupabase]);
+  }, [state, isLoadingSupabase]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 };

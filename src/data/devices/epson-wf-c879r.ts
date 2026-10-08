@@ -85,7 +85,7 @@ export const epsonWfC879r: Device = {
               'Buka Wi-Fi menu bar di macOS, hubungkan ke SSID `DIRECT-WF-C879R`.',
               'Buka dokumen di Mac, tekan ⌘P, dan pilih "Epson WF-C879R Direct".'
             ],
-            tip: 'AirPrint pada macOS tidak memerlukan driver tambahan dan langsung siap mencetak dokumen A3/A4.'
+            tip: 'AirPrint pada macOS mendeteksi printer otomatis secara nirkabel dan langsung siap mencetak dokumen A3/A4.'
           }
         ]
       }
@@ -94,22 +94,22 @@ export const epsonWfC879r: Device = {
       id: 'finish',
       title: 'Proses Setup Selesai & Test Print',
       iconName: 'CheckCircle2',
-      badge: 'Driver & Verifikasi',
+      badge: 'Verifikasi Percetakan',
       osSteps: {
         windows: [
           {
-            title: 'Langkah 1 (Windows): Instal Universal Printer Driver PCL6 (.exe)',
-            description: 'Instal paket driver korporat Epson Universal Print Driver pada komputer Windows.',
+            title: 'Langkah 1 (Windows): Menghubungkan Printer Jaringan di Windows',
+            description: 'Sambungkan Epson WF-C879R melalui menu Printers & Scanners di Windows.',
             details: [
-              'Unduh dan jalankan installer `Epson_WF-C879R_UPD_Win.exe`.',
-              'Pilih opsi "Search Network Printers Automatically".',
-              'Pilih printer WF-C879R dari daftar dan selesaikan instalasi.'
+              'Buka Windows Settings > Bluetooth & devices > Printers & scanners.',
+              'Klik tombol [Add device] untuk memindai printer jaringan kantor.',
+              'Pilih printer WF-C879R dari daftar dan selesaikan pemasangan.'
             ],
-            codeSnippet: 'Epson Universal Print Driver PCL6 / PS3 (Windows)'
+            codeSnippet: 'Windows Settings > Printers & scanners > Add device'
           },
           {
             title: 'Langkah 2 (Windows): Konfigurasi Tray Kertas A4/A3 & Test Print',
-            description: 'Atur ukuran kertas pada driver Windows.',
+            description: 'Atur preferensi ukuran kertas pada printer di Windows.',
             details: [
               'Buka Control Panel > Devices and Printers.',
               'Klik kanan Epson WF-C879R > Printing Preferences.',
@@ -120,14 +120,14 @@ export const epsonWfC879r: Device = {
         ],
         mac: [
           {
-            title: 'Langkah 1 (macOS): Instalasi Driver Mac (.dmg) & Pendaftaran AirPrint',
-            description: 'Tambahkan printer di macOS via System Settings.',
+            title: 'Langkah 1 (macOS): Pendaftaran Printer Nirkabel via AirPrint',
+            description: 'Tambahkan printer di macOS via System Settings secara nirkabel.',
             details: [
-              'Unduh paket driver macOS `WF-C879R_Mac_Driver.dmg` dari situs Epson.',
+              'Pastikan Mac dan printer terhubung pada Wi-Fi kantor yang sama.',
               'Buka Apple Menu () > System Settings > Printers & Scanners.',
               'Klik (+), pilih Epson WF-C879R yang terdeteksi di jaringan Bonjour, dan pilih "Auto Select AirPrint".'
             ],
-            codeSnippet: 'Epson WF-C879R macOS Driver Package (.dmg)'
+            codeSnippet: 'macOS System Settings > Printers & Scanners > AirPrint'
           },
           {
             title: 'Langkah 2 (macOS): Cetak Halaman Uji di Mac',
@@ -178,8 +178,8 @@ export const epsonWfC879r: Device = {
       answer: 'Printer ini mendukung total kapasitas hingga 1.835 lembar kertas dengan opsi cassette tray tambahan.'
     },
     {
-      question: 'Apakah driver macOS mendukung fitur duplex (cetak bolak-balik) A3?',
-      answer: 'Ya, driver macOS dan AirPrint mendukung penuh cetak otomatis 2-sisi (Auto Duplex) hingga ukuran A3.'
+      question: 'Apakah pencetakan di macOS mendukung fitur duplex (cetak bolak-balik) A3?',
+      answer: 'Ya, protokol AirPrint di macOS mendukung penuh cetak otomatis 2-sisi (Auto Duplex) hingga ukuran A3.'
     }
   ]
 };

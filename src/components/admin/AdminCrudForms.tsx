@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Category, Device, DeviceSection, FAQItem, SetupStep } from '../../types/device';
-import { MediaAsset } from '../../types/admin';
 import { createEmptyDevice, emptyStep, slugify, extractDeviceSteps, getDeviceSupportedOs } from '../../lib/catalog';
 import { CrudModal, fieldClass, labelClass } from './CrudModal';
 import { CustomSelect } from '../CustomSelect';
@@ -719,112 +718,7 @@ export const FaqFormModal: React.FC<{
   );
 };
 
-export const MediaFormModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  initial?: MediaAsset | null;
-  onSave: (asset: MediaAsset, isNew: boolean) => void;
-}> = ({ isOpen, onClose, initial, onSave }) => {
-  const isNew = !initial;
-  const [name, setName] = useState(initial?.name ?? '');
-  const [type, setType] = useState<MediaAsset['type']>(initial?.type ?? 'driver');
-  const [fileSize, setFileSize] = useState(initial?.fileSize ?? '');
-  const [targetDevice, setTargetDevice] = useState(initial?.targetDevice ?? '');
-  const [targetOs, setTargetOs] = useState<MediaAsset['targetOs']>(initial?.targetOs ?? 'all');
-  const [url, setUrl] = useState(initial?.url ?? '');
 
-  React.useEffect(() => {
-    setName(initial?.name ?? '');
-    setType(initial?.type ?? 'driver');
-    setFileSize(initial?.fileSize ?? '');
-    setTargetDevice(initial?.targetDevice ?? '');
-    setTargetOs(initial?.targetOs ?? 'all');
-    setUrl(initial?.url ?? '');
-  }, [initial, isOpen]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(
-      {
-        id: initial?.id ?? `media-${Date.now()}`,
-        name: name.trim(),
-        type,
-        fileSize: fileSize.trim() || '-',
-        targetDevice: targetDevice.trim(),
-        targetOs,
-        url: url.trim(),
-        updatedAt: new Date().toISOString().slice(0, 10),
-      },
-      isNew
-    );
-    onClose();
-  };
-
-  return (
-    <CrudModal isOpen={isOpen} onClose={onClose} title={isNew ? 'Tambah Media' : 'Ubah Media'}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className={labelClass}>Nama file</label>
-          <input className={fieldClass} value={name} onChange={(e) => setName(e.target.value)} required />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className={labelClass}>Tipe</label>
-            <CustomSelect
-              value={type}
-              onChange={(val) => setType(val as MediaAsset['type'])}
-              options={[
-                { value: 'driver', label: 'driver' },
-                { value: 'document', label: 'document' },
-                { value: 'image', label: 'image' },
-                { value: 'guide', label: 'guide' },
-              ]}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>OS</label>
-            <CustomSelect
-              value={targetOs}
-              onChange={(val) => setTargetOs(val as MediaAsset['targetOs'])}
-              options={[
-                { value: 'all', label: 'all (semua)' },
-                { value: 'windows', label: 'windows' },
-                { value: 'mac', label: 'mac' },
-              ]}
-            />
-          </div>
-        </div>
-        <div>
-          <label className={labelClass}>Target perangkat</label>
-          <input className={fieldClass} value={targetDevice} onChange={(e) => setTargetDevice(e.target.value)} />
-        </div>
-        <div>
-          <label className={labelClass}>Ukuran</label>
-          <input className={fieldClass} value={fileSize} onChange={(e) => setFileSize(e.target.value)} />
-        </div>
-        <div>
-          <label className={labelClass}>URL</label>
-          <input className={fieldClass} value={url} onChange={(e) => setUrl(e.target.value)} required />
-        </div>
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 sm:gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2.5 sm:py-2 text-sm sm:text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            Batal
-          </button>
-          <button
-            type="submit"
-            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-5 py-2.5 sm:py-2 text-sm sm:text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500 shadow-md shadow-blue-600/25 active:scale-[0.98] transition-all"
-          >
-            Simpan Media
-          </button>
-        </div>
-      </form>
-    </CrudModal>
-  );
-};
 
 export const SingleStepModal: React.FC<{
   isOpen: boolean;

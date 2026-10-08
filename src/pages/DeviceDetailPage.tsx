@@ -162,11 +162,11 @@ export const DeviceDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Interactive Share Link Simulator (jika kategori pembagian link dokumen) */}
-      {isShareLinkCategory && <ShareLinkSimulator />}
-
       {/* Main Interactive Stepper Guide */}
       <StepGuide steps={device.steps} sections={device.sections} supportedOs={device.supported_os} />
+
+      {/* Interactive Share Link Simulator (jika kategori pembagian link dokumen, ditempatkan di bawah panduan) */}
+      {isShareLinkCategory && <ShareLinkSimulator />}
 
       {/* Device Specific FAQ */}
       {device.faqs && device.faqs.length > 0 && (

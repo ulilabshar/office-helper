@@ -33,7 +33,7 @@ Office Helper mengadopsi arsitektur **Hybrid Client-First** dengan sinkronisasi 
 - **Badge Tips & Peringatan**: Menyorot hal-hal krusial seperti frekuensi Wi-Fi 2.4 GHz, mode kabel, atau peringatan keamanan data.
 
 ### 3. 🔗 Simulator Hak Akses Tautan (*Share Link Simulator*)
-- Widget khusus pada panduan pembagian dokumen (Google Docs, Sheets, Slides, OneDrive).
+- Widget interaktif pada panduan pembagian dokumen (Google Docs, Sheets, Slides, OneDrive) yang ditempatkan tepat di bawah alur langkah panduan setup.
 - Memungkinkan staf menguji coba kombinasi **Access Scope** (*Restricted* vs *Anyone with link*) dan **Permission Level** (*Viewer*, *Commenter*, *Editor*) secara visual sebelum membagikan link dokumen sensitif kantor.
 
 ### 4. 🔍 Pencarian Instan & Pintasan Keyboard
@@ -61,8 +61,6 @@ Office Helper mengadopsi arsitektur **Hybrid Client-First** dengan sinkronisasi 
 - **Bank FAQ Terpadu**:
   - FAQ Umum: solusi kendala global yang tampil di beranda.
   - FAQ Spesifik: solusi yang langsung terikat ke perangkat tertentu.
-- **Manajemen Berkas & Media**: Manajemen tautan unduhan driver resmi, dokumen SOP kantor, dan panduan PDF.
-- **Log Aktivitas**: Pencatatan riwayat penambahan, pengubahan, dan penghapusan data oleh administrator.
 
 ---
 

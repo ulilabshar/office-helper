@@ -46,7 +46,7 @@ export const epsonL3250: Device = {
               'Tekan tombol WPS pada router Wi-Fi kantor.',
               'macOS akan secara otomatis mendeteksi printer melalui protokol Bonjour Broadcast.'
             ],
-            tip: 'Di macOS, kamu tidak wajib mengunduh driver manual jika menggunakan protokol AirPrint.'
+            tip: 'Di macOS, printer langsung terdeteksi otomatis menggunakan protokol nirkabel AirPrint.'
           },
           {
             title: 'Langkah 2 (macOS): Menghubungkan Wi-Fi Direct pada Mac',
@@ -78,7 +78,7 @@ export const epsonL3250: Device = {
             warning: 'Koneksi Bluetooth pada printer ini utamanya digunakan untuk setup awal dan pemindaian status.'
           },
           {
-            title: 'Langkah 2 (Windows): Verifikasi Device Driver di Windows',
+            title: 'Langkah 2 (Windows): Verifikasi Status Perangkat Printer di Windows',
             description: 'Pastikan Windows Device Manager mengenali port Bluetooth / Wireless printer.',
             details: [
               'Buka `devmgmt.msc` di Windows Run.',
@@ -104,18 +104,18 @@ export const epsonL3250: Device = {
       id: 'finish',
       title: 'Proses Setup Selesai & Test Print',
       iconName: 'CheckCircle2',
-      badge: 'Driver & Verifikasi',
+      badge: 'Verifikasi Percetakan',
       osSteps: {
         windows: [
           {
-            title: 'Langkah 1 (Windows): Instal Web Installer Driver (.exe)',
-            description: 'Unduh paket penginstal lengkap resmi Epson L3250 untuk sistem operasi Windows.',
+            title: 'Langkah 1 (Windows): Menambahkan Printer Nirkabel di Windows',
+            description: 'Tambahkan printer Epson L3250 melalui pengaturan Devices & Printers di Windows.',
             details: [
-              'Buka file `L3250_Lite_Win_1.2.exe`.',
-              'Pilih opsi "Auto Wireless Connect" saat installer meminta tipe koneksi.',
-              'Selesaikan wizard instalasi hingga muncul notifikasi "Printer Added Successfully".'
+              'Buka Settings > Bluetooth & devices > Printers & scanners.',
+              'Klik [Add device] untuk memindai printer di jaringan Wi-Fi.',
+              'Pilih "EPSON L3250 Series" lalu klik [Add device] hingga terhubung.'
             ],
-            codeSnippet: 'Epson L3250 Windows Web Installer (L3250_Lite_Win.exe)'
+            codeSnippet: 'Windows Settings > Printers & scanners > Add device'
           },
           {
             title: 'Langkah 2 (Windows): Cetak Halaman Uji (Print Test Page)',
@@ -130,14 +130,14 @@ export const epsonL3250: Device = {
         mac: [
           {
             title: 'Langkah 1 (macOS): Menambahkan Printer via System Settings > Printers & Scanners',
-            description: 'Tambahkan printer ke antrean cetak macOS menggunakan driver AirPrint / Epson Drivers.',
+            description: 'Tambahkan printer ke antrean cetak macOS menggunakan fitur AirPrint nirkabel.',
             details: [
               'Buka Apple Menu () > System Settings > Printers & Scanners.',
               'Klik tombol [Add Printer, Scanner, or Fax...] (+).',
               'Pilih "EPSON L3250 Series" dari daftar penemuan Bonjour.',
               'Pada kolom "Use", pilih "Auto Select" atau "Secure AirPrint".'
             ],
-            codeSnippet: 'macOS AirPrint Driver / Epson Driver (.dmg)'
+            codeSnippet: 'System Settings > Printers & Scanners > AirPrint'
           },
           {
             title: 'Langkah 2 (macOS): Uji Cetak Dokumen Test dari Mac',

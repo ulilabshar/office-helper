@@ -329,7 +329,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     Selamat Datang, {user?.name || 'Administrator IT'}
                   </h2>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    CRUD perangkat, kategori, panduan, FAQ, dan media. Situs publik hanya menampilkan data ini.
+                    CRUD perangkat, kategori, panduan, dan FAQ. Situs publik hanya menampilkan data ini.
                   </p>
                 </div>
               </div>
